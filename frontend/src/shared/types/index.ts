@@ -94,6 +94,21 @@ export interface MatchCondition {
   value: string;
 }
 
+/** Normalize PascalCase keys from backend to camelCase MatchCondition[] */
+export function parseMatchConditions(raw: string): MatchCondition[] {
+  try {
+    const arr = JSON.parse(raw) as Record<string, unknown>[];
+    return arr.map((c) => ({
+      sourceType: (c.sourceType ?? c.SourceType) as FieldSourceType,
+      fieldPath: (c.fieldPath ?? c.FieldPath) as string,
+      operator: (c.operator ?? c.Operator) as MatchOperator,
+      value: (c.value ?? c.Value) as string,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export interface MockRequestLog {
   id: string;
   endpointId: string | null;

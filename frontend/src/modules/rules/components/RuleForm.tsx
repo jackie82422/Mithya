@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, Divider, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateRuleRequest, MatchCondition, MockRule } from '@/shared/types';
-import { FieldSourceType } from '@/shared/types';
+import { FieldSourceType, parseMatchConditions } from '@/shared/types';
 import ConditionBuilder from './ConditionBuilder';
 import ResponseEditor from './ResponseEditor';
 
@@ -43,7 +43,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
       form.setFieldsValue({
         ruleName: editingRule.ruleName,
         priority: editingRule.priority,
-        conditions: parseJson<MatchCondition[]>(editingRule.matchConditions, []),
+        conditions: parseMatchConditions(editingRule.matchConditions),
         statusCode: editingRule.responseStatusCode,
         responseBody: editingRule.responseBody,
         responseHeadersStr: editingRule.responseHeaders

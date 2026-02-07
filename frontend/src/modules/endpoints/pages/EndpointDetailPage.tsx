@@ -154,6 +154,7 @@ export default function EndpointDetailPage() {
               <RuleCard
                 key={rule.id}
                 rule={rule}
+                endpoint={endpoint}
                 onEdit={handleEdit}
                 onDelete={(ruleId) => deleteRule.mutate(ruleId)}
               />
