@@ -46,7 +46,7 @@ public class WireMockServerManager : IDisposable
         _server = WireMockServer.Start(new WireMockServerSettings
         {
             Port = _port,
-            StartAdminInterface = false,
+            StartAdminInterface = true,
             ReadStaticMappings = false
         });
 
@@ -94,7 +94,23 @@ public class WireMockServerManager : IDisposable
                         .AtPriority(rule.Priority)
                         .RespondWith(responseBuilder);
 
-                    Console.WriteLine($"Synced rule '{rule.RuleName}' for endpoint '{endpoint.Path}' with priority {rule.Priority}");
+                    // Debug: log conditions
+                    var debugConditions = JsonConvert.DeserializeObject<List<Core.Entities.MatchCondition>>(rule.MatchConditions);
+                    if (debugConditions != null)
+                    {
+                        foreach (var dc in debugConditions)
+                        {
+                            if (dc.SourceType == CoreEnums.FieldSourceType.Body)
+                            {
+                                var rp = dc.FieldPath.StartsWith("$.") ? dc.FieldPath.Substring(2) : dc.FieldPath;
+                                Console.WriteLine($"  Body condition: JsonPath=$[?(@.{rp}=='{dc.Value}')]");
+                            }
+                        }
+                    }
+                    var dbgPath = endpoint.Path;
+                    if (dbgPath.Contains("{"))
+                        dbgPath = System.Text.RegularExpressions.Regex.Replace(dbgPath, @"\{[^}]+\}", "*");
+                    Console.WriteLine($"Synced rule '{rule.RuleName}' for endpoint path='{dbgPath}' method={endpoint.HttpMethod} priority={rule.Priority}");
                 }
                 catch (Exception ex)
                 {
@@ -152,8 +168,12 @@ public class WireMockServerManager : IDisposable
         {
             // Convert path parameters to wildcard
             pathPattern = System.Text.RegularExpressions.Regex.Replace(pathPattern, @"\{[^}]+\}", "*");
+            builder.WithPath(new WMMatchers.WildcardMatcher(pathPattern));
         }
-        builder.WithPath(pathPattern);
+        else
+        {
+            builder.WithPath(pathPattern);
+        }
 
         // Add conditions from rule
         var conditions = JsonConvert.DeserializeObject<List<Core.Entities.MatchCondition>>(rule.MatchConditions);
@@ -166,11 +186,16 @@ public class WireMockServerManager : IDisposable
                     case CoreEnums.FieldSourceType.Body:
                         if (endpoint.Protocol == CoreEnums.ProtocolType.REST)
                         {
-                            builder.WithBody(new WMMatchers.JsonPathMatcher(condition.FieldPath, condition.Value));
+                            // Use JmesPathMatcher for reliable nested field matching
+                            // e.g. $.user.id Equals 12345 → user.id == '12345'
+                            var fieldPath = condition.FieldPath;
+                            var jmesPath = fieldPath.StartsWith("$.") ? fieldPath.Substring(2) : fieldPath;
+                            builder.WithBody(new WMMatchers.JmesPathMatcher($"{jmesPath} == '{condition.Value}'"));
+                            Console.WriteLine($"  JmesPath: {jmesPath} == '{condition.Value}'");
                         }
                         else if (endpoint.Protocol == CoreEnums.ProtocolType.SOAP)
                         {
-                            builder.WithBody(new WMMatchers.XPathMatcher(condition.FieldPath, condition.Value));
+                            builder.WithBody(new WMMatchers.XPathMatcher(condition.FieldPath));
                         }
                         break;
 
