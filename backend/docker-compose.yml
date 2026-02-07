@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mockserver-db
+    environment:
+      POSTGRES_DB: mockserver
+      POSTGRES_USER: mockserver
+      POSTGRES_PASSWORD: mockserver123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mockserver"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mockserver-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: src/MockServer.Api/Dockerfile
+    container_name: mockserver-backend
+    ports:
+      - "5000:8080"    # Admin API
+      - "5001:5001"    # Mock API (WireMock)
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Default=Host=postgres;Database=mockserver;Username=mockserver;Password=mockserver123
+      - WireMock__Port=5001
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - mockserver-network
+
+volumes:
+  postgres-data:
+
+networks:
+  mockserver-network:
+    driver: bridge
