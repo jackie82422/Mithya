@@ -1,7 +1,8 @@
-import { Typography, Row, Col, Space } from 'antd';
+import { Typography, Space, Tabs } from 'antd';
 import { useTranslation } from 'react-i18next';
 import ExportPanel from '../components/ExportPanel';
 import ImportPanel from '../components/ImportPanel';
+import OpenApiImportPanel from '../components/OpenApiImportPanel';
 
 export default function ImportExportPage() {
   const { t } = useTranslation();
@@ -11,14 +12,25 @@ export default function ImportExportPage() {
       <Typography.Title level={2} style={{ fontWeight: 600, letterSpacing: '-0.5px' }}>
         {t('importExport.title')}
       </Typography.Title>
-      <Row gutter={24}>
-        <Col xs={24} md={12}>
-          <ExportPanel />
-        </Col>
-        <Col xs={24} md={12}>
-          <ImportPanel />
-        </Col>
-      </Row>
+      <Tabs
+        items={[
+          {
+            key: 'export',
+            label: t('importExport.export'),
+            children: <ExportPanel />,
+          },
+          {
+            key: 'import-json',
+            label: t('importExport.import'),
+            children: <ImportPanel />,
+          },
+          {
+            key: 'import-openapi',
+            label: t('importExport.openapi.tabTitle'),
+            children: <OpenApiImportPanel />,
+          },
+        ]}
+      />
     </Space>
   );
 }

@@ -141,6 +141,24 @@
     "exportSuccess": "Export successful",
     "noDataToExport": "No data to export",
     "importing": "Importing...",
-    "preview": "Preview"
+    "preview": "Preview",
+    "openapi": {
+      "tabTitle": "Import OpenAPI",
+      "desc": "Import endpoints from an OpenAPI 3.0 or Swagger 2.0 specification file.",
+      "selectFile": "Select OpenAPI File",
+      "acceptFormats": "Supports .json and .yaml/.yml",
+      "serviceName": "Service Name",
+      "serviceNameHint": "Applied to all imported endpoints",
+      "specInfo": "{{specVersion}} — {{title}} v{{version}} — {{count}} endpoints",
+      "importButton": "Import {{count}} Endpoints",
+      "importSuccess": "Successfully imported {{count}} endpoints",
+      "importPartial": "Imported {{success}} endpoints, {{failed}} failed",
+      "importing": "Importing endpoints...",
+      "parseError": "Failed to parse OpenAPI spec",
+      "invalidSpec": "Not a valid OpenAPI 3.0 or Swagger 2.0 file",
+      "noEndpoints": "No endpoints found in the spec",
+      "progress": "Importing {{current}} of {{total}}...",
+      "warnings": "Warnings"
+    }
   }
 }

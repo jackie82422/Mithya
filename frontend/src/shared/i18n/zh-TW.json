@@ -141,6 +141,24 @@
     "exportSuccess": "匯出成功",
     "noDataToExport": "沒有可匯出的資料",
     "importing": "匯入中...",
-    "preview": "預覽"
+    "preview": "預覽",
+    "openapi": {
+      "tabTitle": "匯入 OpenAPI",
+      "desc": "從 OpenAPI 3.0 或 Swagger 2.0 規格檔匯入端點。",
+      "selectFile": "選擇 OpenAPI 檔案",
+      "acceptFormats": "支援 .json 及 .yaml/.yml",
+      "serviceName": "服務名稱",
+      "serviceNameHint": "套用至所有匯入的端點",
+      "specInfo": "{{specVersion}} — {{title}} v{{version}} — 共 {{count}} 個端點",
+      "importButton": "匯入 {{count}} 個端點",
+      "importSuccess": "成功匯入 {{count}} 個端點",
+      "importPartial": "匯入 {{success}} 個端點，{{failed}} 個失敗",
+      "importing": "匯入端點中...",
+      "parseError": "解析 OpenAPI 規格失敗",
+      "invalidSpec": "此檔案不是有效的 OpenAPI 3.0 或 Swagger 2.0 規格",
+      "noEndpoints": "規格檔中未找到任何端點",
+      "progress": "正在匯入第 {{current}} / {{total}} 個...",
+      "warnings": "警告"
+    }
   }
 }
