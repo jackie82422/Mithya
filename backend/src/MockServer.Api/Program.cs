@@ -58,11 +58,18 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Auto-migrate database
+// Auto-migrate database (skip for InMemory database in tests)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MockServerDbContext>();
-    db.Database.Migrate();
+    if (db.Database.IsRelational())
+    {
+        db.Database.Migrate();
+    }
+    else
+    {
+        db.Database.EnsureCreated();
+    }
 }
 
 // Configure the HTTP request pipeline

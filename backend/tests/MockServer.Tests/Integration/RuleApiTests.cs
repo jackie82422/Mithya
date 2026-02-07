@@ -211,4 +211,195 @@ public class RuleApiTests : IClassFixture<WebApplicationFactory<Program>>
         rules.Should().NotBeNull();
         rules.Should().HaveCount(2);
     }
+
+    [Fact]
+    [DisplayName("更新 Rule API 使用有效請求應該返回 200")]
+    public async Task UpdateRule_ValidRequest_ShouldReturn200()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Create endpoint
+        var endpointRequest = new CreateEndpointRequest
+        {
+            Name = "Test Endpoint",
+            ServiceName = "Test Service",
+            Protocol = ProtocolType.REST,
+            Path = "/api/updaterule",
+            HttpMethod = "POST"
+        };
+
+        var endpointResponse = await client.PostAsJsonAsync("/admin/api/endpoints", endpointRequest);
+        var endpoint = await endpointResponse.Content.ReadFromJsonAsync<MockEndpoint>();
+
+        // Create a rule
+        var createRequest = new CreateRuleRequest
+        {
+            RuleName = "Original Rule",
+            Priority = 1,
+            Conditions = new List<MatchCondition>
+            {
+                new MatchCondition
+                {
+                    SourceType = FieldSourceType.Body,
+                    FieldPath = "$.userId",
+                    Operator = MatchOperator.Equals,
+                    Value = "123"
+                }
+            },
+            StatusCode = 200,
+            ResponseBody = "{\"status\":\"original\"}"
+        };
+
+        var createResponse = await client.PostAsJsonAsync($"/admin/api/endpoints/{endpoint!.Id}/rules", createRequest);
+        var createdRule = await createResponse.Content.ReadFromJsonAsync<MockRule>();
+
+        // Update the rule
+        var updateRequest = new CreateRuleRequest
+        {
+            RuleName = "Updated Rule",
+            Priority = 2,
+            Conditions = new List<MatchCondition>
+            {
+                new MatchCondition
+                {
+                    SourceType = FieldSourceType.Body,
+                    FieldPath = "$.userId",
+                    Operator = MatchOperator.Equals,
+                    Value = "456"
+                }
+            },
+            StatusCode = 201,
+            ResponseBody = "{\"status\":\"updated\"}",
+            DelayMs = 100
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/admin/api/endpoints/{endpoint.Id}/rules/{createdRule!.Id}", updateRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updatedRule = await response.Content.ReadFromJsonAsync<MockRule>();
+        updatedRule.Should().NotBeNull();
+        updatedRule!.RuleName.Should().Be("Updated Rule");
+        updatedRule.Priority.Should().Be(2);
+        updatedRule.ResponseStatusCode.Should().Be(201);
+        updatedRule.ResponseBody.Should().Be("{\"status\":\"updated\"}");
+        updatedRule.DelayMs.Should().Be(100);
+        updatedRule.Id.Should().Be(createdRule.Id); // Same ID
+    }
+
+    [Fact]
+    [DisplayName("更新 Rule API 使用不存在的 Rule ID 應該返回 404")]
+    public async Task UpdateRule_NonExistentRule_ShouldReturn404()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Create endpoint
+        var endpointRequest = new CreateEndpointRequest
+        {
+            Name = "Test Endpoint",
+            ServiceName = "Test Service",
+            Protocol = ProtocolType.REST,
+            Path = "/api/notfound",
+            HttpMethod = "POST"
+        };
+
+        var endpointResponse = await client.PostAsJsonAsync("/admin/api/endpoints", endpointRequest);
+        var endpoint = await endpointResponse.Content.ReadFromJsonAsync<MockEndpoint>();
+
+        // Try to update non-existent rule
+        var updateRequest = new CreateRuleRequest
+        {
+            RuleName = "Updated Rule",
+            Priority = 1,
+            Conditions = new List<MatchCondition>
+            {
+                new MatchCondition
+                {
+                    SourceType = FieldSourceType.Body,
+                    FieldPath = "$.id",
+                    Operator = MatchOperator.Equals,
+                    Value = "123"
+                }
+            },
+            StatusCode = 200,
+            ResponseBody = "{}"
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/admin/api/endpoints/{endpoint!.Id}/rules/{Guid.NewGuid()}", updateRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    [DisplayName("更新 Rule API 使用無效 JsonPath 應該返回 400")]
+    public async Task UpdateRule_InvalidJsonPath_ShouldReturn400()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Create endpoint
+        var endpointRequest = new CreateEndpointRequest
+        {
+            Name = "Test Endpoint",
+            ServiceName = "Test Service",
+            Protocol = ProtocolType.REST,
+            Path = "/api/invalidupdate",
+            HttpMethod = "POST"
+        };
+
+        var endpointResponse = await client.PostAsJsonAsync("/admin/api/endpoints", endpointRequest);
+        var endpoint = await endpointResponse.Content.ReadFromJsonAsync<MockEndpoint>();
+
+        // Create a rule
+        var createRequest = new CreateRuleRequest
+        {
+            RuleName = "Original Rule",
+            Priority = 1,
+            Conditions = new List<MatchCondition>
+            {
+                new MatchCondition
+                {
+                    SourceType = FieldSourceType.Body,
+                    FieldPath = "$.userId",
+                    Operator = MatchOperator.Equals,
+                    Value = "123"
+                }
+            },
+            StatusCode = 200,
+            ResponseBody = "{}"
+        };
+
+        var createResponse = await client.PostAsJsonAsync($"/admin/api/endpoints/{endpoint!.Id}/rules", createRequest);
+        var createdRule = await createResponse.Content.ReadFromJsonAsync<MockRule>();
+
+        // Try to update with invalid JsonPath
+        var updateRequest = new CreateRuleRequest
+        {
+            RuleName = "Updated Rule",
+            Priority = 1,
+            Conditions = new List<MatchCondition>
+            {
+                new MatchCondition
+                {
+                    SourceType = FieldSourceType.Body,
+                    FieldPath = "userId", // Should start with $.
+                    Operator = MatchOperator.Equals,
+                    Value = "456"
+                }
+            },
+            StatusCode = 200,
+            ResponseBody = "{}"
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/admin/api/endpoints/{endpoint.Id}/rules/{createdRule!.Id}", updateRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

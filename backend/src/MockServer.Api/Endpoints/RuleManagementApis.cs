@@ -67,6 +67,59 @@ public static class RuleManagementApis
         .WithName("CreateRule")
         .WithOpenApi();
 
+        group.MapPut("/{ruleId}", async (
+            Guid endpointId,
+            Guid ruleId,
+            CreateRuleRequest request,
+            IEndpointRepository endpointRepo,
+            IRuleRepository ruleRepo,
+            ProtocolHandlerFactory factory,
+            WireMockServerManager manager) =>
+        {
+            // Validate endpoint exists
+            var endpoint = await endpointRepo.GetByIdAsync(endpointId);
+            if (endpoint is null)
+            {
+                return Results.NotFound(new { message = "Endpoint not found" });
+            }
+
+            // Validate rule exists and belongs to the endpoint
+            var rule = await ruleRepo.GetByIdAsync(ruleId);
+            if (rule is null || rule.EndpointId != endpointId)
+            {
+                return Results.NotFound(new { message = "Rule not found" });
+            }
+
+            // Update rule fields
+            rule.RuleName = request.RuleName;
+            rule.Priority = request.Priority;
+            rule.MatchConditions = JsonConvert.SerializeObject(request.Conditions);
+            rule.ResponseStatusCode = request.StatusCode;
+            rule.ResponseBody = request.ResponseBody;
+            rule.ResponseHeaders = request.ResponseHeaders != null
+                ? JsonConvert.SerializeObject(request.ResponseHeaders)
+                : null;
+            rule.DelayMs = request.DelayMs;
+
+            // Validate updated rule
+            var handler = factory.GetHandler(endpoint.Protocol);
+            var validation = handler.ValidateRule(rule, endpoint);
+
+            if (!validation.IsValid)
+            {
+                return Results.BadRequest(new { errors = validation.Errors });
+            }
+
+            // Save and sync
+            await ruleRepo.UpdateAsync(rule);
+            await ruleRepo.SaveChangesAsync();
+            await manager.SyncAllRulesAsync();
+
+            return Results.Ok(rule);
+        })
+        .WithName("UpdateRule")
+        .WithOpenApi();
+
         group.MapDelete("/{ruleId}", async (
             Guid endpointId,
             Guid ruleId,
