@@ -1,4 +1,4 @@
-import { Drawer, Descriptions, Tag, Typography } from 'antd';
+import { Drawer, Descriptions, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { MockRequestLog } from '@/shared/types';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
@@ -19,6 +19,41 @@ function tryFormat(raw: string | null): string {
   }
 }
 
+function StatusCodePill({ code }: { code: number }) {
+  const ok = code < 400;
+  return (
+    <span
+      style={{
+        padding: '2px 10px',
+        borderRadius: 100,
+        fontSize: 12,
+        fontWeight: 600,
+        background: ok ? 'var(--get-bg)' : 'var(--delete-bg)',
+        color: ok ? 'var(--get-color)' : 'var(--delete-color)',
+      }}
+    >
+      {code}
+    </span>
+  );
+}
+
+function MatchPill({ matched, label }: { matched: boolean; label: string }) {
+  return (
+    <span
+      style={{
+        padding: '2px 10px',
+        borderRadius: 100,
+        fontSize: 12,
+        fontWeight: 500,
+        background: matched ? 'var(--active-bg)' : 'var(--put-bg)',
+        color: matched ? 'var(--active-color)' : 'var(--put-color)',
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
 export default function LogDetail({ log, open, onClose }: LogDetailProps) {
   const { t } = useTranslation();
 
@@ -29,9 +64,10 @@ export default function LogDetail({ log, open, onClose }: LogDetailProps) {
       title={t('logs.detail')}
       open={open}
       onClose={onClose}
-      width={700}
+      width={720}
+      styles={{ body: { padding: 24 } }}
     >
-      <Descriptions bordered column={1} size="small">
+      <Descriptions column={1} size="small">
         <Descriptions.Item label={t('logs.timestamp')}>
           {new Date(log.timestamp).toLocaleString()}
         </Descriptions.Item>
@@ -45,23 +81,22 @@ export default function LogDetail({ log, open, onClose }: LogDetailProps) {
           {log.queryString || '-'}
         </Descriptions.Item>
         <Descriptions.Item label={t('logs.statusCode')}>
-          <Tag color={log.responseStatusCode < 400 ? 'green' : 'red'}>
-            {log.responseStatusCode}
-          </Tag>
+          <StatusCodePill code={log.responseStatusCode} />
         </Descriptions.Item>
         <Descriptions.Item label={t('logs.responseTime')}>
           {log.responseTimeMs} {t('logs.ms')}
         </Descriptions.Item>
         <Descriptions.Item label={t('logs.matchStatus')}>
-          <Tag color={log.isMatched ? 'success' : 'warning'}>
-            {log.isMatched ? t('logs.matched') : t('logs.unmatched')}
-          </Tag>
+          <MatchPill
+            matched={log.isMatched}
+            label={log.isMatched ? t('logs.matched') : t('logs.unmatched')}
+          />
         </Descriptions.Item>
       </Descriptions>
 
       {log.headers && (
         <>
-          <Typography.Title level={5} style={{ marginTop: 16 }}>
+          <Typography.Title level={5} style={{ marginTop: 20 }}>
             {t('logs.requestHeaders')}
           </Typography.Title>
           <CodeEditor value={tryFormat(log.headers)} readOnly height={150} />
@@ -70,7 +105,7 @@ export default function LogDetail({ log, open, onClose }: LogDetailProps) {
 
       {log.body && (
         <>
-          <Typography.Title level={5} style={{ marginTop: 16 }}>
+          <Typography.Title level={5} style={{ marginTop: 20 }}>
             {t('logs.requestBody')}
           </Typography.Title>
           <CodeEditor value={tryFormat(log.body)} readOnly height={200} />
@@ -79,7 +114,7 @@ export default function LogDetail({ log, open, onClose }: LogDetailProps) {
 
       {log.responseBody && (
         <>
-          <Typography.Title level={5} style={{ marginTop: 16 }}>
+          <Typography.Title level={5} style={{ marginTop: 20 }}>
             {t('logs.responseBody')}
           </Typography.Title>
           <CodeEditor value={tryFormat(log.responseBody)} readOnly height={200} />

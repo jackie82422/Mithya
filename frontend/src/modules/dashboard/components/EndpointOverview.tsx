@@ -15,7 +15,13 @@ export default function EndpointOverview({ endpoints }: EndpointOverviewProps) {
   const navigate = useNavigate();
 
   return (
-    <Card title={t('dashboard.endpointOverview')}>
+    <Card
+      title={
+        <span style={{ fontSize: 16, fontWeight: 600 }}>
+          {t('dashboard.endpointOverview')}
+        </span>
+      }
+    >
       <Table
         dataSource={endpoints}
         rowKey="id"

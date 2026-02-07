@@ -73,7 +73,11 @@ export default function ConditionBuilder({ value = [], onChange }: ConditionBuil
           needsJsonPath && cond.fieldPath && !cond.fieldPath.startsWith('$.');
 
         return (
-          <Card key={i} size="small" style={{ marginBottom: 8 }}>
+          <Card
+            key={i}
+            size="small"
+            style={{ marginBottom: 8, background: 'var(--condition-bg)' }}
+          >
             <Flex gap={8} wrap="wrap" align="center">
               <Select
                 style={{ width: 120 }}
@@ -118,6 +122,7 @@ export default function ConditionBuilder({ value = [], onChange }: ConditionBuil
                 onChange={(e) => update(i, 'value', e.target.value)}
               />
               <Button
+                type="text"
                 danger
                 icon={<DeleteOutlined />}
                 onClick={() => remove(i)}
@@ -127,7 +132,13 @@ export default function ConditionBuilder({ value = [], onChange }: ConditionBuil
           </Card>
         );
       })}
-      <Button type="dashed" icon={<PlusOutlined />} onClick={add} block>
+      <Button
+        type="dashed"
+        icon={<PlusOutlined />}
+        onClick={add}
+        block
+        style={{ borderRadius: 12, height: 40 }}
+      >
         {t('rules.form.addCondition')}
       </Button>
     </div>

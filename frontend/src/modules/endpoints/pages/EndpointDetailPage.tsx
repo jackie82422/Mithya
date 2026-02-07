@@ -4,7 +4,7 @@ import {
   Typography,
   Button,
   Spin,
-  Descriptions,
+  Card,
   Divider,
   Empty,
   Flex,
@@ -21,6 +21,17 @@ import StatusBadge from '@/shared/components/StatusBadge';
 import RuleCard from '@/modules/rules/components/RuleCard';
 import RuleForm from '@/modules/rules/components/RuleForm';
 import type { CreateRuleRequest, MockRule } from '@/shared/types';
+
+function InfoItem({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 14, color: 'var(--color-text)' }}>{children}</div>
+    </div>
+  );
+}
 
 export default function EndpointDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -92,41 +103,51 @@ export default function EndpointDetailPage() {
         ]}
       />
 
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+      <Flex justify="space-between" align="center" style={{ marginBottom: 20 }}>
         <Flex align="center" gap={12}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/endpoints')} />
-          <Typography.Title level={3} style={{ margin: 0 }}>
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/endpoints')}
+          />
+          <Typography.Title level={2} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
             {endpoint.name}
           </Typography.Title>
           <StatusBadge active={endpoint.isActive} />
         </Flex>
       </Flex>
 
-      <Descriptions bordered column={2} size="small" style={{ marginBottom: 24 }}>
-        <Descriptions.Item label={t('endpoints.serviceName')}>
-          {endpoint.serviceName}
-        </Descriptions.Item>
-        <Descriptions.Item label={t('endpoints.protocol')}>
-          <ProtocolTag protocol={endpoint.protocol} />
-        </Descriptions.Item>
-        <Descriptions.Item label={t('endpoints.httpMethod')}>
-          <HttpMethodTag method={endpoint.httpMethod} />
-        </Descriptions.Item>
-        <Descriptions.Item label={t('endpoints.path')}>
-          <Typography.Text code>{endpoint.path}</Typography.Text>
-        </Descriptions.Item>
-        <Descriptions.Item label={t('endpoints.defaultStatusCode')}>
-          {endpoint.defaultStatusCode ?? '-'}
-        </Descriptions.Item>
-        <Descriptions.Item label={t('common.createdAt')}>
-          {new Date(endpoint.createdAt).toLocaleString()}
-        </Descriptions.Item>
-      </Descriptions>
+      <Card style={{ marginBottom: 24 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 24,
+          }}
+        >
+          <InfoItem label={t('endpoints.serviceName')}>{endpoint.serviceName}</InfoItem>
+          <InfoItem label={t('endpoints.protocol')}>
+            <ProtocolTag protocol={endpoint.protocol} />
+          </InfoItem>
+          <InfoItem label={t('endpoints.httpMethod')}>
+            <HttpMethodTag method={endpoint.httpMethod} />
+          </InfoItem>
+          <InfoItem label={t('endpoints.path')}>
+            <Typography.Text code>{endpoint.path}</Typography.Text>
+          </InfoItem>
+          <InfoItem label={t('endpoints.defaultStatusCode')}>
+            {endpoint.defaultStatusCode ?? '-'}
+          </InfoItem>
+          <InfoItem label={t('common.createdAt')}>
+            {new Date(endpoint.createdAt).toLocaleString()}
+          </InfoItem>
+        </div>
+      </Card>
 
       <Divider />
 
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Typography.Title level={4} style={{ margin: 0 }}>
+        <Typography.Title level={4} style={{ margin: 0, fontWeight: 600 }}>
           {t('rules.title')} ({sortedRules.length})
         </Typography.Title>
         <Button

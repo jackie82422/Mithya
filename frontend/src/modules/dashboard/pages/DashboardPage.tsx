@@ -23,7 +23,9 @@ export default function DashboardPage() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Typography.Title level={3}>{t('dashboard.title')}</Typography.Title>
+      <Typography.Title level={2} style={{ fontWeight: 600, letterSpacing: '-0.5px' }}>
+        {t('dashboard.title')}
+      </Typography.Title>
       <StatsCards endpoints={endpoints ?? []} logs={logs ?? []} />
       <EndpointOverview endpoints={endpoints ?? []} />
       <RecentLogs logs={logs ?? []} />

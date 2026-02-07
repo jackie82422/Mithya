@@ -1,0 +1,368 @@
+/* ═══════════════════════════════════════════════
+   Apple-Style Global Theme
+   ═══════════════════════════════════════════════ */
+
+/* ── CSS Custom Properties (Light) ── */
+:root,
+[data-theme='light'] {
+  --color-primary: #007AFF;
+  --color-bg: #F5F5F7;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E5EA;
+  --color-text: #1D1D1F;
+  --color-text-secondary: #86868B;
+  --color-success: #34C759;
+  --color-warning: #FF9500;
+  --color-danger: #FF3B30;
+  --color-purple: #5856D6;
+  --color-pink: #AF52DE;
+
+  --sidebar-bg: rgba(255, 255, 255, 0.72);
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --header-bg: rgba(255, 255, 255, 0.72);
+  --header-border: rgba(0, 0, 0, 0.06);
+
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --card-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
+
+  --code-bg: #F9F9F9;
+  --condition-bg: #F9F9FB;
+
+  /* HTTP method soft backgrounds */
+  --get-bg: #F0FFF4;
+  --get-color: #34C759;
+  --post-bg: #F0F5FF;
+  --post-color: #007AFF;
+  --put-bg: #FFF8F0;
+  --put-color: #FF9500;
+  --patch-bg: #F5F0FF;
+  --patch-color: #5856D6;
+  --delete-bg: #FFF0F0;
+  --delete-color: #FF3B30;
+
+  /* Protocol soft backgrounds */
+  --rest-bg: #F0F5FF;
+  --rest-color: #007AFF;
+  --soap-bg: #FFF8F0;
+  --soap-color: #FF9500;
+  --grpc-bg: #F5F0FF;
+  --grpc-color: #5856D6;
+  --graphql-bg: #F9F0FF;
+  --graphql-color: #AF52DE;
+
+  /* Status badge */
+  --active-bg: #E8FAE8;
+  --active-color: #34C759;
+  --inactive-bg: #F2F2F7;
+  --inactive-color: #86868B;
+
+  /* Stats card backgrounds */
+  --stats-blue-bg: #F0F5FF;
+  --stats-green-bg: #F0FFF4;
+  --stats-purple-bg: #F5F0FF;
+  --stats-orange-bg: #FFF8F0;
+  --stats-blue-icon: #007AFF;
+  --stats-green-icon: #34C759;
+  --stats-purple-icon: #5856D6;
+  --stats-orange-icon: #FF9500;
+}
+
+/* ── CSS Custom Properties (Dark) ── */
+[data-theme='dark'] {
+  --color-primary: #0A84FF;
+  --color-bg: #000000;
+  --color-surface: #1C1C1E;
+  --color-border: #38383A;
+  --color-text: #F5F5F7;
+  --color-text-secondary: #98989D;
+  --color-success: #30D158;
+  --color-warning: #FF9F0A;
+  --color-danger: #FF453A;
+  --color-purple: #5E5CE6;
+  --color-pink: #BF5AF2;
+
+  --sidebar-bg: rgba(28, 28, 30, 0.82);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --header-bg: rgba(28, 28, 30, 0.82);
+  --header-border: rgba(255, 255, 255, 0.08);
+
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
+
+  --code-bg: #2C2C2E;
+  --condition-bg: #2C2C2E;
+
+  --get-bg: rgba(48, 209, 88, 0.12);
+  --get-color: #30D158;
+  --post-bg: rgba(10, 132, 255, 0.12);
+  --post-color: #0A84FF;
+  --put-bg: rgba(255, 159, 10, 0.12);
+  --put-color: #FF9F0A;
+  --patch-bg: rgba(94, 92, 230, 0.12);
+  --patch-color: #5E5CE6;
+  --delete-bg: rgba(255, 69, 58, 0.12);
+  --delete-color: #FF453A;
+
+  --rest-bg: rgba(10, 132, 255, 0.12);
+  --rest-color: #0A84FF;
+  --soap-bg: rgba(255, 159, 10, 0.12);
+  --soap-color: #FF9F0A;
+  --grpc-bg: rgba(94, 92, 230, 0.12);
+  --grpc-color: #5E5CE6;
+  --graphql-bg: rgba(191, 90, 242, 0.12);
+  --graphql-color: #BF5AF2;
+
+  --active-bg: rgba(48, 209, 88, 0.15);
+  --active-color: #30D158;
+  --inactive-bg: rgba(152, 152, 157, 0.15);
+  --inactive-color: #98989D;
+
+  --stats-blue-bg: rgba(10, 132, 255, 0.12);
+  --stats-green-bg: rgba(48, 209, 88, 0.12);
+  --stats-purple-bg: rgba(94, 92, 230, 0.12);
+  --stats-orange-bg: rgba(255, 159, 10, 0.12);
+  --stats-blue-icon: #0A84FF;
+  --stats-green-icon: #30D158;
+  --stats-purple-icon: #5E5CE6;
+  --stats-orange-icon: #FF9F0A;
+}
+
+/* ── Base ── */
+body {
+  margin: 0;
+  background: var(--color-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--color-text);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ── Ant Design Card Override ── */
+.ant-card {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: var(--card-shadow) !important;
+  background: var(--color-surface) !important;
+  transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease !important;
+}
+
+/* ── Ant Design Table Override ── */
+.ant-table {
+  background: transparent !important;
+}
+
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > td {
+  background: transparent !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid var(--color-border) !important;
+  transition: background 0.2s ease !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: var(--condition-bg) !important;
+}
+
+.ant-table-wrapper .ant-table-container {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+/* ── Ant Design Modal Override ── */
+.ant-modal-content {
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden;
+}
+
+.ant-modal-header {
+  border-bottom: none !important;
+  padding: 24px 24px 12px !important;
+}
+
+.ant-modal-body {
+  padding: 12px 24px 24px !important;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid var(--color-border) !important;
+  padding: 16px 24px !important;
+}
+
+/* ── Ant Design Button Override ── */
+.ant-btn {
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.ant-btn-primary {
+  box-shadow: none !important;
+}
+
+.ant-btn-primary:hover {
+  opacity: 0.85;
+}
+
+/* ── Ant Design Tag Override ── */
+.ant-tag {
+  border-radius: 100px !important;
+  border: none !important;
+  font-weight: 500 !important;
+  padding: 2px 10px !important;
+}
+
+/* ── Ant Design Input Override ── */
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector,
+.ant-input-number {
+  border-radius: 10px !important;
+  border-color: var(--color-border) !important;
+}
+
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused,
+.ant-input:focus,
+.ant-input-focused {
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15) !important;
+}
+
+/* ── Ant Design Drawer Override ── */
+.ant-drawer-content-wrapper {
+  border-radius: 16px 0 0 16px !important;
+  overflow: hidden;
+}
+
+/* ── Ant Design Descriptions Override ── */
+.ant-descriptions-bordered .ant-descriptions-view {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+/* ── Sidebar Glass Effect ── */
+.apple-sidebar {
+  background: var(--sidebar-bg) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid var(--sidebar-border) !important;
+}
+
+.apple-sidebar .ant-layout-sider-children {
+  background: transparent !important;
+}
+
+.apple-sidebar .ant-menu {
+  background: transparent !important;
+}
+
+.apple-sidebar .ant-menu-item {
+  border-radius: 10px !important;
+  margin: 4px 12px !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  transition: all 0.2s ease !important;
+}
+
+.apple-sidebar .ant-menu-item-selected {
+  background: var(--color-primary) !important;
+  color: #fff !important;
+}
+
+.apple-sidebar .ant-menu-item-selected .anticon {
+  color: #fff !important;
+}
+
+.apple-sidebar .ant-menu-item:not(.ant-menu-item-selected):hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme='dark'] .apple-sidebar .ant-menu-item:not(.ant-menu-item-selected):hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Header Glass Effect ── */
+.apple-header {
+  background: var(--header-bg) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--header-border) !important;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Apple Endpoint Card Hover ── */
+.apple-endpoint-card {
+  transition: box-shadow 0.3s ease, transform 0.3s ease !important;
+  cursor: pointer;
+}
+
+.apple-endpoint-card:hover {
+  box-shadow: var(--card-shadow-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Timeline cleanup ── */
+.ant-timeline-item-head {
+  background: var(--color-surface) !important;
+}
+
+/* ── Form spacing ── */
+.ant-form-vertical .ant-form-item {
+  margin-bottom: 20px;
+}
+
+/* ── Popconfirm ── */
+.ant-popconfirm .ant-popover-inner {
+  border-radius: 12px !important;
+}
+
+/* ── Breadcrumb ── */
+.ant-breadcrumb {
+  font-size: 14px !important;
+}
+
+/* ── Pagination ── */
+.ant-pagination .ant-pagination-item {
+  border-radius: 8px !important;
+}
+
+.ant-pagination .ant-pagination-item-active {
+  border-color: var(--color-primary) !important;
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(0, 122, 255, 0.2);
+}
+
+[data-theme='dark'] ::selection {
+  background: rgba(10, 132, 255, 0.3);
+}

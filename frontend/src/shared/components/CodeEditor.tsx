@@ -24,8 +24,11 @@ export default function CodeEditor({
         fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, Consolas, monospace",
         fontSize: 13,
         lineHeight: 1.6,
-        background: readOnly ? '#f5f5f5' : '#fff',
+        background: readOnly ? 'var(--code-bg)' : 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 12,
         resize: 'vertical',
+        color: 'var(--color-text)',
       }}
       autoSize={false}
     />

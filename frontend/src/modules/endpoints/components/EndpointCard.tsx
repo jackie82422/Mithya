@@ -19,8 +19,8 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault }: Endpo
 
   return (
     <Card
-      hoverable
-      style={{ marginBottom: 16 }}
+      className="apple-endpoint-card"
+      style={{ marginBottom: 16, borderRadius: 16, padding: 4 }}
       onClick={() => navigate(`/endpoints/${endpoint.id}`)}
     >
       <Flex justify="space-between" align="flex-start">
@@ -48,6 +48,7 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault }: Endpo
         <Space onClick={(e) => e.stopPropagation()}>
           <Button
             size="small"
+            type="text"
             icon={<SettingOutlined />}
             onClick={(e) => {
               e.stopPropagation();
@@ -66,9 +67,9 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault }: Endpo
             okText={t('common.yes')}
             cancelText={t('common.no')}
           >
-            <Button size="small" danger icon={<DeleteOutlined />} />
+            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
-          <RightOutlined style={{ color: '#999' }} />
+          <RightOutlined style={{ color: 'var(--color-text-secondary)', fontSize: 12 }} />
         </Space>
       </Flex>
     </Card>

@@ -38,7 +38,7 @@ export default function EndpointListPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
+        <Typography.Title level={2} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
           {t('endpoints.title')}
         </Typography.Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormOpen(true)}>
@@ -47,11 +47,11 @@ export default function EndpointListPage() {
       </Flex>
 
       <Input
-        prefix={<SearchOutlined />}
+        prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
         placeholder={t('common.search')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 16, maxWidth: 400 }}
+        style={{ marginBottom: 20, maxWidth: 420, height: 42, borderRadius: 12 }}
         allowClear
       />
 

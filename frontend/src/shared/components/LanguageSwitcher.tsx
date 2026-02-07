@@ -24,7 +24,15 @@ export default function LanguageSwitcher() {
         },
       }}
     >
-      <Button type="text" icon={<GlobalOutlined />} />
+      <Button
+        type="text"
+        icon={<GlobalOutlined />}
+        size="small"
+        style={{
+          borderRadius: 8,
+          color: 'var(--color-text-secondary)',
+        }}
+      />
     </Dropdown>
   );
 }

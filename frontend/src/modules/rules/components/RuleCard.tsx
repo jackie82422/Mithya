@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Typography, Tag, Button, Popconfirm, Flex, Space, Modal, message } from 'antd';
+import { Card, Typography, Button, Popconfirm, Flex, Space, Modal, message } from 'antd';
 import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { MockRule, MockEndpoint, MatchCondition } from '@/shared/types';
@@ -20,24 +20,20 @@ interface RuleCardProps {
 
 function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[]): string {
   const method = endpoint.httpMethod.toUpperCase();
-  // Build path: replace {param} with sample values from Path conditions
   let path = endpoint.path;
   const pathConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Path);
   for (const pc of pathConditions) {
     path = path.replace(`{${pc.fieldPath}}`, pc.value || `{${pc.fieldPath}}`);
   }
-  // Fill remaining {param} with placeholder
   path = path.replace(/\{([^}]+)\}/g, '1');
 
   const url = `http://localhost:5001${path}`;
-
   const parts: string[] = ['curl'];
 
   if (method !== 'GET') {
     parts.push(`-X ${method}`);
   }
 
-  // Query params
   const queryConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Query);
   let fullUrl = url;
   if (queryConditions.length > 0) {
@@ -46,7 +42,6 @@ function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[]): string
   }
   parts.push(`'${fullUrl}'`);
 
-  // Headers
   const headerConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Header);
   const hasContentType = headerConditions.some(
     (c) => c.fieldPath.toLowerCase() === 'content-type',
@@ -56,13 +51,11 @@ function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[]): string
     parts.push(`-H '${hc.fieldPath}: ${hc.value}'`);
   }
 
-  // Body
   const bodyConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Body);
   if (bodyConditions.length > 0) {
     if (!hasContentType) {
       parts.push("-H 'Content-Type: application/json'");
     }
-    // Build a JSON body from body conditions
     const bodyObj: Record<string, unknown> = {};
     for (const bc of bodyConditions) {
       const fieldPath = bc.fieldPath.startsWith('$.') ? bc.fieldPath.slice(2) : bc.fieldPath;
@@ -104,16 +97,38 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardP
         <Flex justify="space-between" align="flex-start">
           <div style={{ flex: 1 }}>
             <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
-              <Tag color="geekblue">#{rule.priority}</Tag>
+              <span
+                style={{
+                  padding: '2px 10px',
+                  borderRadius: 100,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: 'var(--post-bg)',
+                  color: 'var(--post-color)',
+                }}
+              >
+                #{rule.priority}
+              </span>
               <Typography.Text strong>{rule.ruleName}</Typography.Text>
               <StatusBadge active={rule.isActive} />
             </Flex>
             <Space size={[4, 4]} wrap style={{ marginBottom: 4 }}>
               {conditions.map((c, i) => (
-                <Tag key={i}>
+                <span
+                  key={i}
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                    fontSize: 12,
+                    background: 'var(--condition-bg)',
+                    color: 'var(--color-text-secondary)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                >
                   {FieldSourceTypeLabel[c.sourceType]}.{c.fieldPath}{' '}
                   {MatchOperatorLabel[c.operator]} {c.value && `"${c.value}"`}
-                </Tag>
+                </span>
               ))}
               {conditions.length === 0 && (
                 <Typography.Text type="secondary">({t('common.noData')})</Typography.Text>
@@ -129,18 +144,19 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardP
           <Space>
             <Button
               size="small"
+              type="text"
               icon={<CodeOutlined />}
               onClick={() => setCurlOpen(true)}
               title="cURL"
             />
-            <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(rule)} />
+            <Button size="small" type="text" icon={<EditOutlined />} onClick={() => onEdit(rule)} />
             <Popconfirm
               title={t('rules.deleteConfirm', { name: rule.ruleName })}
               onConfirm={() => onDelete(rule.id)}
               okText={t('common.yes')}
               cancelText={t('common.no')}
             >
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} />
             </Popconfirm>
           </Space>
         </Flex>
@@ -159,10 +175,10 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardP
       >
         <pre
           style={{
-            background: '#1e1e1e',
-            color: '#d4d4d4',
-            padding: 16,
-            borderRadius: 8,
+            background: '#1a1a2e',
+            color: '#e0e0e0',
+            padding: 20,
+            borderRadius: 14,
             fontSize: 13,
             lineHeight: 1.6,
             overflowX: 'auto',

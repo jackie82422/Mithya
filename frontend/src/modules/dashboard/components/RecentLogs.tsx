@@ -1,4 +1,4 @@
-import { Card, Table, Tag, Typography } from 'antd';
+import { Card, Table, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { MockRequestLog } from '@/shared/types';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
@@ -7,11 +7,52 @@ interface RecentLogsProps {
   logs: MockRequestLog[];
 }
 
+function StatusCodePill({ code }: { code: number }) {
+  const ok = code < 400;
+  return (
+    <span
+      style={{
+        padding: '2px 10px',
+        borderRadius: 100,
+        fontSize: 12,
+        fontWeight: 600,
+        background: ok ? 'var(--get-bg)' : 'var(--delete-bg)',
+        color: ok ? 'var(--get-color)' : 'var(--delete-color)',
+      }}
+    >
+      {code}
+    </span>
+  );
+}
+
+function MatchPill({ matched, label }: { matched: boolean; label: string }) {
+  return (
+    <span
+      style={{
+        padding: '2px 10px',
+        borderRadius: 100,
+        fontSize: 12,
+        fontWeight: 500,
+        background: matched ? 'var(--active-bg)' : 'var(--put-bg)',
+        color: matched ? 'var(--active-color)' : 'var(--put-color)',
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
 export default function RecentLogs({ logs }: RecentLogsProps) {
   const { t } = useTranslation();
 
   return (
-    <Card title={t('dashboard.recentLogs')}>
+    <Card
+      title={
+        <span style={{ fontSize: 16, fontWeight: 600 }}>
+          {t('dashboard.recentLogs')}
+        </span>
+      }
+    >
       {logs.length === 0 ? (
         <Typography.Text type="secondary">{t('dashboard.noLogs')}</Typography.Text>
       ) : (
@@ -42,18 +83,17 @@ export default function RecentLogs({ logs }: RecentLogsProps) {
               title: t('logs.statusCode'),
               dataIndex: 'responseStatusCode',
               width: 100,
-              render: (code: number) => (
-                <Tag color={code < 400 ? 'green' : 'red'}>{code}</Tag>
-              ),
+              render: (code: number) => <StatusCodePill code={code} />,
             },
             {
               title: t('logs.matchStatus'),
               dataIndex: 'isMatched',
               width: 100,
               render: (matched: boolean) => (
-                <Tag color={matched ? 'success' : 'warning'}>
-                  {matched ? t('logs.matched') : t('logs.unmatched')}
-                </Tag>
+                <MatchPill
+                  matched={matched}
+                  label={matched ? t('logs.matched') : t('logs.unmatched')}
+                />
               ),
             },
           ]}

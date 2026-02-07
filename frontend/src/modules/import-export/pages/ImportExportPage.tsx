@@ -8,7 +8,9 @@ export default function ImportExportPage() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Typography.Title level={3}>{t('importExport.title')}</Typography.Title>
+      <Typography.Title level={2} style={{ fontWeight: 600, letterSpacing: '-0.5px' }}>
+        {t('importExport.title')}
+      </Typography.Title>
       <Row gutter={24}>
         <Col xs={24} md={12}>
           <ExportPanel />
