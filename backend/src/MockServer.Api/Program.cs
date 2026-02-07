@@ -37,12 +37,10 @@ builder.Services.AddSingleton<WireMockServerManager>(sp =>
     var config = sp.GetRequiredService<IConfiguration>();
     var port = config.GetValue<int>("WireMock:Port", 5001);
 
-    var scope = sp.CreateScope();
-    var endpointRepo = scope.ServiceProvider.GetRequiredService<IEndpointRepository>();
-    var ruleRepo = scope.ServiceProvider.GetRequiredService<IRuleRepository>();
+    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
     var factory = sp.GetRequiredService<ProtocolHandlerFactory>();
 
-    return new WireMockServerManager(endpointRepo, ruleRepo, factory, port);
+    return new WireMockServerManager(scopeFactory, factory, port);
 });
 
 // CORS

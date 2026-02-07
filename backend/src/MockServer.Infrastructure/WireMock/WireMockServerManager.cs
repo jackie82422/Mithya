@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using MockServer.Core.Interfaces;
 using MockServer.Infrastructure.ProtocolHandlers;
@@ -12,20 +13,17 @@ namespace MockServer.Infrastructure.WireMock;
 
 public class WireMockServerManager : IDisposable
 {
-    private readonly IEndpointRepository _endpointRepo;
-    private readonly IRuleRepository _ruleRepo;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ProtocolHandlerFactory _factory;
     private WireMockServer? _server;
     private readonly int _port;
 
     public WireMockServerManager(
-        IEndpointRepository endpointRepo,
-        IRuleRepository ruleRepo,
+        IServiceScopeFactory scopeFactory,
         ProtocolHandlerFactory factory,
         int port = 5001)
     {
-        _endpointRepo = endpointRepo;
-        _ruleRepo = ruleRepo;
+        _scopeFactory = scopeFactory;
         _factory = factory;
         _port = port;
     }
@@ -71,11 +69,16 @@ public class WireMockServerManager : IDisposable
         // Reset all existing mappings
         _server.Reset();
 
-        var endpoints = await _endpointRepo.GetAllActiveAsync();
+        // Create new scope to get fresh repositories (avoid Scoped lifetime issues in Singleton)
+        using var scope = _scopeFactory.CreateScope();
+        var endpointRepo = scope.ServiceProvider.GetRequiredService<IEndpointRepository>();
+        var ruleRepo = scope.ServiceProvider.GetRequiredService<IRuleRepository>();
+
+        var endpoints = await endpointRepo.GetAllActiveAsync();
 
         foreach (var endpoint in endpoints)
         {
-            var rules = await _ruleRepo.GetByEndpointIdAsync(endpoint.Id);
+            var rules = await ruleRepo.GetByEndpointIdAsync(endpoint.Id);
 
             // Add rules by priority (lower number = higher priority)
             foreach (var rule in rules.Where(r => r.IsActive).OrderBy(r => r.Priority))
