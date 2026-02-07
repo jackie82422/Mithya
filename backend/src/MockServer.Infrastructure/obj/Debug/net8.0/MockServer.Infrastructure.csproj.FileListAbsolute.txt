@@ -1,0 +1,15 @@
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/bin/Debug/net8.0/MockServer.Infrastructure.deps.json
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/bin/Debug/net8.0/MockServer.Infrastructure.dll
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/bin/Debug/net8.0/MockServer.Infrastructure.pdb
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/bin/Debug/net8.0/MockServer.Core.dll
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/bin/Debug/net8.0/MockServer.Core.pdb
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServer.Infrastructure.csproj.AssemblyReference.cache
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServer.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServer.Infrastructure.AssemblyInfoInputs.cache
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServer.Infrastructure.AssemblyInfo.cs
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServer.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServ.7A6C87E8.Up2Date
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServer.Infrastructure.dll
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/refint/MockServer.Infrastructure.dll
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/MockServer.Infrastructure.pdb
+/Users/chachalin/repository/mServer/backend/src/MockServer.Infrastructure/obj/Debug/net8.0/ref/MockServer.Infrastructure.dll
