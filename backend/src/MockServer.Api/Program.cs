@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using MockServer.Core.Interfaces;
 using MockServer.Infrastructure.Data;
@@ -12,6 +13,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure JSON serialization to handle circular references
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
+
 // Database
 builder.Services.AddDbContext<MockServerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
@@ -24,15 +31,17 @@ builder.Services.AddScoped<IRequestLogRepository, RequestLogRepository>();
 // Protocol Handler Factory
 builder.Services.AddSingleton<ProtocolHandlerFactory>();
 
-// WireMock Server Manager (Singleton)
+// WireMock Server Manager (Singleton) - won't start if port is 0 (test environment)
 builder.Services.AddSingleton<WireMockServerManager>(sp =>
 {
+    var config = sp.GetRequiredService<IConfiguration>();
+    var port = config.GetValue<int>("WireMock:Port", 5001);
+
     var scope = sp.CreateScope();
     var endpointRepo = scope.ServiceProvider.GetRequiredService<IEndpointRepository>();
     var ruleRepo = scope.ServiceProvider.GetRequiredService<IRuleRepository>();
     var factory = sp.GetRequiredService<ProtocolHandlerFactory>();
 
-    var port = builder.Configuration.GetValue<int>("WireMock:Port", 5001);
     return new WireMockServerManager(endpointRepo, ruleRepo, factory, port);
 });
 
@@ -64,22 +73,28 @@ app.MapEndpointManagementApis();
 app.MapRuleManagementApis();
 app.MapLogApis();
 
-// Initialize WireMock server
-var wireMockManager = app.Services.GetRequiredService<WireMockServerManager>();
-wireMockManager.Start();
-
-// Sync rules from database
-using (var scope = app.Services.CreateScope())
+// Initialize WireMock server only if it's registered (skip in test environment)
+var wireMockManager = app.Services.GetService<WireMockServerManager>();
+if (wireMockManager is not null)
 {
-    try
+    wireMockManager.Start();
+
+    // Sync rules from database
+    using (var scope = app.Services.CreateScope())
     {
-        await wireMockManager.SyncAllRulesAsync();
-        Console.WriteLine("Initial rule synchronization completed");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error during initial sync: {ex.Message}");
+        try
+        {
+            await wireMockManager.SyncAllRulesAsync();
+            Console.WriteLine("Initial rule synchronization completed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during initial sync: {ex.Message}");
+        }
     }
 }
 
 app.Run();
+
+// Make Program class accessible to integration tests
+public partial class Program { }

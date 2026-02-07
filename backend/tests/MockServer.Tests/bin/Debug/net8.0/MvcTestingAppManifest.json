@@ -1,0 +1,5 @@
+{
+  "MockServer.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/chachalin\/repository\/mServer\/backend\/src\/MockServer.Api",
+  "MockServer.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/chachalin\/repository\/mServer\/backend\/src\/MockServer.Core",
+  "MockServer.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/chachalin\/repository\/mServer\/backend\/src\/MockServer.Infrastructure"
+}
