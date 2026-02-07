@@ -26,7 +26,7 @@ services:
       dockerfile: src/MockServer.Api/Dockerfile
     container_name: mockserver-backend
     ports:
-      - "5000:8080"    # Admin API
+      - "5050:8080"    # Admin API
       - "5001:5001"    # Mock API (WireMock)
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
