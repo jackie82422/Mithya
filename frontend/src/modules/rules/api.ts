@@ -8,6 +8,9 @@ export const rulesApi = {
   create: (endpointId: string, data: CreateRuleRequest) =>
     apiClient.post<MockRule>(`/endpoints/${endpointId}/rules`, data).then((r) => r.data),
 
+  update: (endpointId: string, ruleId: string, data: CreateRuleRequest) =>
+    apiClient.put<MockRule>(`/endpoints/${endpointId}/rules/${ruleId}`, data).then((r) => r.data),
+
   delete: (endpointId: string, ruleId: string) =>
     apiClient.delete(`/endpoints/${endpointId}/rules/${ruleId}`),
 };

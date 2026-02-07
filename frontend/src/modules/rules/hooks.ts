@@ -27,6 +27,22 @@ export function useCreateRule(endpointId: string) {
   });
 }
 
+export function useUpdateRule(endpointId: string) {
+  const qc = useQueryClient();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: ({ ruleId, data }: { ruleId: string; data: CreateRuleRequest }) =>
+      rulesApi.update(endpointId, ruleId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['rules', endpointId] });
+      qc.invalidateQueries({ queryKey: ['endpoints', endpointId] });
+      qc.invalidateQueries({ queryKey: ['endpoints'] });
+      message.success(t('common.success'));
+    },
+    onError: () => message.error(t('common.error')),
+  });
+}
+
 export function useDeleteRule(endpointId: string) {
   const qc = useQueryClient();
   const { t } = useTranslation();

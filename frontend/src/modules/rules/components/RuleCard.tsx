@@ -1,5 +1,5 @@
 import { Card, Typography, Tag, Button, Popconfirm, Flex, Space } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { MockRule, MatchCondition } from '@/shared/types';
 import { FieldSourceTypeLabel, MatchOperatorLabel } from '@/shared/types';
@@ -7,6 +7,7 @@ import StatusBadge from '@/shared/components/StatusBadge';
 
 interface RuleCardProps {
   rule: MockRule;
+  onEdit: (rule: MockRule) => void;
   onDelete: (ruleId: string) => void;
 }
 
@@ -18,7 +19,7 @@ function parseConditions(raw: string): MatchCondition[] {
   }
 }
 
-export default function RuleCard({ rule, onDelete }: RuleCardProps) {
+export default function RuleCard({ rule, onEdit, onDelete }: RuleCardProps) {
   const { t } = useTranslation();
   const conditions = parseConditions(rule.matchConditions);
 
@@ -49,14 +50,17 @@ export default function RuleCard({ rule, onDelete }: RuleCardProps) {
             </Typography.Text>
           </div>
         </div>
-        <Popconfirm
-          title={t('rules.deleteConfirm', { name: rule.ruleName })}
-          onConfirm={() => onDelete(rule.id)}
-          okText={t('common.yes')}
-          cancelText={t('common.no')}
-        >
-          <Button size="small" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
+        <Space>
+          <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(rule)} />
+          <Popconfirm
+            title={t('rules.deleteConfirm', { name: rule.ruleName })}
+            onConfirm={() => onDelete(rule.id)}
+            okText={t('common.yes')}
+            cancelText={t('common.no')}
+          >
+            <Button size="small" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       </Flex>
     </Card>
   );

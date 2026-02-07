@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, Divider, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { CreateRuleRequest, MatchCondition } from '@/shared/types';
+import type { CreateRuleRequest, MatchCondition, MockRule } from '@/shared/types';
 import { FieldSourceType } from '@/shared/types';
 import ConditionBuilder from './ConditionBuilder';
 import ResponseEditor from './ResponseEditor';
@@ -10,6 +11,7 @@ interface RuleFormProps {
   onCancel: () => void;
   onSubmit: (values: CreateRuleRequest) => void;
   loading?: boolean;
+  editingRule?: MockRule | null;
 }
 
 interface FormValues {
@@ -22,9 +24,35 @@ interface FormValues {
   delayMs: number;
 }
 
-export default function RuleForm({ open, onCancel, onSubmit, loading }: RuleFormProps) {
+function parseJson<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule }: RuleFormProps) {
   const { t } = useTranslation();
   const [form] = Form.useForm<FormValues>();
+  const isEdit = !!editingRule;
+
+  useEffect(() => {
+    if (open && editingRule) {
+      form.setFieldsValue({
+        ruleName: editingRule.ruleName,
+        priority: editingRule.priority,
+        conditions: parseJson<MatchCondition[]>(editingRule.matchConditions, []),
+        statusCode: editingRule.responseStatusCode,
+        responseBody: editingRule.responseBody,
+        responseHeadersStr: editingRule.responseHeaders
+          ? JSON.stringify(parseJson(editingRule.responseHeaders, {}), null, 2)
+          : '{\n  "Content-Type": "application/json"\n}',
+        delayMs: editingRule.delayMs,
+      });
+    }
+  }, [open, editingRule, form]);
 
   const handleOk = async () => {
     const values = await form.validateFields();
@@ -56,12 +84,11 @@ export default function RuleForm({ open, onCancel, onSubmit, loading }: RuleForm
       responseHeaders,
       delayMs: values.delayMs,
     });
-    form.resetFields();
   };
 
   return (
     <Modal
-      title={t('rules.form.title')}
+      title={isEdit ? t('rules.form.editTitle') : t('rules.form.title')}
       open={open}
       onCancel={() => {
         form.resetFields();

@@ -14,13 +14,13 @@ import {
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoint } from '../hooks';
-import { useRules, useCreateRule, useDeleteRule } from '@/modules/rules/hooks';
+import { useRules, useCreateRule, useUpdateRule, useDeleteRule } from '@/modules/rules/hooks';
 import ProtocolTag from '@/shared/components/ProtocolTag';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
 import StatusBadge from '@/shared/components/StatusBadge';
 import RuleCard from '@/modules/rules/components/RuleCard';
 import RuleForm from '@/modules/rules/components/RuleForm';
-import type { CreateRuleRequest } from '@/shared/types';
+import type { CreateRuleRequest, MockRule } from '@/shared/types';
 
 export default function EndpointDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,8 +29,10 @@ export default function EndpointDetailPage() {
   const { data: endpoint, isLoading } = useEndpoint(id!);
   const { data: rules } = useRules(id!);
   const createRule = useCreateRule(id!);
+  const updateRule = useUpdateRule(id!);
   const deleteRule = useDeleteRule(id!);
   const [ruleFormOpen, setRuleFormOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<MockRule | null>(null);
 
   if (isLoading) {
     return (
@@ -46,8 +48,34 @@ export default function EndpointDetailPage() {
 
   const sortedRules = [...(rules ?? [])].sort((a, b) => a.priority - b.priority);
 
-  const handleCreateRule = (values: CreateRuleRequest) => {
-    createRule.mutate(values, { onSuccess: () => setRuleFormOpen(false) });
+  const handleSubmitRule = (values: CreateRuleRequest) => {
+    if (editingRule) {
+      updateRule.mutate(
+        { ruleId: editingRule.id, data: values },
+        {
+          onSuccess: () => {
+            setRuleFormOpen(false);
+            setEditingRule(null);
+          },
+        },
+      );
+    } else {
+      createRule.mutate(values, {
+        onSuccess: () => {
+          setRuleFormOpen(false);
+        },
+      });
+    }
+  };
+
+  const handleEdit = (rule: MockRule) => {
+    setEditingRule(rule);
+    setRuleFormOpen(true);
+  };
+
+  const handleCancel = () => {
+    setRuleFormOpen(false);
+    setEditingRule(null);
   };
 
   return (
@@ -101,7 +129,14 @@ export default function EndpointDetailPage() {
         <Typography.Title level={4} style={{ margin: 0 }}>
           {t('rules.title')} ({sortedRules.length})
         </Typography.Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setRuleFormOpen(true)}>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => {
+            setEditingRule(null);
+            setRuleFormOpen(true);
+          }}
+        >
           {t('rules.create')}
         </Button>
       </Flex>
@@ -119,6 +154,7 @@ export default function EndpointDetailPage() {
               <RuleCard
                 key={rule.id}
                 rule={rule}
+                onEdit={handleEdit}
                 onDelete={(ruleId) => deleteRule.mutate(ruleId)}
               />
             ),
@@ -128,9 +164,10 @@ export default function EndpointDetailPage() {
 
       <RuleForm
         open={ruleFormOpen}
-        onCancel={() => setRuleFormOpen(false)}
-        onSubmit={handleCreateRule}
-        loading={createRule.isPending}
+        onCancel={handleCancel}
+        onSubmit={handleSubmitRule}
+        loading={editingRule ? updateRule.isPending : createRule.isPending}
+        editingRule={editingRule}
       />
     </div>
   );
