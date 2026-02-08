@@ -12,6 +12,8 @@ interface RuleFormProps {
   onSubmit: (values: CreateRuleRequest) => void;
   loading?: boolean;
   editingRule?: MockRule | null;
+  endpointPath?: string;
+  endpointMethod?: string;
 }
 
 interface FormValues {
@@ -22,6 +24,7 @@ interface FormValues {
   responseBody: string;
   responseHeadersStr: string;
   delayMs: number;
+  isTemplate: boolean;
 }
 
 function parseJson<T>(raw: string | null, fallback: T): T {
@@ -33,7 +36,7 @@ function parseJson<T>(raw: string | null, fallback: T): T {
   }
 }
 
-export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule }: RuleFormProps) {
+export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule, endpointPath, endpointMethod }: RuleFormProps) {
   const { t } = useTranslation();
   const [form] = Form.useForm<FormValues>();
   const isEdit = !!editingRule;
@@ -50,6 +53,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
           ? JSON.stringify(parseJson(editingRule.responseHeaders, {}), null, 2)
           : '{\n  "Content-Type": "application/json"\n}',
         delayMs: editingRule.delayMs,
+        isTemplate: editingRule.isTemplate ?? false,
       });
     }
   }, [open, editingRule, form]);
@@ -83,6 +87,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
       responseBody: values.responseBody,
       responseHeaders,
       delayMs: values.delayMs,
+      isTemplate: values.isTemplate ?? false,
     });
   };
 
@@ -112,6 +117,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
           conditions: [],
           responseBody: '{\n  \n}',
           responseHeadersStr: '{\n  "Content-Type": "application/json"\n}',
+          isTemplate: false,
         }}
       >
         <Form.Item
@@ -135,7 +141,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         </Form.Item>
 
         <Divider>{t('rules.response')}</Divider>
-        <ResponseEditor />
+        <ResponseEditor endpointPath={endpointPath} endpointMethod={endpointMethod} />
       </Form>
     </Modal>
   );

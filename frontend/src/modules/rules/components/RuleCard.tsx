@@ -139,6 +139,21 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
               </span>
               <Typography.Text strong>{rule.ruleName}</Typography.Text>
               <StatusBadge active={rule.isActive} />
+              {rule.isTemplate && (
+                <span
+                  className="pill-tag"
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: 100,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    background: 'var(--rest-bg, var(--get-bg))',
+                    color: 'var(--rest-color, var(--get-color))',
+                  }}
+                >
+                  {t('rules.template')}
+                </span>
+              )}
             </Flex>
             <Space size={[4, 4]} wrap style={{ marginBottom: 4 }}>
               {conditions.map((c, i) => (

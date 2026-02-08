@@ -6,7 +6,7 @@ import { useTheme } from '@/shared/contexts/ThemeContext';
 interface CodeEditorProps {
   value: string;
   onChange?: (value: string) => void;
-  language?: string;
+  language?: 'json' | 'handlebars';
   height?: string | number;
   readOnly?: boolean;
 }
@@ -14,11 +14,15 @@ interface CodeEditorProps {
 export default function CodeEditor({
   value,
   onChange,
+  language = 'json',
   height = 300,
   readOnly = false,
 }: CodeEditorProps) {
   const { mode } = useTheme();
-  const extensions = useMemo(() => [json()], []);
+  const extensions = useMemo(() => {
+    if (language === 'handlebars') return [];
+    return [json()];
+  }, [language]);
   const h = typeof height === 'number' ? `${height}px` : height;
 
   return (

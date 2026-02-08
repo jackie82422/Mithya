@@ -225,6 +225,8 @@ export default function EndpointDetailPage() {
         onSubmit={handleSubmitRule}
         loading={editingRule ? updateRule.isPending : createRule.isPending}
         editingRule={editingRule}
+        endpointPath={endpoint.path}
+        endpointMethod={endpoint.httpMethod}
       />
     </div>
   );
