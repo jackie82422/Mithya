@@ -46,7 +46,8 @@
     "recentLogs": "Recent Requests",
     "endpointOverview": "Endpoint Overview",
     "noLogs": "No request logs yet",
-    "matchedRate": "Match Rate"
+    "matchedRate": "Match Rate",
+    "emptyDesc": "No endpoints yet. Create your first mock endpoint to get started."
   },
   "endpoints": {
     "title": "Endpoints",

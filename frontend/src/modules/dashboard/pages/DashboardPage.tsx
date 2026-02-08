@@ -1,4 +1,6 @@
-import { Typography, Spin, Flex, Space } from 'antd';
+import { Typography, Spin, Flex, Space, Card, Button, Empty } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useEndpoints } from '@/modules/endpoints/hooks';
 import { useLogs } from '@/modules/logs/hooks';
@@ -8,6 +10,7 @@ import RecentLogs from '../components/RecentLogs';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: endpoints, isLoading: epLoading } = useEndpoints();
   const { data: logs, isLoading: logLoading } = useLogs(100);
 
@@ -21,6 +24,8 @@ export default function DashboardPage() {
     );
   }
 
+  const hasEndpoints = (endpoints?.length ?? 0) > 0;
+
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <div>
@@ -32,8 +37,24 @@ export default function DashboardPage() {
         </Typography.Text>
       </div>
       <StatsCards endpoints={endpoints ?? []} logs={logs ?? []} />
-      <EndpointOverview endpoints={endpoints ?? []} />
-      <RecentLogs logs={logs ?? []} />
+      {hasEndpoints ? (
+        <>
+          <EndpointOverview endpoints={endpoints ?? []} />
+          <RecentLogs logs={logs ?? []} />
+        </>
+      ) : (
+        <Card>
+          <Empty description={t('dashboard.emptyDesc')}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => navigate('/endpoints')}
+            >
+              {t('endpoints.create')}
+            </Button>
+          </Empty>
+        </Card>
+      )}
     </Space>
   );
 }
