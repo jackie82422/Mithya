@@ -58,7 +58,7 @@ function StatCard({
           </div>
           <div
             style={{
-              fontSize: 32,
+              fontSize: 'clamp(22px, 4vw, 32px)',
               fontWeight: 700,
               lineHeight: 1.1,
               color: 'var(--color-text)',

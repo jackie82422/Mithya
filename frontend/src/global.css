@@ -366,3 +366,14 @@ body {
 [data-theme='dark'] ::selection {
   background: rgba(10, 132, 255, 0.3);
 }
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .ant-table {
+    min-width: 600px;
+  }
+}
