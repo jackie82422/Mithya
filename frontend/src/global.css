@@ -26,6 +26,10 @@
   --card-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05);
 
   --code-bg: #F9F9F9;
+  --code-key: #9B2393;
+  --code-string: #0B6E33;
+  --code-number: #1C00CF;
+  --code-bool: #007AFF;
   --condition-bg: #F9F9FB;
   --table-row-hover: rgba(0, 122, 255, 0.06);
 
@@ -91,6 +95,10 @@
   --card-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
 
   --code-bg: #2C2C2E;
+  --code-key: #FC5FA3;
+  --code-string: #67B7A4;
+  --code-number: #D0BF69;
+  --code-bool: #0A84FF;
   --condition-bg: #2C2C2E;
   --table-row-hover: rgba(10, 132, 255, 0.1);
 
