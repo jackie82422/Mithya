@@ -29,6 +29,8 @@ builder.Services.AddScoped<IEndpointRepository, EndpointRepository>();
 builder.Services.AddScoped<IRuleRepository, RuleRepository>();
 builder.Services.AddScoped<IRequestLogRepository, RequestLogRepository>();
 builder.Services.AddScoped<IProxyConfigRepository, ProxyConfigRepository>();
+builder.Services.AddScoped<IScenarioRepository, ScenarioRepository>();
+builder.Services.AddScoped<IScenarioStepRepository, ScenarioStepRepository>();
 
 // Protocol Handler Factory
 builder.Services.AddSingleton<ProtocolHandlerFactory>();
@@ -49,6 +51,9 @@ builder.Services.AddHttpClient("ProxyClient")
 builder.Services.AddSingleton<IProxyEngine, ProxyEngine>();
 builder.Services.AddSingleton<IRecordingService, RecordingService>();
 builder.Services.AddSingleton<IProxyConfigCache, ProxyConfigCache>();
+
+// Scenario Engine
+builder.Services.AddSingleton<IScenarioEngine, ScenarioEngine>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -96,6 +101,7 @@ app.MapRuleManagementApis();
 app.MapLogApis();
 app.MapTemplateApis();
 app.MapProxyConfigApis();
+app.MapScenarioApis();
 app.MapConfigEndpoints();
 
 // Load all cached rules on startup
@@ -120,6 +126,18 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"Error loading proxy config cache: {ex.Message}");
+}
+
+// Load scenario engine on startup
+var scenarioEngine = app.Services.GetRequiredService<IScenarioEngine>();
+try
+{
+    await scenarioEngine.LoadAllAsync();
+    Console.WriteLine("Scenario engine loaded successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error loading scenario engine: {ex.Message}");
 }
 
 app.Run();

@@ -17,6 +17,7 @@ public class DynamicMockMiddleware
     private readonly IProxyEngine _proxyEngine;
     private readonly IRecordingService _recordingService;
     private readonly IProxyConfigCache _proxyConfigCache;
+    private readonly IScenarioEngine _scenarioEngine;
 
     public DynamicMockMiddleware(
         RequestDelegate next,
@@ -25,7 +26,8 @@ public class DynamicMockMiddleware
         IServiceScopeFactory scopeFactory,
         IProxyEngine proxyEngine,
         IRecordingService recordingService,
-        IProxyConfigCache proxyConfigCache)
+        IProxyConfigCache proxyConfigCache,
+        IScenarioEngine scenarioEngine)
     {
         _next = next;
         _matchEngine = matchEngine;
@@ -34,6 +36,7 @@ public class DynamicMockMiddleware
         _proxyEngine = proxyEngine;
         _recordingService = recordingService;
         _proxyConfigCache = proxyConfigCache;
+        _scenarioEngine = scenarioEngine;
     }
 
     public async Task InvokeAsync(HttpContext httpContext)
@@ -84,6 +87,27 @@ public class DynamicMockMiddleware
         int? faultTypeApplied = null;
         bool isProxied = false;
         string? proxyTargetUrl = null;
+
+        // Try scenario match first (if an endpoint was matched)
+        if (matchResult != null)
+        {
+            var scenarioResult = await _scenarioEngine.TryMatchAsync(context, matchResult.Endpoint.Id);
+            if (scenarioResult != null)
+            {
+                endpointId = matchResult.Endpoint.Id;
+                isMatched = true;
+
+                await _responseRenderer.RenderScenarioAsync(httpContext, scenarioResult, context);
+
+                responseStatusCode = httpContext.Response.StatusCode;
+                responseBody = scenarioResult.Step.ResponseBody;
+
+                stopwatch.Stop();
+                await WriteLog(context, requestBody, responseStatusCode, responseBody, (int)stopwatch.ElapsedMilliseconds,
+                    isMatched, endpointId, null, null, false, null);
+                return;
+            }
+        }
 
         if (matchResult != null)
         {
@@ -153,7 +177,14 @@ public class DynamicMockMiddleware
 
         stopwatch.Stop();
 
-        // Write log entry directly to DB
+        await WriteLog(context, requestBody, responseStatusCode, responseBody, (int)stopwatch.ElapsedMilliseconds,
+            isMatched, endpointId, ruleId, faultTypeApplied, isProxied, proxyTargetUrl);
+    }
+
+    private async Task WriteLog(MockRequestContext context, string? requestBody, int responseStatusCode,
+        string? responseBody, int responseTimeMs, bool isMatched, Guid? endpointId, Guid? ruleId,
+        int? faultTypeApplied, bool isProxied, string? proxyTargetUrl)
+    {
         try
         {
             using var scope = _scopeFactory.CreateScope();
@@ -170,7 +201,7 @@ public class DynamicMockMiddleware
                 Body = requestBody,
                 ResponseStatusCode = responseStatusCode,
                 ResponseBody = responseBody,
-                ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds,
+                ResponseTimeMs = responseTimeMs,
                 IsMatched = isMatched,
                 FaultTypeApplied = faultTypeApplied,
                 IsProxied = isProxied,

@@ -97,6 +97,55 @@ public class ResponseRenderer
         await response.WriteAsync(body);
     }
 
+    public async Task RenderScenarioAsync(HttpContext httpContext, ScenarioMatchResult scenarioResult, MockRequestContext requestContext)
+    {
+        var step = scenarioResult.Step;
+        var response = httpContext.Response;
+
+        if (step.DelayMs > 0)
+            await Task.Delay(step.DelayMs);
+
+        response.StatusCode = step.ResponseStatusCode;
+
+        TemplateContext? templateContext = null;
+        if (step.IsTemplate)
+        {
+            templateContext = BuildTemplateContext(requestContext, null);
+        }
+
+        if (!string.IsNullOrEmpty(step.ResponseHeaders))
+        {
+            try
+            {
+                var headers = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(step.ResponseHeaders);
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                        response.Headers[header.Key] = header.Value;
+                }
+            }
+            catch { }
+        }
+
+        if (!response.Headers.ContainsKey("Content-Type"))
+            response.ContentType = "application/json";
+
+        var body = step.ResponseBody ?? string.Empty;
+        if (step.IsTemplate && templateContext != null && !string.IsNullOrEmpty(body))
+        {
+            try
+            {
+                body = _templateEngine.Render(body, templateContext);
+            }
+            catch
+            {
+                response.Headers["X-Template-Error"] = "true";
+            }
+        }
+
+        await response.WriteAsync(body);
+    }
+
     private static TemplateContext BuildTemplateContext(MockRequestContext requestContext, Dictionary<string, string>? pathParams)
     {
         return new TemplateContext
