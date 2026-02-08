@@ -33,7 +33,7 @@
   --code-number: #1C00CF;
   --code-bool: #007AFF;
   --condition-bg: #F9F9FB;
-  --table-row-hover: rgba(0, 122, 255, 0.06);
+  --table-row-hover: rgba(0, 122, 255, 0.09);
 
   /* HTTP method soft backgrounds */
   --get-bg: #F0FFF4;
