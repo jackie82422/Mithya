@@ -20,12 +20,14 @@ function StatCard({
   iconColor,
   title,
   value,
+  subtitle,
 }: {
   icon: ReactNode;
   iconBg: string;
   iconColor: string;
   title: string;
-  value: number;
+  value: number | string;
+  subtitle?: string;
 }) {
   return (
     <Card style={{ padding: 4 }}>
@@ -46,7 +48,7 @@ function StatCard({
         >
           {icon}
         </div>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div
             style={{
               fontSize: 13,
@@ -67,6 +69,17 @@ function StatCard({
           >
             {value}
           </div>
+          {subtitle && (
+            <div
+              style={{
+                fontSize: 12,
+                color: 'var(--color-text-secondary)',
+                marginTop: 4,
+              }}
+            >
+              {subtitle}
+            </div>
+          )}
         </div>
       </div>
     </Card>
@@ -79,7 +92,14 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
   const totalEndpoints = endpoints.length;
   const activeEndpoints = endpoints.filter((e) => e.isActive).length;
   const totalRules = endpoints.reduce((sum, e) => sum + (e.rules?.length ?? 0), 0);
+  const activeRules = endpoints.reduce(
+    (sum, e) => sum + (e.rules?.filter((r) => r.isActive).length ?? 0),
+    0,
+  );
   const totalRequests = logs.length;
+  const matchedRequests = logs.filter((l) => l.isMatched).length;
+  const matchRate =
+    totalRequests > 0 ? Math.round((matchedRequests / totalRequests) * 100) : 0;
 
   return (
     <Row gutter={[16, 16]}>
@@ -90,6 +110,7 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
           iconColor="var(--stats-blue-icon)"
           title={t('dashboard.totalEndpoints')}
           value={totalEndpoints}
+          subtitle={`${activeEndpoints} ${t('common.active').toLowerCase()}`}
         />
       </Col>
       <Col xs={12} lg={6}>
@@ -99,6 +120,11 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
           iconColor="var(--stats-green-icon)"
           title={t('dashboard.activeEndpoints')}
           value={activeEndpoints}
+          subtitle={
+            totalEndpoints > 0
+              ? `${Math.round((activeEndpoints / totalEndpoints) * 100)}%`
+              : undefined
+          }
         />
       </Col>
       <Col xs={12} lg={6}>
@@ -108,6 +134,7 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
           iconColor="var(--stats-purple-icon)"
           title={t('dashboard.totalRules')}
           value={totalRules}
+          subtitle={`${activeRules} ${t('common.active').toLowerCase()}`}
         />
       </Col>
       <Col xs={12} lg={6}>
@@ -117,6 +144,11 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
           iconColor="var(--stats-orange-icon)"
           title={t('dashboard.totalRequests')}
           value={totalRequests}
+          subtitle={
+            totalRequests > 0
+              ? `${t('dashboard.matchedRate')} ${matchRate}%`
+              : undefined
+          }
         />
       </Col>
     </Row>
