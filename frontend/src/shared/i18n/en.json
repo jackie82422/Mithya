@@ -68,6 +68,16 @@
     "noEndpoints": "No endpoints created yet",
     "createFirst": "Click the button above to create your first endpoint",
     "deleteConfirm": "Are you sure you want to delete endpoint \"{{name}}\"? Related rules will also be deleted.",
+    "batch": {
+      "toggle": "Batch",
+      "selected": "{{count}} selected",
+      "enable": "Enable",
+      "disable": "Disable",
+      "deleteConfirm": "Are you sure you want to delete {{count}} endpoint(s)? This action cannot be undone.",
+      "done": "{{count}} endpoint(s) processed successfully",
+      "noneToEnable": "All selected endpoints are already active",
+      "noneToDisable": "All selected endpoints are already inactive"
+    },
     "notFound": "Endpoint Not Found",
     "notFoundDesc": "This endpoint may have been deleted or the ID is incorrect.",
     "backToList": "Back to Endpoints",
