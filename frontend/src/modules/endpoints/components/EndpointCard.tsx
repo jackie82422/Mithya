@@ -53,7 +53,16 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggl
             </Typography.Text>
           </Flex>
         </div>
-        <Space onClick={(e) => e.stopPropagation()}>
+        <Flex
+          align="center"
+          gap={8}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            paddingLeft: 16,
+            borderLeft: '1px solid var(--color-border)',
+            marginLeft: 16,
+          }}
+        >
           <Tooltip title={endpoint.isActive ? t('common.toggleDisable') : t('common.toggleEnable')}>
             <Switch
               size="small"
@@ -90,8 +99,8 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggl
               <Button size="small" type="text" danger icon={<DeleteOutlined />} />
             </Tooltip>
           </Popconfirm>
-          <RightOutlined style={{ color: 'var(--color-text-secondary)', fontSize: 12 }} />
-        </Space>
+          <RightOutlined style={{ color: 'var(--color-primary)', fontSize: 14, marginLeft: 4 }} />
+        </Flex>
       </Flex>
     </Card>
   );
