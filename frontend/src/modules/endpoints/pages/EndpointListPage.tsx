@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { Typography, Button, Spin, Empty, Input, Flex } from 'antd';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Typography, Button, Spin, Empty, Input, Flex, Space, Popconfirm, message } from 'antd';
 import type { InputRef } from 'antd';
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, CheckSquareOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoints, useCreateEndpoint, useUpdateEndpoint, useDeleteEndpoint, useSetDefaultResponse, useToggleEndpoint } from '../hooks';
 import EndpointCard from '../components/EndpointCard';
@@ -24,6 +24,10 @@ export default function EndpointListPage() {
   const [selectedEndpoint, setSelectedEndpoint] = useState<MockEndpoint | null>(null);
   const [search, setSearch] = useState('');
   const searchRef = useRef<InputRef>(null);
+
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchLoading, setBatchLoading] = useState(false);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -65,6 +69,71 @@ export default function EndpointListPage() {
     setDefault.mutate({ id, data }, { onSuccess: () => setDefaultFormOpen(false) });
   };
 
+  const handleSelectToggle = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const exitBatchMode = () => {
+    setBatchMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const runBatch = async (action: (id: string) => Promise<unknown>) => {
+    setBatchLoading(true);
+    const ids = Array.from(selectedIds);
+    let successCount = 0;
+    for (const id of ids) {
+      try {
+        await action(id);
+        successCount++;
+      } catch {
+        // individual errors handled by mutation
+      }
+    }
+    setBatchLoading(false);
+    if (successCount > 0) {
+      message.success(t('endpoints.batch.done', { count: successCount }));
+    }
+    exitBatchMode();
+  };
+
+  const handleBatchEnable = () => {
+    const toEnable = Array.from(selectedIds).filter((id) => {
+      const ep = endpoints?.find((e) => e.id === id);
+      return ep && !ep.isActive;
+    });
+    if (toEnable.length === 0) {
+      message.info(t('endpoints.batch.noneToEnable'));
+      return;
+    }
+    setSelectedIds(new Set(toEnable));
+    runBatch((id) => toggleEndpoint.mutateAsync(id));
+  };
+
+  const handleBatchDisable = () => {
+    const toDisable = Array.from(selectedIds).filter((id) => {
+      const ep = endpoints?.find((e) => e.id === id);
+      return ep && ep.isActive;
+    });
+    if (toDisable.length === 0) {
+      message.info(t('endpoints.batch.noneToDisable'));
+      return;
+    }
+    setSelectedIds(new Set(toDisable));
+    runBatch((id) => toggleEndpoint.mutateAsync(id));
+  };
+
+  const handleBatchDelete = () => {
+    runBatch((id) => deleteEndpoint.mutateAsync(id));
+  };
+
+  const selectedCount = selectedIds.size;
+
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
@@ -76,9 +145,24 @@ export default function EndpointListPage() {
             {t('endpoints.subtitle')}
           </Typography.Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingEndpoint(null); setFormOpen(true); }}>
-          {t('endpoints.create')}
-        </Button>
+        <Space>
+          {!batchMode && filtered && filtered.length > 0 && (
+            <Button
+              icon={<CheckSquareOutlined />}
+              onClick={() => setBatchMode(true)}
+            >
+              {t('endpoints.batch.toggle')}
+            </Button>
+          )}
+          {batchMode && (
+            <Button icon={<CloseOutlined />} onClick={exitBatchMode}>
+              {t('common.cancel')}
+            </Button>
+          )}
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingEndpoint(null); setFormOpen(true); }}>
+            {t('endpoints.create')}
+          </Button>
+        </Space>
       </Flex>
 
       <Input
@@ -119,8 +203,51 @@ export default function EndpointListPage() {
               setFormOpen(true);
             }}
             toggleLoading={toggleEndpoint.isPending}
+            selectable={batchMode}
+            selected={selectedIds.has(ep.id)}
+            onSelect={handleSelectToggle}
           />
         ))
+      )}
+
+      {batchMode && selectedCount > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 16,
+            padding: '12px 24px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            zIndex: 100,
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <Flex align="center" gap={16}>
+            <Typography.Text strong>
+              {t('endpoints.batch.selected', { count: selectedCount })}
+            </Typography.Text>
+            <Button size="small" onClick={handleBatchEnable} loading={batchLoading}>
+              {t('endpoints.batch.enable')}
+            </Button>
+            <Button size="small" onClick={handleBatchDisable} loading={batchLoading}>
+              {t('endpoints.batch.disable')}
+            </Button>
+            <Popconfirm
+              title={t('endpoints.batch.deleteConfirm', { count: selectedCount })}
+              onConfirm={handleBatchDelete}
+              okText={t('common.yes')}
+              cancelText={t('common.no')}
+            >
+              <Button size="small" danger loading={batchLoading}>
+                {t('common.delete')}
+              </Button>
+            </Popconfirm>
+          </Flex>
+        </div>
       )}
 
       <EndpointForm
