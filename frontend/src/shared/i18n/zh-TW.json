@@ -156,6 +156,8 @@
     "exportSuccess": "匯出成功",
     "noDataToExport": "沒有可匯出的資料",
     "importing": "匯入中...",
+    "duplicateWarning": "以下 {{count}} 個端點已存在（路徑 + 方法重複），繼續匯入將建立重複項目：",
+    "duplicateConfirm": "確定繼續匯入？",
     "preview": "預覽",
     "openapi": {
       "tabTitle": "匯入 OpenAPI",

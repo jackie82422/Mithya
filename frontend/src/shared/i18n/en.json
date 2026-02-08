@@ -156,6 +156,8 @@
     "exportSuccess": "Export successful",
     "noDataToExport": "No data to export",
     "importing": "Importing...",
+    "duplicateWarning": "The following {{count}} endpoint(s) already exist (same path + method). Continuing will create duplicates:",
+    "duplicateConfirm": "Continue importing?",
     "preview": "Preview",
     "openapi": {
       "tabTitle": "Import OpenAPI",

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Upload, Button, Typography, message, Space } from 'antd';
+import { Card, Upload, Button, Typography, message, Space, Modal } from 'antd';
 import { UploadOutlined, ImportOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,11 +24,9 @@ export default function ImportPanel() {
     return false;
   };
 
-  const handleImport = async () => {
-    if (!preview) return;
+  const doImport = async (data: MockEndpoint[]) => {
+    setImporting(true);
     try {
-      setImporting(true);
-      const data: MockEndpoint[] = JSON.parse(preview);
       let count = 0;
       for (const ep of data) {
         const created = await endpointsApi.create({
@@ -83,6 +81,46 @@ export default function ImportPanel() {
       message.error(t('importExport.importError'));
     } finally {
       setImporting(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!preview) return;
+    try {
+      const data: MockEndpoint[] = JSON.parse(preview);
+      const existing = await endpointsApi.getAll();
+
+      const existingSet = new Set(
+        existing.map((ep) => `${ep.httpMethod.toUpperCase()}:${ep.path}`),
+      );
+      const duplicates = data.filter((ep) =>
+        existingSet.has(`${ep.httpMethod.toUpperCase()}:${ep.path}`),
+      );
+
+      if (duplicates.length > 0) {
+        Modal.confirm({
+          title: t('importExport.duplicateConfirm'),
+          content: (
+            <div>
+              <p>{t('importExport.duplicateWarning', { count: duplicates.length })}</p>
+              <ul style={{ maxHeight: 200, overflow: 'auto', paddingLeft: 20 }}>
+                {duplicates.map((ep, i) => (
+                  <li key={i}>
+                    <code>{ep.httpMethod.toUpperCase()} {ep.path}</code> — {ep.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ),
+          okText: t('common.confirm'),
+          cancelText: t('common.cancel'),
+          onOk: () => doImport(data),
+        });
+      } else {
+        await doImport(data);
+      }
+    } catch {
+      message.error(t('importExport.importError'));
     }
   };
 
