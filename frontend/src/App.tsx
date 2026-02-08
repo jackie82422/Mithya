@@ -12,6 +12,8 @@ import EndpointDetailPage from './modules/endpoints/pages/EndpointDetailPage';
 import LogListPage from './modules/logs/pages/LogListPage';
 import ImportExportPage from './modules/import-export/pages/ImportExportPage';
 import ProxyConfigPage from './modules/proxy/pages/ProxyConfigPage';
+import ScenarioListPage from './modules/scenarios/pages/ScenarioListPage';
+import ScenarioDetailPage from './modules/scenarios/pages/ScenarioDetailPage';
 import NotFoundPage from './shared/pages/NotFoundPage';
 
 const queryClient = new QueryClient({
@@ -58,6 +60,8 @@ function ThemedApp() {
             <Route path="/endpoints/:id" element={<EndpointDetailPage />} />
             <Route path="/logs" element={<LogListPage />} />
             <Route path="/proxy" element={<ProxyConfigPage />} />
+            <Route path="/scenarios" element={<ScenarioListPage />} />
+            <Route path="/scenarios/:id" element={<ScenarioDetailPage />} />
             <Route path="/import-export" element={<ImportExportPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
