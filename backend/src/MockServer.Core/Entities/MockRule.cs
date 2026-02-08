@@ -18,6 +18,7 @@ public class MockRule
     public bool IsResponseHeadersTemplate { get; set; }
     public FaultType FaultType { get; set; } = FaultType.None;
     public string? FaultConfig { get; set; }
+    public LogicMode LogicMode { get; set; } = LogicMode.AND;
 
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using MockServer.Core.Enums;
+using NJsonSchema;
 
 namespace MockServer.Infrastructure.MockEngine;
 
@@ -17,7 +18,26 @@ public static class OperatorEvaluator
             MatchOperator.GreaterThan => decimal.TryParse(actual, out var a) && decimal.TryParse(expected, out var ge) && a > ge,
             MatchOperator.LessThan => decimal.TryParse(actual, out var b) && decimal.TryParse(expected, out var le) && b < le,
             MatchOperator.Exists => actual != null,
+            MatchOperator.NotEquals => !string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase),
+            MatchOperator.JsonSchema => ValidateJsonSchema(actual, expected),
+            MatchOperator.IsEmpty => string.IsNullOrEmpty(actual),
+            MatchOperator.NotExists => actual == null,
             _ => false
         };
+    }
+
+    private static bool ValidateJsonSchema(string? json, string schema)
+    {
+        if (json == null) return false;
+        try
+        {
+            var jsonSchema = JsonSchema.FromJsonAsync(schema).Result;
+            var errors = jsonSchema.Validate(json);
+            return errors.Count == 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

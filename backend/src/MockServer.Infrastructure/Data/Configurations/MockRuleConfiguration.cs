@@ -58,6 +58,12 @@ public class MockRuleConfiguration : IEntityTypeConfiguration<MockRule>
         builder.Property(r => r.FaultConfig)
             .HasColumnType("jsonb");
 
+        builder.Property(r => r.LogicMode)
+            .IsRequired()
+            .HasDefaultValue(LogicMode.AND)
+            .HasConversion<string>()
+            .HasMaxLength(3);
+
         builder.Property(r => r.IsActive)
             .IsRequired()
             .HasDefaultValue(true);

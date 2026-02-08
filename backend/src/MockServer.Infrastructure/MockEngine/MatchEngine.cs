@@ -1,6 +1,7 @@
 using System.Xml;
 using MockServer.Core.Enums;
 using MockServer.Core.Interfaces;
+using MockServer.Core.ValueObjects;
 using Newtonsoft.Json.Linq;
 
 namespace MockServer.Infrastructure.MockEngine;
@@ -35,7 +36,7 @@ public class MatchEngine : IMatchEngine
             // Try rules in priority order (lower number = higher priority)
             foreach (var rule in endpoint.Rules.OrderBy(r => r.Priority))
             {
-                if (EvaluateAllConditions(rule.Conditions, context, endpoint, pathParams))
+                if (EvaluateAllConditions(rule, context, endpoint, pathParams))
                 {
                     return Task.FromResult<MatchResult?>(new MatchResult
                     {
@@ -64,24 +65,29 @@ public class MatchEngine : IMatchEngine
     }
 
     private bool EvaluateAllConditions(
-        List<Core.Entities.MatchCondition> conditions,
+        CachedRule rule,
         MockRequestContext context,
-        Core.ValueObjects.CachedEndpoint endpoint,
+        CachedEndpoint endpoint,
         Dictionary<string, string> pathParams)
     {
-        if (conditions.Count == 0)
+        if (rule.Conditions.Count == 0)
             return true;
 
-        // AND logic: all conditions must match
-        foreach (var condition in conditions)
+        if (rule.LogicMode == LogicMode.OR)
         {
-            var actual = ExtractValue(condition.SourceType, condition.FieldPath, context, endpoint, pathParams);
-
-            if (!OperatorEvaluator.Evaluate(condition.Operator, actual, condition.Value))
-                return false;
+            return rule.Conditions.Any(c =>
+            {
+                var actual = ExtractValue(c.SourceType, c.FieldPath, context, endpoint, pathParams);
+                return OperatorEvaluator.Evaluate(c.Operator, actual, c.Value);
+            });
         }
 
-        return true;
+        // AND logic (default): all conditions must match
+        return rule.Conditions.All(c =>
+        {
+            var actual = ExtractValue(c.SourceType, c.FieldPath, context, endpoint, pathParams);
+            return OperatorEvaluator.Evaluate(c.Operator, actual, c.Value);
+        });
     }
 
     private string? ExtractValue(

@@ -9,5 +9,15 @@ public enum MatchOperator
     EndsWith = 5,
     GreaterThan = 6,
     LessThan = 7,
-    Exists = 8
+    Exists = 8,
+    NotEquals = 9,
+    JsonSchema = 10,
+    IsEmpty = 11,
+    NotExists = 12
+}
+
+public enum LogicMode
+{
+    AND = 0,
+    OR = 1
 }

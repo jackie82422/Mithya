@@ -50,6 +50,7 @@ public static class RuleManagementApis
                 IsResponseHeadersTemplate = request.IsResponseHeadersTemplate,
                 FaultType = request.FaultType,
                 FaultConfig = request.FaultConfig,
+                LogicMode = request.LogicMode,
                 IsActive = true
             };
 
@@ -107,6 +108,7 @@ public static class RuleManagementApis
             rule.IsResponseHeadersTemplate = request.IsResponseHeadersTemplate;
             rule.FaultType = request.FaultType;
             rule.FaultConfig = request.FaultConfig;
+            rule.LogicMode = request.LogicMode;
 
             // Validate updated rule
             var handler = factory.GetHandler(endpoint.Protocol);

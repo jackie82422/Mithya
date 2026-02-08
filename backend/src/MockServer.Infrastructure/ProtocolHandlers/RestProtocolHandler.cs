@@ -41,8 +41,9 @@ public class RestProtocolHandler : IProtocolHandler
                     if (string.IsNullOrWhiteSpace(condition.FieldPath))
                         errors.Add("FieldPath is required for all conditions");
 
-                    if (condition.SourceType == CoreEnums.FieldSourceType.Body && !condition.FieldPath.StartsWith("$."))
-                        errors.Add("Body FieldPath must be a valid JsonPath (starts with $.)");
+                    if (condition.SourceType == CoreEnums.FieldSourceType.Body &&
+                        !condition.FieldPath.StartsWith("$") )
+                        errors.Add("Body FieldPath must be a valid JsonPath (starts with $)");
                 }
             }
         }

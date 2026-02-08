@@ -16,4 +16,5 @@ public class CreateRuleRequest
     public bool IsResponseHeadersTemplate { get; set; } = false;
     public FaultType FaultType { get; set; } = FaultType.None;
     public string? FaultConfig { get; set; }
+    public LogicMode LogicMode { get; set; } = LogicMode.AND;
 }

@@ -99,7 +99,8 @@ public class MockRuleCache : IMockRuleCache
                     IsTemplate = r.IsTemplate,
                     IsResponseHeadersTemplate = r.IsResponseHeadersTemplate,
                     FaultType = r.FaultType,
-                    FaultConfig = r.FaultConfig
+                    FaultConfig = r.FaultConfig,
+                    LogicMode = r.LogicMode
                 })
                 .ToList()
         };

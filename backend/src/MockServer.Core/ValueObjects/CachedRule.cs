@@ -18,4 +18,5 @@ public class CachedRule
     public bool IsResponseHeadersTemplate { get; set; }
     public FaultType FaultType { get; set; }
     public string? FaultConfig { get; set; }
+    public LogicMode LogicMode { get; set; }
 }
