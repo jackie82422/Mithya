@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using MockServer.Core.Interfaces;
+using MockServer.Core.Entities;
 using MockServer.Infrastructure.ProtocolHandlers;
 using WireMock.Server;
 using WireMock.Settings;
@@ -17,6 +18,7 @@ public class WireMockServerManager : IDisposable
     private readonly ProtocolHandlerFactory _factory;
     private WireMockServer? _server;
     private readonly int _port;
+    private readonly HashSet<Guid> _processedLogEntries = new();
 
     public WireMockServerManager(
         IServiceScopeFactory scopeFactory,
@@ -158,6 +160,99 @@ public class WireMockServerManager : IDisposable
         }
 
         Console.WriteLine($"Sync completed. Total active endpoints: {endpoints.Count()}");
+    }
+
+    public async Task ProcessNewLogEntriesAsync()
+    {
+        // Don't process if server is not started (test environment)
+        if (_server == null)
+        {
+            return;
+        }
+
+        // Create new scope to get fresh repositories
+        using var scope = _scopeFactory.CreateScope();
+        var endpointRepo = scope.ServiceProvider.GetRequiredService<IEndpointRepository>();
+        var ruleRepo = scope.ServiceProvider.GetRequiredService<IRuleRepository>();
+        var logRepo = scope.ServiceProvider.GetRequiredService<IRequestLogRepository>();
+
+        var allEndpoints = await endpointRepo.GetAllAsync();
+
+        // Get all log entries from WireMock
+        var logEntries = _server.LogEntries.ToList();
+
+        foreach (var entry in logEntries)
+        {
+            // Skip if already processed
+            if (_processedLogEntries.Contains(entry.Guid))
+            {
+                continue;
+            }
+
+            try
+            {
+                var request = entry.RequestMessage;
+                var response = entry.ResponseMessage;
+
+                // Try to match the request to an endpoint
+                var matchedEndpoint = allEndpoints.FirstOrDefault(e =>
+                    e.IsActive &&
+                    request.Method?.Equals(e.HttpMethod, StringComparison.OrdinalIgnoreCase) == true &&
+                    request.Path.StartsWith(e.Path.Split('{')[0].TrimEnd('/')));
+
+                // Try to match the request to a rule (based on response)
+                Guid? matchedRuleId = null;
+                bool isMatched = false;
+
+                var responseStatusCode = response.StatusCode != null ? Convert.ToInt32(response.StatusCode) : 0;
+
+                if (matchedEndpoint != null)
+                {
+                    var rules = await ruleRepo.GetByEndpointIdAsync(matchedEndpoint.Id);
+                    var matchedRule = rules.FirstOrDefault(r =>
+                        r.IsActive &&
+                        r.ResponseStatusCode == responseStatusCode &&
+                        r.ResponseBody == response.BodyData?.BodyAsString);
+
+                    if (matchedRule != null)
+                    {
+                        matchedRuleId = matchedRule.Id;
+                        isMatched = true;
+                    }
+                }
+
+                // Calculate response time (WireMock doesn't provide response timestamp, use 0 for now)
+                int responseTimeMs = 0;
+
+                // Create log entry
+                var log = new MockRequestLog
+                {
+                    EndpointId = matchedEndpoint?.Id,
+                    RuleId = matchedRuleId,
+                    Method = request.Method ?? "UNKNOWN",
+                    Path = request.Path,
+                    QueryString = request.Query != null ? string.Join("&", request.Query.Select(q => $"{q.Key}={string.Join(",", q.Value)}")) : null,
+                    Headers = request.Headers != null ? JsonConvert.SerializeObject(request.Headers) : null,
+                    Body = request.Body,
+                    ResponseStatusCode = responseStatusCode,
+                    ResponseBody = response.BodyData?.BodyAsString,
+                    ResponseTimeMs = responseTimeMs,
+                    IsMatched = isMatched
+                };
+
+                await logRepo.AddAsync(log);
+                await logRepo.SaveChangesAsync();
+
+                // Mark as processed
+                _processedLogEntries.Add(entry.Guid);
+
+                Console.WriteLine($"Logged request: {log.Method} {log.Path} -> {log.ResponseStatusCode}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing log entry {entry.Guid}: {ex.Message}");
+            }
+        }
     }
 
     private IRequestBuilder CreateRequestBuilder(Core.Entities.MockEndpoint endpoint, Core.Entities.MockRule rule)
