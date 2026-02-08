@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Typography, Button, Popconfirm, Flex, Space, Modal, message } from 'antd';
-import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { MockRule, MockEndpoint, MatchCondition } from '@/shared/types';
 import {
@@ -79,24 +79,42 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: strin
   current[keys[keys.length - 1]] = value;
 }
 
+function formatJson(raw: string): string {
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
+}
+
 export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardProps) {
   const { t } = useTranslation();
   const conditions = parseMatchConditions(rule.matchConditions);
   const [curlOpen, setCurlOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const curlCmd = buildCurl(endpoint, conditions);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(curlCmd);
-    message.success('Copied!');
+    message.success(t('rules.copiedCurl'));
   };
+
+  const responseHeaders = rule.responseHeaders ? formatJson(rule.responseHeaders) : null;
 
   return (
     <>
       <Card size="small" style={{ marginBottom: 12 }}>
         <Flex justify="space-between" align="flex-start">
-          <div style={{ flex: 1 }}>
+          <div
+            style={{ flex: 1, cursor: 'pointer' }}
+            onClick={() => setExpanded((v) => !v)}
+          >
             <Flex align="center" gap={8} style={{ marginBottom: 8 }}>
+              {expanded
+                ? <DownOutlined style={{ fontSize: 10, color: 'var(--color-text-secondary)' }} />
+                : <RightOutlined style={{ fontSize: 10, color: 'var(--color-text-secondary)' }} />
+              }
               <span
                 style={{
                   padding: '2px 10px',
@@ -160,6 +178,57 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardP
             </Popconfirm>
           </Space>
         </Flex>
+
+        {expanded && (
+          <div style={{ marginTop: 12, borderTop: '1px solid var(--color-border)', paddingTop: 12 }}>
+            <Typography.Text strong style={{ fontSize: 12 }}>
+              {t('rules.responseBody')}
+            </Typography.Text>
+            <pre
+              style={{
+                marginTop: 4,
+                padding: 12,
+                borderRadius: 8,
+                fontSize: 12,
+                lineHeight: 1.5,
+                background: 'var(--code-bg)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                overflowX: 'auto',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-all',
+                maxHeight: 300,
+              }}
+            >
+              {formatJson(rule.responseBody)}
+            </pre>
+
+            {responseHeaders && (
+              <>
+                <Typography.Text strong style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
+                  {t('rules.responseHeaders')}
+                </Typography.Text>
+                <pre
+                  style={{
+                    marginTop: 4,
+                    padding: 12,
+                    borderRadius: 8,
+                    fontSize: 12,
+                    lineHeight: 1.5,
+                    background: 'var(--code-bg)',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-border)',
+                    overflowX: 'auto',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  {responseHeaders}
+                </pre>
+              </>
+            )}
+          </div>
+        )}
       </Card>
 
       <Modal
@@ -168,7 +237,7 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardP
         onCancel={() => setCurlOpen(false)}
         footer={
           <Button icon={<CopyOutlined />} type="primary" onClick={handleCopy}>
-            Copy
+            {t('rules.copyCurl')}
           </Button>
         }
         width={700}

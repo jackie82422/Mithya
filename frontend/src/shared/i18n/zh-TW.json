@@ -92,6 +92,8 @@
     "noRules": "此端點尚未建立任何規則",
     "createFirst": "點擊上方按鈕建立第一條規則",
     "deleteConfirm": "確定要刪除規則「{{name}}」嗎？",
+    "copyCurl": "複製",
+    "copiedCurl": "已複製！",
     "form": {
       "title": "新增規則",
       "editTitle": "編輯規則",

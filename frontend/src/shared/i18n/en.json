@@ -92,6 +92,8 @@
     "noRules": "No rules created for this endpoint",
     "createFirst": "Click the button above to create your first rule",
     "deleteConfirm": "Are you sure you want to delete rule \"{{name}}\"?",
+    "copyCurl": "Copy",
+    "copiedCurl": "Copied!",
     "form": {
       "title": "Create Rule",
       "editTitle": "Edit Rule",
