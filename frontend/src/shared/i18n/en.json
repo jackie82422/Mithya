@@ -125,6 +125,12 @@
     "allStatus": "All Status",
     "ms": "ms"
   },
+  "validation": {
+    "required": "Please enter {{field}}",
+    "requiredSelect": "Please select {{field}}",
+    "fieldPathRequired": "Field path is required for all conditions",
+    "bodyFieldPathPrefix": "Body field path must start with $."
+  },
   "importExport": {
     "title": "Import / Export",
     "export": "Export",

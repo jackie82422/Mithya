@@ -52,14 +52,14 @@ export default function DefaultResponseForm({
         <Form.Item
           name="statusCode"
           label={t('endpoints.defaultResponseForm.statusCode')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.required', { field: t('endpoints.defaultResponseForm.statusCode') }) }]}
         >
           <InputNumber min={100} max={599} style={{ width: 160 }} />
         </Form.Item>
         <Form.Item
           name="responseBody"
           label={t('endpoints.defaultResponseForm.responseBody')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.required', { field: t('endpoints.defaultResponseForm.responseBody') }) }]}
         >
           <CodeEditorField />
         </Form.Item>

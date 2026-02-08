@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ConfigProvider, theme } from 'antd';
+import { useTranslation } from 'react-i18next';
+import zhTW from 'antd/locale/zh_TW';
+import enUS from 'antd/locale/en_US';
 import { ThemeProvider, useTheme } from './shared/contexts/ThemeContext';
 import AppLayout from './shared/layouts/AppLayout';
 import DashboardPage from './modules/dashboard/pages/DashboardPage';
@@ -20,10 +23,13 @@ const fontFamily =
 
 function ThemedApp() {
   const { mode } = useTheme();
+  const { i18n } = useTranslation();
   const isDark = mode === 'dark';
+  const antLocale = i18n.language === 'en' ? enUS : zhTW;
 
   return (
     <ConfigProvider
+      locale={antLocale}
       theme={{
         algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {

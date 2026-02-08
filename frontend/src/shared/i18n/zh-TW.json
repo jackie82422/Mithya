@@ -125,6 +125,12 @@
     "allStatus": "所有狀態",
     "ms": "ms"
   },
+  "validation": {
+    "required": "請輸入{{field}}",
+    "requiredSelect": "請選擇{{field}}",
+    "fieldPathRequired": "所有條件的欄位路徑為必填",
+    "bodyFieldPathPrefix": "Body 欄位路徑必須以 $. 開頭"
+  },
   "importExport": {
     "title": "匯入 / 匯出",
     "export": "匯出",

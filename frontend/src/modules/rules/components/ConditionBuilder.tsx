@@ -100,7 +100,7 @@ export default function ConditionBuilder({ value = [], onChange }: ConditionBuil
                 />
                 {pathError && (
                   <Typography.Text type="danger" style={{ fontSize: 12 }}>
-                    Body must start with $.
+                    {t('validation.bodyFieldPathPrefix')}
                   </Typography.Text>
                 )}
               </div>

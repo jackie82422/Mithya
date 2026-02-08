@@ -59,11 +59,11 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
     const conditions: MatchCondition[] = values.conditions || [];
     for (const c of conditions) {
       if (!c.fieldPath) {
-        message.error('FieldPath is required for all conditions');
+        message.error(t('validation.fieldPathRequired'));
         return;
       }
       if (c.sourceType === FieldSourceType.Body && !c.fieldPath.startsWith('$.')) {
-        message.error('Body FieldPath must start with $.');
+        message.error(t('validation.bodyFieldPathPrefix'));
         return;
       }
     }
@@ -117,7 +117,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         <Form.Item
           name="ruleName"
           label={t('rules.ruleName')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.required', { field: t('rules.ruleName') }) }]}
         >
           <Input placeholder={t('rules.form.ruleNamePlaceholder')} />
         </Form.Item>

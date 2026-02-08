@@ -26,7 +26,7 @@ export default function ResponseEditor() {
       <Form.Item
         name="responseBody"
         label={t('rules.responseBody')}
-        rules={[{ required: true }]}
+        rules={[{ required: true, message: t('validation.required', { field: t('rules.responseBody') }) }]}
       >
         <CodeEditorField />
       </Form.Item>

@@ -40,21 +40,21 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading }: Endp
         <Form.Item
           name="name"
           label={t('endpoints.name')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.required', { field: t('endpoints.name') }) }]}
         >
           <Input placeholder={t('endpoints.form.namePlaceholder')} />
         </Form.Item>
         <Form.Item
           name="serviceName"
           label={t('endpoints.serviceName')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.required', { field: t('endpoints.serviceName') }) }]}
         >
           <Input placeholder={t('endpoints.form.serviceNamePlaceholder')} />
         </Form.Item>
         <Form.Item
           name="protocol"
           label={t('endpoints.protocol')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.requiredSelect', { field: t('endpoints.protocol') }) }]}
         >
           <Select placeholder={t('endpoints.form.selectProtocol')}>
             {Object.entries(ProtocolTypeLabel).map(([val, label]) => (
@@ -67,7 +67,7 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading }: Endp
         <Form.Item
           name="httpMethod"
           label={t('endpoints.httpMethod')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.requiredSelect', { field: t('endpoints.httpMethod') }) }]}
         >
           <Select placeholder={t('endpoints.form.selectMethod')}>
             {httpMethods.map((m) => (
@@ -80,7 +80,7 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading }: Endp
         <Form.Item
           name="path"
           label={t('endpoints.path')}
-          rules={[{ required: true }]}
+          rules={[{ required: true, message: t('validation.required', { field: t('endpoints.path') }) }]}
         >
           <Input placeholder={t('endpoints.form.pathPlaceholder')} />
         </Form.Item>
