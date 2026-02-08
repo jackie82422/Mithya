@@ -1,0 +1,15 @@
+using MockServer.Core.Enums;
+
+namespace MockServer.Core.ValueObjects;
+
+public class CachedEndpoint
+{
+    public Guid Id { get; set; }
+    public string Path { get; set; } = string.Empty;
+    public string HttpMethod { get; set; } = string.Empty;
+    public ProtocolType Protocol { get; set; }
+    public bool IsActive { get; set; }
+    public string? DefaultResponse { get; set; }
+    public int? DefaultStatusCode { get; set; }
+    public List<CachedRule> Rules { get; set; } = new();
+}

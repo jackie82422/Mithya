@@ -40,8 +40,6 @@ public class RuleApiTests : IClassFixture<WebApplicationFactory<Program>>
                 var db = scope.ServiceProvider.GetRequiredService<MockServerDbContext>();
                 db.Database.EnsureCreated();
             });
-
-            builder.UseSetting("WireMock:Port", "0");
         });
     }
 

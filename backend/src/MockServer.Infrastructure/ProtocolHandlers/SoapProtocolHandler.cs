@@ -2,122 +2,12 @@ using Newtonsoft.Json;
 using MockServer.Core.Entities;
 using MockServer.Core.Interfaces;
 using MockServer.Core.ValueObjects;
-using WireMock.Admin.Mappings;
 using CoreEnums = MockServer.Core.Enums;
 
 namespace MockServer.Infrastructure.ProtocolHandlers;
 
 public class SoapProtocolHandler : IProtocolHandler
 {
-    public MappingModel ToWireMockMapping(MockRule rule, MockEndpoint endpoint)
-    {
-        var conditions = JsonConvert.DeserializeObject<List<MatchCondition>>(rule.MatchConditions)
-                         ?? new List<MatchCondition>();
-
-        var requestModel = new RequestModel
-        {
-            Path = new PathModel
-            {
-                Matchers = new[]
-                {
-                    new MatcherModel
-                    {
-                        Name = "WildcardMatcher",
-                        Pattern = endpoint.Path
-                    }
-                }
-            },
-            Methods = new[] { endpoint.HttpMethod }
-        };
-
-        // Process conditions (SOAP uses Body with XPath)
-        foreach (var condition in conditions)
-        {
-            if (condition.SourceType == CoreEnums.FieldSourceType.Body)
-            {
-                AddXPathMatcher(requestModel, condition);
-            }
-            else if (condition.SourceType == CoreEnums.FieldSourceType.Header)
-            {
-                AddHeaderMatcher(requestModel, condition);
-            }
-        }
-
-        var responseModel = new ResponseModel
-        {
-            StatusCode = rule.ResponseStatusCode,
-            Body = rule.ResponseBody
-        };
-
-        if (!string.IsNullOrEmpty(rule.ResponseHeaders))
-        {
-            responseModel.Headers = JsonConvert.DeserializeObject<Dictionary<string, object>>(rule.ResponseHeaders);
-        }
-        else
-        {
-            // Default SOAP headers
-            responseModel.Headers = new Dictionary<string, object>
-            {
-                { "Content-Type", "text/xml; charset=utf-8" }
-            };
-        }
-
-        if (rule.DelayMs > 0)
-        {
-            responseModel.Delay = rule.DelayMs;
-        }
-
-        return new MappingModel
-        {
-            Guid = rule.Id,
-            Priority = rule.Priority,
-            Request = requestModel,
-            Response = responseModel
-        };
-    }
-
-    private void AddXPathMatcher(RequestModel request, MatchCondition condition)
-    {
-        var matcher = condition.Operator switch
-        {
-            CoreEnums.MatchOperator.Equals => new MatcherModel
-            {
-                Name = "XPathMatcher",
-                Pattern = condition.FieldPath,
-                Patterns = new[] { condition.Value }
-            },
-            CoreEnums.MatchOperator.Contains => new MatcherModel
-            {
-                Name = "XPathMatcher",
-                Pattern = condition.FieldPath,
-                Patterns = new[] { $"*{condition.Value}*" }
-            },
-            _ => throw new NotSupportedException($"Operator {condition.Operator} not supported for SOAP Body")
-        };
-
-        request.Body = new BodyModel
-        {
-            Matcher = matcher
-        };
-    }
-
-    private void AddHeaderMatcher(RequestModel request, MatchCondition condition)
-    {
-        request.Headers ??= new List<HeaderModel>();
-
-        var matcher = new MatcherModel
-        {
-            Name = "ExactMatcher",
-            Pattern = condition.Value
-        };
-
-        request.Headers.Add(new HeaderModel
-        {
-            Name = condition.FieldPath,
-            Matchers = new[] { matcher }
-        });
-    }
-
     public ValidationResult ValidateEndpoint(MockEndpoint endpoint)
     {
         var errors = new List<string>();

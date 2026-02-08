@@ -43,9 +43,6 @@ public class EndpointApiTests : IClassFixture<WebApplicationFactory<Program>>
                 var db = scope.ServiceProvider.GetRequiredService<MockServerDbContext>();
                 db.Database.EnsureCreated();
             });
-
-            // Use test server without WireMock
-            builder.UseSetting("WireMock:Port", "0"); // Disable WireMock
         });
     }
 

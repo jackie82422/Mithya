@@ -26,13 +26,12 @@ services:
       dockerfile: src/MockServer.Api/Dockerfile
     container_name: mockserver-backend
     ports:
-      - "5050:8080"    # Admin API
-      - "5001:5001"    # Mock API (WireMock)
+      - "5050:8080"    # Admin API + Mock API (single port)
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__Default=Host=postgres;Database=mockserver;Username=mockserver;Password=mockserver123
-      - WireMock__Port=5001
+      - MockServer__BaseUrl=http://localhost:5050
     depends_on:
       postgres:
         condition: service_healthy

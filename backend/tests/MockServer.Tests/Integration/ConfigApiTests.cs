@@ -40,9 +40,6 @@ public class ConfigApiTests : IClassFixture<WebApplicationFactory<Program>>
                 var db = scope.ServiceProvider.GetRequiredService<MockServerDbContext>();
                 db.Database.EnsureCreated();
             });
-
-            // Use test server without WireMock
-            builder.UseSetting("WireMock:Port", "0"); // Disable WireMock
         });
     }
 
@@ -61,23 +58,17 @@ public class ConfigApiTests : IClassFixture<WebApplicationFactory<Program>>
 
         var config = await response.Content.ReadFromJsonAsync<ServerConfig>();
         config.Should().NotBeNull();
-        config!.MockServerPort.Should().Be(0); // Port is 0 in test environment
-        config.MockServerUrl.Should().NotBeNullOrEmpty();
+        config!.MockServerUrl.Should().NotBeNullOrEmpty();
         config.MockServerHost.Should().NotBeNullOrEmpty();
         config.AdminApiUrl.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
-    [DisplayName("取得伺服器配置 API 應該使用設定檔中的 WireMock Port")]
-    public async Task GetConfig_ShouldUseConfiguredWireMockPort()
+    [DisplayName("取得伺服器配置 API Mock Server URL 和 Admin API URL 應該相同（同 port）")]
+    public async Task GetConfig_MockServerAndAdminShouldUseSameUrl()
     {
         // Arrange
-        var factory = _factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("WireMock:Port", "5555");
-        });
-
-        var client = factory.CreateClient();
+        var client = _factory.CreateClient();
 
         // Act
         var response = await client.GetAsync("/admin/api/config");
@@ -87,8 +78,7 @@ public class ConfigApiTests : IClassFixture<WebApplicationFactory<Program>>
 
         var config = await response.Content.ReadFromJsonAsync<ServerConfig>();
         config.Should().NotBeNull();
-        config!.MockServerPort.Should().Be(5555);
-        config.MockServerUrl.Should().Contain("5555");
+        config!.MockServerUrl.Should().Be(config.AdminApiUrl);
     }
 
     [Fact]

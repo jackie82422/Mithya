@@ -4,8 +4,9 @@ using MockServer.Core.Interfaces;
 using MockServer.Infrastructure.Data;
 using MockServer.Infrastructure.Repositories;
 using MockServer.Infrastructure.ProtocolHandlers;
-using MockServer.Infrastructure.WireMock;
+using MockServer.Infrastructure.MockEngine;
 using MockServer.Api.Endpoints;
+using MockServer.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,17 +32,10 @@ builder.Services.AddScoped<IRequestLogRepository, RequestLogRepository>();
 // Protocol Handler Factory
 builder.Services.AddSingleton<ProtocolHandlerFactory>();
 
-// WireMock Server Manager (Singleton) - won't start if port is 0 (test environment)
-builder.Services.AddSingleton<WireMockServerManager>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var port = config.GetValue<int>("WireMock:Port", 5001);
-
-    var scopeFactory = sp.GetRequiredService<IServiceScopeFactory>();
-    var factory = sp.GetRequiredService<ProtocolHandlerFactory>();
-
-    return new WireMockServerManager(scopeFactory, factory, port);
-});
+// Mock Engine
+builder.Services.AddSingleton<IMockRuleCache, MockRuleCache>();
+builder.Services.AddSingleton<IMatchEngine, MatchEngine>();
+builder.Services.AddSingleton<ResponseRenderer>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -79,6 +73,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 
+// Dynamic mock middleware (must be before MapXxxApis so non-admin paths are intercepted)
+app.UseMiddleware<DynamicMockMiddleware>();
+
 // Map API endpoints
 app.MapProtocolEndpoints();
 app.MapEndpointManagementApis();
@@ -86,25 +83,16 @@ app.MapRuleManagementApis();
 app.MapLogApis();
 app.MapConfigEndpoints();
 
-// Initialize WireMock server only if it's registered (skip in test environment)
-var wireMockManager = app.Services.GetService<WireMockServerManager>();
-if (wireMockManager is not null)
+// Load all cached rules on startup
+var cache = app.Services.GetRequiredService<IMockRuleCache>();
+try
 {
-    wireMockManager.Start();
-
-    // Sync rules from database
-    using (var scope = app.Services.CreateScope())
-    {
-        try
-        {
-            await wireMockManager.SyncAllRulesAsync();
-            Console.WriteLine("Initial rule synchronization completed");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error during initial sync: {ex.Message}");
-        }
-    }
+    await cache.LoadAllAsync();
+    Console.WriteLine("Mock rule cache loaded successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error loading mock rule cache: {ex.Message}");
 }
 
 app.Run();

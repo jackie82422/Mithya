@@ -1,5 +1,4 @@
 using MockServer.Core.Interfaces;
-using MockServer.Infrastructure.WireMock;
 
 namespace MockServer.Api.Endpoints;
 
@@ -11,12 +10,8 @@ public static class LogApis
 
         group.MapGet("/", async (
             IRequestLogRepository repo,
-            WireMockServerManager manager,
             int limit = 100) =>
         {
-            // Process new log entries from WireMock before fetching
-            await manager.ProcessNewLogEntriesAsync();
-
             var logs = await repo.GetLogsAsync(limit);
             return Results.Ok(logs);
         })
@@ -34,12 +29,8 @@ public static class LogApis
         group.MapGet("/endpoint/{endpointId}", async (
             Guid endpointId,
             IRequestLogRepository repo,
-            WireMockServerManager manager,
             int limit = 100) =>
         {
-            // Process new log entries from WireMock before fetching
-            await manager.ProcessNewLogEntriesAsync();
-
             var logs = await repo.GetLogsByEndpointAsync(endpointId, limit);
             return Results.Ok(logs);
         })

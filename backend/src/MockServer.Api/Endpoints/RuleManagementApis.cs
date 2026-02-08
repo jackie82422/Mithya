@@ -2,7 +2,6 @@ using Newtonsoft.Json;
 using MockServer.Api.DTOs.Requests;
 using MockServer.Core.Entities;
 using MockServer.Core.Interfaces;
-using MockServer.Infrastructure.WireMock;
 using MockServer.Infrastructure.ProtocolHandlers;
 
 namespace MockServer.Api.Endpoints;
@@ -27,7 +26,7 @@ public static class RuleManagementApis
             IEndpointRepository endpointRepo,
             IRuleRepository ruleRepo,
             ProtocolHandlerFactory factory,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var endpoint = await endpointRepo.GetByIdAsync(endpointId);
             if (endpoint is null)
@@ -60,7 +59,7 @@ public static class RuleManagementApis
 
             await ruleRepo.AddAsync(rule);
             await ruleRepo.SaveChangesAsync();
-            await manager.SyncAllRulesAsync();
+            await cache.ReloadRulesForEndpointAsync(endpointId);
 
             return Results.Created($"/admin/api/rules/{rule.Id}", rule);
         })
@@ -74,7 +73,7 @@ public static class RuleManagementApis
             IEndpointRepository endpointRepo,
             IRuleRepository ruleRepo,
             ProtocolHandlerFactory factory,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             // Validate endpoint exists
             var endpoint = await endpointRepo.GetByIdAsync(endpointId);
@@ -113,7 +112,7 @@ public static class RuleManagementApis
             // Save and sync
             await ruleRepo.UpdateAsync(rule);
             await ruleRepo.SaveChangesAsync();
-            await manager.SyncAllRulesAsync();
+            await cache.ReloadRulesForEndpointAsync(endpointId);
 
             return Results.Ok(rule);
         })
@@ -124,7 +123,7 @@ public static class RuleManagementApis
             Guid endpointId,
             Guid ruleId,
             IRuleRepository repo,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var rule = await repo.GetByIdAsync(ruleId);
             if (rule is null || rule.EndpointId != endpointId)
@@ -134,7 +133,7 @@ public static class RuleManagementApis
 
             await repo.DeleteAsync(ruleId);
             await repo.SaveChangesAsync();
-            await manager.SyncAllRulesAsync();
+            await cache.ReloadRulesForEndpointAsync(endpointId);
 
             return Results.NoContent();
         })
@@ -146,7 +145,7 @@ public static class RuleManagementApis
             Guid ruleId,
             IEndpointRepository endpointRepo,
             IRuleRepository ruleRepo,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var endpoint = await endpointRepo.GetByIdAsync(endpointId);
             if (endpoint is null)
@@ -168,15 +167,7 @@ public static class RuleManagementApis
             rule.IsActive = !rule.IsActive;
             await ruleRepo.UpdateAsync(rule);
             await ruleRepo.SaveChangesAsync();
-
-            try
-            {
-                await manager.SyncAllRulesAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Warning: WireMock sync failed after toggling rule '{rule.RuleName}': {ex.Message}");
-            }
+            await cache.ReloadRulesForEndpointAsync(endpointId);
 
             return Results.Ok(rule);
         })

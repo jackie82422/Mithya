@@ -8,23 +8,34 @@ public static class ConfigEndpoints
 
         group.MapGet("/", (IConfiguration config, HttpContext context) =>
         {
-            var port = config.GetValue<int>("WireMock:Port", 5001);
+            // Allow explicit override via config/env (e.g. MockServer__BaseUrl=http://example.com:5050)
+            var baseUrlOverride = config.GetValue<string>("MockServer:BaseUrl");
 
-            // Get the host from the current request
-            // This handles localhost, Docker, and remote deployments
-            var scheme = context.Request.Scheme;
-            var host = context.Request.Host.Host;
+            string mockServerUrl;
+            string mockServerHost;
+            int mockServerPort;
 
-            // Allow override via environment variable for Docker scenarios
-            var mockServerHost = config.GetValue<string>("WireMock:Host") ?? host;
-            var mockServerUrl = $"{scheme}://{mockServerHost}:{port}";
+            if (!string.IsNullOrEmpty(baseUrlOverride))
+            {
+                var uri = new Uri(baseUrlOverride.TrimEnd('/'));
+                mockServerUrl = uri.GetLeftPart(UriPartial.Authority);
+                mockServerHost = uri.Host;
+                mockServerPort = uri.Port;
+            }
+            else
+            {
+                var scheme = context.Request.Scheme;
+                mockServerUrl = $"{scheme}://{context.Request.Host}";
+                mockServerHost = context.Request.Host.Host;
+                mockServerPort = context.Request.Host.Port ?? (scheme == "https" ? 443 : 80);
+            }
 
             return Results.Ok(new
             {
-                MockServerPort = port,
+                MockServerPort = mockServerPort,
                 MockServerUrl = mockServerUrl,
                 MockServerHost = mockServerHost,
-                AdminApiUrl = $"{scheme}://{context.Request.Host}"
+                AdminApiUrl = mockServerUrl
             });
         })
         .WithName("GetServerConfig")

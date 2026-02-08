@@ -45,9 +45,6 @@ public class LogApiTests : IClassFixture<WebApplicationFactory<Program>>
                 var db = scope.ServiceProvider.GetRequiredService<MockServerDbContext>();
                 db.Database.EnsureCreated();
             });
-
-            // Use test server without WireMock for most tests
-            builder.UseSetting("WireMock:Port", "0");
         });
     }
 
@@ -73,11 +70,10 @@ public class LogApiTests : IClassFixture<WebApplicationFactory<Program>>
     [DisplayName("請求日誌 API 應該記錄 Mock Server 收到的請求")]
     public async Task GetLogs_AfterMockRequest_ShouldReturnLoggedRequest()
     {
-        // Arrange - Create factory with WireMock enabled
-        var testDbName = $"TestDb_Logs_WithWireMock_{Guid.NewGuid()}";
-        var mockPort = 15001; // Use different port for test
+        // Arrange - Use the same test server client (single port architecture)
+        var testDbName = $"TestDb_Logs_Mock_{Guid.NewGuid()}";
 
-        var factoryWithWireMock = _factory.WithWebHostBuilder(builder =>
+        var factoryWithMock = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -100,80 +96,68 @@ public class LogApiTests : IClassFixture<WebApplicationFactory<Program>>
                 var db = scope.ServiceProvider.GetRequiredService<MockServerDbContext>();
                 db.Database.EnsureCreated();
             });
-
-            builder.UseSetting("WireMock:Port", mockPort.ToString());
         });
 
-        var adminClient = factoryWithWireMock.CreateClient();
-        var mockClient = new HttpClient { BaseAddress = new Uri($"http://localhost:{mockPort}") };
+        var client = factoryWithMock.CreateClient();
 
-        try
+        // Create endpoint via admin API
+        var createEndpointResponse = await client.PostAsJsonAsync("/admin/api/endpoints", new
         {
-            // Create endpoint
-            var createEndpointResponse = await adminClient.PostAsJsonAsync("/admin/api/endpoints", new
-            {
-                name = "測試端點",
-                serviceName = "測試服務",
-                protocol = 1,
-                path = "/api/test",
-                httpMethod = "POST"
-            });
+            name = "測試端點",
+            serviceName = "測試服務",
+            protocol = 1,
+            path = "/api/test",
+            httpMethod = "POST"
+        });
 
-            var endpoint = await createEndpointResponse.Content.ReadFromJsonAsync<MockEndpoint>();
-            endpoint.Should().NotBeNull();
+        var endpoint = await createEndpointResponse.Content.ReadFromJsonAsync<MockEndpoint>();
+        endpoint.Should().NotBeNull();
 
-            // Create rule
-            await adminClient.PostAsJsonAsync($"/admin/api/endpoints/{endpoint!.Id}/rules", new
+        // Create rule via admin API
+        await client.PostAsJsonAsync($"/admin/api/endpoints/{endpoint!.Id}/rules", new
+        {
+            ruleName = "測試規則",
+            priority = 1,
+            conditions = new[]
             {
-                ruleName = "測試規則",
-                priority = 1,
-                conditions = new[]
+                new
                 {
-                    new
-                    {
-                        sourceType = 1, // Body
-                        fieldPath = "$.userId",
-                        @operator = 1,  // Equals
-                        value = "12345"
-                    }
-                },
-                statusCode = 200,
-                responseBody = "{\"status\":\"success\"}",
-                delayMs = 0
-            });
+                    sourceType = 1, // Body
+                    fieldPath = "$.userId",
+                    @operator = 1,  // Equals
+                    value = "12345"
+                }
+            },
+            statusCode = 200,
+            responseBody = "{\"status\":\"success\"}",
+            delayMs = 0
+        });
 
-            // Wait for sync
-            await Task.Delay(500);
-
-            // Act - Send request to mock server
-            var mockResponse = await mockClient.PostAsync("/api/test", JsonContent.Create(new
-            {
-                userId = "12345"
-            }));
-
-            mockResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            // Get logs
-            var logsResponse = await adminClient.GetAsync("/admin/api/logs");
-            logsResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-
-            var logs = await logsResponse.Content.ReadFromJsonAsync<List<MockRequestLog>>();
-
-            // Assert
-            logs.Should().NotBeNull();
-            logs.Should().HaveCountGreaterThan(0);
-
-            var log = logs!.First();
-            log.Method.Should().Be("POST");
-            log.Path.Should().Be("/api/test");
-            log.ResponseStatusCode.Should().Be(200);
-            log.EndpointId.Should().Be(endpoint.Id);
-            log.IsMatched.Should().BeTrue();
-        }
-        finally
+        // Act - Send mock request through the same test server (single port)
+        var mockResponse = await client.PostAsync("/api/test", JsonContent.Create(new
         {
-            mockClient.Dispose();
-        }
+            userId = "12345"
+        }));
+
+        mockResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Get logs
+        var logsResponse = await client.GetAsync("/admin/api/logs");
+        logsResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var logs = await logsResponse.Content.ReadFromJsonAsync<List<MockRequestLog>>();
+
+        // Assert
+        logs.Should().NotBeNull();
+        logs.Should().HaveCountGreaterThan(0);
+
+        var log = logs!.First();
+        log.Method.Should().Be("POST");
+        log.Path.Should().Be("/api/test");
+        log.ResponseStatusCode.Should().Be(200);
+        log.EndpointId.Should().Be(endpoint.Id);
+        log.IsMatched.Should().BeTrue();
+        log.ResponseTimeMs.Should().BeGreaterOrEqualTo(0);
     }
 
     [Fact]

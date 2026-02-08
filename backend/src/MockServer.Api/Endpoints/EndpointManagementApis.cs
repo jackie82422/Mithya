@@ -4,7 +4,6 @@ using Npgsql;
 using MockServer.Api.DTOs.Requests;
 using MockServer.Core.Entities;
 using MockServer.Core.Interfaces;
-using MockServer.Infrastructure.WireMock;
 using MockServer.Infrastructure.ProtocolHandlers;
 
 namespace MockServer.Api.Endpoints;
@@ -35,7 +34,7 @@ public static class EndpointManagementApis
             CreateEndpointRequest request,
             IEndpointRepository repo,
             ProtocolHandlerFactory factory,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var endpoint = new MockEndpoint
             {
@@ -78,7 +77,7 @@ public static class EndpointManagementApis
             {
                 await repo.AddAsync(endpoint);
                 await repo.SaveChangesAsync();
-                await manager.SyncAllRulesAsync();
+                await cache.ReloadEndpointAsync(endpoint.Id);
 
                 return Results.Created($"/admin/api/endpoints/{endpoint.Id}", endpoint);
             }
@@ -102,7 +101,7 @@ public static class EndpointManagementApis
             UpdateEndpointRequest request,
             IEndpointRepository repo,
             ProtocolHandlerFactory factory,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
@@ -145,7 +144,7 @@ public static class EndpointManagementApis
 
             await repo.UpdateAsync(endpoint);
             await repo.SaveChangesAsync();
-            await manager.SyncAllRulesAsync();
+            await cache.ReloadEndpointAsync(endpoint.Id);
 
             return Results.Ok(endpoint);
         })
@@ -156,7 +155,7 @@ public static class EndpointManagementApis
             Guid id,
             SetDefaultResponseRequest request,
             IEndpointRepository repo,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
@@ -169,7 +168,7 @@ public static class EndpointManagementApis
 
             await repo.UpdateAsync(endpoint);
             await repo.SaveChangesAsync();
-            await manager.SyncAllRulesAsync();
+            await cache.ReloadEndpointAsync(endpoint.Id);
 
             return Results.Ok(endpoint);
         })
@@ -179,7 +178,7 @@ public static class EndpointManagementApis
         group.MapDelete("/{id}", async (
             Guid id,
             IEndpointRepository repo,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
@@ -189,7 +188,7 @@ public static class EndpointManagementApis
 
             await repo.DeleteAsync(id);
             await repo.SaveChangesAsync();
-            await manager.SyncAllRulesAsync();
+            cache.RemoveEndpoint(id);
 
             return Results.NoContent();
         })
@@ -199,7 +198,7 @@ public static class EndpointManagementApis
         group.MapMethods("/{id}/toggle", new[] { "PATCH" }, async (
             Guid id,
             IEndpointRepository repo,
-            WireMockServerManager manager) =>
+            IMockRuleCache cache) =>
         {
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
@@ -210,15 +209,7 @@ public static class EndpointManagementApis
             endpoint.IsActive = !endpoint.IsActive;
             await repo.UpdateAsync(endpoint);
             await repo.SaveChangesAsync();
-
-            try
-            {
-                await manager.SyncAllRulesAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Warning: WireMock sync failed after toggling endpoint '{endpoint.Name}': {ex.Message}");
-            }
+            await cache.ReloadEndpointAsync(endpoint.Id);
 
             return Results.Ok(endpoint);
         })
