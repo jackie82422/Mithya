@@ -89,7 +89,7 @@ public class DynamicMockMiddleware
             ruleId = matchResult.Rule?.Id;
             isMatched = true;
 
-            await _responseRenderer.RenderAsync(httpContext, matchResult);
+            await _responseRenderer.RenderAsync(httpContext, matchResult, context, matchResult.PathParams);
 
             responseStatusCode = httpContext.Response.StatusCode;
             responseBody = matchResult.IsDefaultResponse

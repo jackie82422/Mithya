@@ -13,4 +13,6 @@ public class CachedRule
     public string ResponseBody { get; set; } = string.Empty;
     public Dictionary<string, string>? ResponseHeaders { get; set; }
     public int DelayMs { get; set; }
+    public bool IsTemplate { get; set; }
+    public bool IsResponseHeadersTemplate { get; set; }
 }

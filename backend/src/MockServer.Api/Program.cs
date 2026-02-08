@@ -33,6 +33,7 @@ builder.Services.AddScoped<IRequestLogRepository, RequestLogRepository>();
 builder.Services.AddSingleton<ProtocolHandlerFactory>();
 
 // Mock Engine
+builder.Services.AddSingleton<ITemplateEngine, HandlebarsTemplateEngine>();
 builder.Services.AddSingleton<IMockRuleCache, MockRuleCache>();
 builder.Services.AddSingleton<IMatchEngine, MatchEngine>();
 builder.Services.AddSingleton<ResponseRenderer>();
@@ -81,6 +82,7 @@ app.MapProtocolEndpoints();
 app.MapEndpointManagementApis();
 app.MapRuleManagementApis();
 app.MapLogApis();
+app.MapTemplateApis();
 app.MapConfigEndpoints();
 
 // Load all cached rules on startup

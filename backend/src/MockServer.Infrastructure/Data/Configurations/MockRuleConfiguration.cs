@@ -42,6 +42,14 @@ public class MockRuleConfiguration : IEntityTypeConfiguration<MockRule>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(r => r.IsTemplate)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(r => r.IsResponseHeadersTemplate)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(r => r.IsActive)
             .IsRequired()
             .HasDefaultValue(true);

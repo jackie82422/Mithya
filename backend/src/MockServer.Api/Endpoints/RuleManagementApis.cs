@@ -46,6 +46,8 @@ public static class RuleManagementApis
                     ? JsonConvert.SerializeObject(request.ResponseHeaders)
                     : null,
                 DelayMs = request.DelayMs,
+                IsTemplate = request.IsTemplate,
+                IsResponseHeadersTemplate = request.IsResponseHeadersTemplate,
                 IsActive = true
             };
 
@@ -99,6 +101,8 @@ public static class RuleManagementApis
                 ? JsonConvert.SerializeObject(request.ResponseHeaders)
                 : null;
             rule.DelayMs = request.DelayMs;
+            rule.IsTemplate = request.IsTemplate;
+            rule.IsResponseHeadersTemplate = request.IsResponseHeadersTemplate;
 
             // Validate updated rule
             var handler = factory.GetHandler(endpoint.Protocol);

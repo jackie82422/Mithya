@@ -18,6 +18,7 @@ public class MatchResult
     public CachedEndpoint Endpoint { get; set; } = null!;
     public CachedRule? Rule { get; set; }
     public bool IsDefaultResponse { get; set; }
+    public Dictionary<string, string> PathParams { get; set; } = new();
 }
 
 public interface IMatchEngine

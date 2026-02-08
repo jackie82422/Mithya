@@ -41,7 +41,8 @@ public class MatchEngine : IMatchEngine
                     {
                         Endpoint = endpoint,
                         Rule = rule,
-                        IsDefaultResponse = false
+                        IsDefaultResponse = false,
+                        PathParams = pathParams
                     });
                 }
             }
@@ -53,7 +54,8 @@ public class MatchEngine : IMatchEngine
                 {
                     Endpoint = endpoint,
                     Rule = null,
-                    IsDefaultResponse = true
+                    IsDefaultResponse = true,
+                    PathParams = pathParams
                 });
             }
         }

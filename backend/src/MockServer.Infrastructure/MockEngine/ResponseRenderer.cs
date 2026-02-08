@@ -6,7 +6,14 @@ namespace MockServer.Infrastructure.MockEngine;
 
 public class ResponseRenderer
 {
-    public async Task RenderAsync(HttpContext httpContext, MatchResult matchResult)
+    private readonly ITemplateEngine _templateEngine;
+
+    public ResponseRenderer(ITemplateEngine templateEngine)
+    {
+        _templateEngine = templateEngine;
+    }
+
+    public async Task RenderAsync(HttpContext httpContext, MatchResult matchResult, MockRequestContext? requestContext = null, Dictionary<string, string>? pathParams = null)
     {
         var response = httpContext.Response;
 
@@ -31,12 +38,31 @@ public class ResponseRenderer
 
         response.StatusCode = rule.ResponseStatusCode;
 
-        // Apply custom headers
+        // Build template context if needed
+        TemplateContext? templateContext = null;
+        if ((rule.IsTemplate || rule.IsResponseHeadersTemplate) && requestContext != null)
+        {
+            templateContext = BuildTemplateContext(requestContext, pathParams);
+        }
+
+        // Apply custom headers (with optional template rendering)
         if (rule.ResponseHeaders != null)
         {
             foreach (var header in rule.ResponseHeaders)
             {
-                response.Headers[header.Key] = header.Value;
+                var headerValue = header.Value;
+                if (rule.IsResponseHeadersTemplate && templateContext != null)
+                {
+                    try
+                    {
+                        headerValue = _templateEngine.Render(headerValue, templateContext);
+                    }
+                    catch
+                    {
+                        // Use raw value on template error
+                    }
+                }
+                response.Headers[header.Key] = headerValue;
             }
         }
 
@@ -46,7 +72,38 @@ public class ResponseRenderer
             SetDefaultContentType(response, matchResult.Endpoint.Protocol);
         }
 
-        await response.WriteAsync(rule.ResponseBody ?? string.Empty);
+        // Render body (with optional template rendering)
+        var body = rule.ResponseBody ?? string.Empty;
+        if (rule.IsTemplate && templateContext != null && !string.IsNullOrEmpty(body))
+        {
+            try
+            {
+                body = _templateEngine.Render(body, templateContext);
+            }
+            catch
+            {
+                // Return raw template on error, add warning header
+                response.Headers["X-Template-Error"] = "true";
+            }
+        }
+
+        await response.WriteAsync(body);
+    }
+
+    private static TemplateContext BuildTemplateContext(MockRequestContext requestContext, Dictionary<string, string>? pathParams)
+    {
+        return new TemplateContext
+        {
+            Request = new TemplateRequestData
+            {
+                Method = requestContext.Method,
+                Path = requestContext.Path,
+                Body = requestContext.Body,
+                Headers = requestContext.Headers,
+                Query = requestContext.QueryParams,
+                PathParams = pathParams ?? new Dictionary<string, string>()
+            }
+        };
     }
 
     private static void SetDefaultContentType(HttpResponse response, ProtocolType protocol)

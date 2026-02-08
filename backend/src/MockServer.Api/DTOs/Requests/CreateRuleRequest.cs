@@ -11,4 +11,6 @@ public class CreateRuleRequest
     public string ResponseBody { get; set; } = string.Empty;
     public Dictionary<string, string>? ResponseHeaders { get; set; }
     public int DelayMs { get; set; } = 0;
+    public bool IsTemplate { get; set; } = false;
+    public bool IsResponseHeadersTemplate { get; set; } = false;
 }
