@@ -27,6 +27,7 @@ export default function EndpointOverview({ endpoints }: EndpointOverviewProps) {
         rowKey="id"
         size="small"
         pagination={false}
+        scroll={{ x: 700 }}
         onRow={(record) => ({
           onClick: () => navigate(`/endpoints/${record.id}`),
           style: { cursor: 'pointer' },

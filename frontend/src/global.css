@@ -368,12 +368,6 @@ body {
 }
 
 /* ── Responsive ── */
-@media (max-width: 767px) {
-  .ant-table-wrapper {
-    overflow-x: auto;
-  }
-
-  .ant-table {
-    min-width: 600px;
-  }
+.ant-table-wrapper {
+  overflow-x: auto;
 }

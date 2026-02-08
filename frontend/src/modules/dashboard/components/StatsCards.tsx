@@ -83,7 +83,7 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
 
   return (
     <Row gutter={[16, 16]}>
-      <Col xs={12} sm={6}>
+      <Col xs={12} lg={6}>
         <StatCard
           icon={<ApiOutlined />}
           iconBg="var(--stats-blue-bg)"
@@ -92,7 +92,7 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
           value={totalEndpoints}
         />
       </Col>
-      <Col xs={12} sm={6}>
+      <Col xs={12} lg={6}>
         <StatCard
           icon={<CheckCircleOutlined />}
           iconBg="var(--stats-green-bg)"
@@ -101,7 +101,7 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
           value={activeEndpoints}
         />
       </Col>
-      <Col xs={12} sm={6}>
+      <Col xs={12} lg={6}>
         <StatCard
           icon={<BranchesOutlined />}
           iconBg="var(--stats-purple-bg)"
@@ -110,7 +110,7 @@ export default function StatsCards({ endpoints, logs }: StatsCardsProps) {
           value={totalRules}
         />
       </Col>
-      <Col xs={12} sm={6}>
+      <Col xs={12} lg={6}>
         <StatCard
           icon={<ThunderboltOutlined />}
           iconBg="var(--stats-orange-bg)"

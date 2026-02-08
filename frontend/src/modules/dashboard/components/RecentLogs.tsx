@@ -61,6 +61,7 @@ export default function RecentLogs({ logs }: RecentLogsProps) {
           rowKey="id"
           size="small"
           pagination={false}
+          scroll={{ x: 650 }}
           columns={[
             {
               title: t('logs.timestamp'),

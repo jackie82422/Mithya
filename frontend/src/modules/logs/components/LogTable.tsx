@@ -53,6 +53,7 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
       rowKey="id"
       loading={loading}
       size="small"
+      scroll={{ x: 800 }}
       pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100] }}
       onRow={(record) => ({
         onClick: () => onRowClick(record),
