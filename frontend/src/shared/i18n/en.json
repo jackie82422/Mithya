@@ -62,6 +62,9 @@
     "noEndpoints": "No endpoints created yet",
     "createFirst": "Click the button above to create your first endpoint",
     "deleteConfirm": "Are you sure you want to delete endpoint \"{{name}}\"? Related rules will also be deleted.",
+    "notFound": "Endpoint Not Found",
+    "notFoundDesc": "This endpoint may have been deleted or the ID is incorrect.",
+    "backToList": "Back to Endpoints",
     "form": {
       "title": "Create Endpoint",
       "editTitle": "Edit Endpoint",

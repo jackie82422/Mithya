@@ -6,10 +6,11 @@ import {
   Spin,
   Card,
   Divider,
-  Empty,
   Flex,
   Breadcrumb,
   Timeline,
+  Result,
+  Empty,
 } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -54,7 +55,18 @@ export default function EndpointDetailPage() {
   }
 
   if (!endpoint) {
-    return <Empty />;
+    return (
+      <Result
+        status="warning"
+        title={t('endpoints.notFound')}
+        subTitle={t('endpoints.notFoundDesc')}
+        extra={
+          <Button type="primary" onClick={() => navigate('/endpoints')}>
+            {t('endpoints.backToList')}
+          </Button>
+        }
+      />
+    );
   }
 
   const sortedRules = [...(rules ?? [])].sort((a, b) => a.priority - b.priority);
