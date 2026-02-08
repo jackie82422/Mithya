@@ -60,17 +60,32 @@ public static class ImportExportApis
             if (request.Endpoints == null || request.Endpoints.Count == 0)
                 return Results.BadRequest(new { error = "No endpoints to import" });
 
+            var existingEndpoints = await endpointRepo.GetAllAsync();
             var imported = new List<object>();
+            var skipped = new List<object>();
 
             foreach (var ep in request.Endpoints)
             {
+                var method = ep.HttpMethod.ToUpper();
+
+                // Check for duplicate path+method
+                var duplicate = existingEndpoints.FirstOrDefault(e =>
+                    e.Path == ep.Path &&
+                    e.HttpMethod.Equals(method, StringComparison.OrdinalIgnoreCase));
+
+                if (duplicate != null)
+                {
+                    skipped.Add(new { ep.Name, ep.Path, httpMethod = method, reason = "duplicate", existingEndpointId = duplicate.Id });
+                    continue;
+                }
+
                 var endpoint = new MockEndpoint
                 {
                     Name = ep.Name,
                     ServiceName = ep.ServiceName,
                     Protocol = (ProtocolType)ep.Protocol,
                     Path = ep.Path,
-                    HttpMethod = ep.HttpMethod.ToUpper(),
+                    HttpMethod = method,
                     DefaultResponse = ep.DefaultResponse,
                     DefaultStatusCode = ep.DefaultStatusCode,
                     ProtocolSettings = ep.ProtocolSettings,
@@ -109,9 +124,12 @@ public static class ImportExportApis
 
                 await cache.ReloadEndpointAsync(endpoint.Id);
                 imported.Add(new { endpoint.Id, endpoint.Name, endpoint.Path, rulesCount = ep.Rules?.Count ?? 0 });
+
+                // Track newly added for duplicate detection within same batch
+                existingEndpoints = existingEndpoints.Append(endpoint);
             }
 
-            return Results.Ok(new { imported = imported.Count, endpoints = imported });
+            return Results.Ok(new { imported = imported.Count, skipped = skipped.Count, endpoints = imported, duplicates = skipped });
         })
         .WithName("ImportJson")
         .WithOpenApi();
@@ -132,7 +150,9 @@ public static class ImportExportApis
                 if (paths == null)
                     return Results.BadRequest(new { error = "Invalid OpenAPI spec: missing 'paths'" });
 
+                var existingEndpoints = await endpointRepo.GetAllAsync();
                 var imported = new List<object>();
+                var skipped = new List<object>();
                 var validMethods = new[] { "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS" };
 
                 foreach (var pathProp in paths.Properties())
@@ -145,6 +165,17 @@ public static class ImportExportApis
                         var method = methodProp.Name.ToUpper();
                         if (!validMethods.Contains(method))
                             continue;
+
+                        // Check for duplicate path+method
+                        var duplicate = existingEndpoints.FirstOrDefault(e =>
+                            e.Path == pathProp.Name &&
+                            e.HttpMethod.Equals(method, StringComparison.OrdinalIgnoreCase));
+
+                        if (duplicate != null)
+                        {
+                            skipped.Add(new { path = pathProp.Name, httpMethod = method, reason = "duplicate", existingEndpointId = duplicate.Id });
+                            continue;
+                        }
 
                         var operation = methodProp.Value as JObject;
                         var summary = operation?["summary"]?.ToString() ?? $"{method} {pathProp.Name}";
@@ -178,13 +209,15 @@ public static class ImportExportApis
 
                         await endpointRepo.AddAsync(endpoint);
                         imported.Add(new { endpoint.Id, endpoint.Name, endpoint.Path, endpoint.HttpMethod });
+
+                        existingEndpoints = existingEndpoints.Append(endpoint);
                     }
                 }
 
                 await endpointRepo.SaveChangesAsync();
                 await cache.LoadAllAsync();
 
-                return Results.Ok(new { imported = imported.Count, endpoints = imported });
+                return Results.Ok(new { imported = imported.Count, skipped = skipped.Count, endpoints = imported, duplicates = skipped });
             }
             catch (Exception ex)
             {

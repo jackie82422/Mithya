@@ -194,6 +194,57 @@ public class ImportExportApiTests : IClassFixture<WebApplicationFactory<Program>
     }
 
     [Fact]
+    [DisplayName("匯入重複 path+method 應跳過並回傳 duplicates")]
+    public async Task ImportJson_DuplicateEndpoint_ShouldSkipAndReport()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Create an existing endpoint
+        await client.PostAsJsonAsync("/admin/api/endpoints", new
+        {
+            name = "Existing EP",
+            serviceName = "Test",
+            protocol = 1,
+            path = "/api/dup-test",
+            httpMethod = "GET"
+        });
+
+        // Act - import with same path+method
+        var response = await client.PostAsJsonAsync("/admin/api/import/json", new
+        {
+            endpoints = new[]
+            {
+                new
+                {
+                    name = "Duplicate EP",
+                    serviceName = "Test",
+                    protocol = 1,
+                    path = "/api/dup-test",
+                    httpMethod = "GET",
+                    isActive = true
+                },
+                new
+                {
+                    name = "New EP",
+                    serviceName = "Test",
+                    protocol = 1,
+                    path = "/api/new-import",
+                    httpMethod = "POST",
+                    isActive = true
+                }
+            }
+        });
+
+        // Assert - 200, not 500; imported=1, skipped=1
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().Contain("\"imported\":1");
+        body.Should().Contain("\"skipped\":1");
+        body.Should().Contain("duplicate");
+    }
+
+    [Fact]
     [DisplayName("匯出再匯入應保留所有資料")]
     public async Task ExportThenImport_ShouldPreserveData()
     {
