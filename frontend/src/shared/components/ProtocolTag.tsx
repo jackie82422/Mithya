@@ -15,6 +15,7 @@ export default function ProtocolTag({ protocol }: ProtocolTagProps) {
   const s = styleMap[protocol] ?? { bg: 'var(--inactive-bg)', color: 'var(--color-text-secondary)' };
   return (
     <span
+      className="pill-tag"
       style={{
         display: 'inline-block',
         padding: '2px 10px',

@@ -17,6 +17,7 @@ export default function HttpMethodTag({ method }: HttpMethodTagProps) {
   const s = styleMap[upper] ?? defaultStyle;
   return (
     <span
+      className="pill-tag"
       style={{
         display: 'inline-block',
         padding: '2px 10px',

@@ -8,6 +8,7 @@ export default function StatusBadge({ active }: StatusBadgeProps) {
   const { t } = useTranslation();
   return (
     <span
+      className="pill-tag"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
