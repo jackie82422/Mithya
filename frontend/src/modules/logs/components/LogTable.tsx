@@ -1,6 +1,7 @@
-import { Table, Typography } from 'antd';
+import { Table, Typography, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { MockRequestLog } from '@/shared/types';
+import { FaultType, FaultTypeLabel } from '@/shared/types';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
 
 interface LogTableProps {
@@ -113,11 +114,37 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
             { text: t('logs.unmatched'), value: false },
           ],
           onFilter: (value, record) => record.isMatched === value,
-          render: (matched: boolean) => (
-            <MatchPill
-              matched={matched}
-              label={matched ? t('logs.matched') : t('logs.unmatched')}
-            />
+          render: (matched: boolean, record) => (
+            <Space size={4}>
+              <MatchPill
+                matched={matched}
+                label={matched ? t('logs.matched') : t('logs.unmatched')}
+              />
+              {record.faultTypeApplied != null && record.faultTypeApplied !== FaultType.None && (
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: 100,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  background: 'var(--delete-bg)',
+                  color: 'var(--delete-color)',
+                }}>
+                  {FaultTypeLabel[record.faultTypeApplied]}
+                </span>
+              )}
+              {record.isProxied && (
+                <span style={{
+                  padding: '2px 8px',
+                  borderRadius: 100,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  background: 'var(--put-bg)',
+                  color: 'var(--put-color)',
+                }}>
+                  {t('proxy.proxied')}
+                </span>
+              )}
+            </Space>
           ),
         },
       ]}

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Modal, Form, Input, InputNumber, Divider, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { CreateRuleRequest, MatchCondition, MockRule } from '@/shared/types';
-import { FieldSourceType, parseMatchConditions } from '@/shared/types';
+import { FaultType, FieldSourceType, parseMatchConditions } from '@/shared/types';
 import ConditionBuilder from './ConditionBuilder';
 import ResponseEditor from './ResponseEditor';
 
@@ -25,6 +25,7 @@ interface FormValues {
   responseHeadersStr: string;
   delayMs: number;
   isTemplate: boolean;
+  faultConfig?: { minDelay?: number; maxDelay?: number; statusCode?: number; byteCount?: number; timeoutMs?: number };
 }
 
 function parseJson<T>(raw: string | null, fallback: T): T {
@@ -79,6 +80,8 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         responseHeaders = undefined;
       }
     }
+    const faultType = (values as unknown as Record<string, unknown>).faultType as FaultType | undefined;
+    const faultConfig = values.faultConfig;
     onSubmit({
       ruleName: values.ruleName,
       priority: values.priority,
@@ -88,6 +91,8 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
       responseHeaders,
       delayMs: values.delayMs,
       isTemplate: values.isTemplate ?? false,
+      faultType: faultType ?? FaultType.None,
+      faultConfig: faultConfig && faultType !== FaultType.None ? JSON.stringify(faultConfig) : null,
     });
   };
 

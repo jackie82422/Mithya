@@ -4,6 +4,8 @@ import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined, DownOutlined,
 import { useTranslation } from 'react-i18next';
 import type { MockRule, MockEndpoint, MatchCondition } from '@/shared/types';
 import {
+  FaultType,
+  FaultTypeLabel,
   FieldSourceType,
   FieldSourceTypeLabel,
   MatchOperatorLabel,
@@ -152,6 +154,21 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
                   }}
                 >
                   {t('rules.template')}
+                </span>
+              )}
+              {rule.faultType !== undefined && rule.faultType !== FaultType.None && (
+                <span
+                  className="pill-tag"
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: 100,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    background: 'var(--delete-bg)',
+                    color: 'var(--delete-color)',
+                  }}
+                >
+                  {FaultTypeLabel[rule.faultType]}
                 </span>
               )}
             </Flex>

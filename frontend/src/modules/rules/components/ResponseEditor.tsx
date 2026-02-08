@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Form, InputNumber, Space, Switch, Tooltip, Button } from 'antd';
+import { Form, InputNumber, Space, Switch, Tooltip, Button, Divider } from 'antd';
 import { QuestionCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { FaultType } from '@/shared/types';
 import CodeEditor from '@/shared/components/CodeEditor';
 import TemplateVariableRef from './TemplateVariableRef';
 import TemplatePreview from './TemplatePreview';
+import FaultInjectionConfig from './FaultInjectionConfig';
 
 interface ResponseEditorProps {
   endpointPath?: string;
@@ -15,7 +17,15 @@ export default function ResponseEditor({ endpointPath, endpointMethod }: Respons
   const { t } = useTranslation();
   const [isTemplate, setIsTemplate] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [faultType, setFaultType] = useState<FaultType>(FaultType.None);
   const form = Form.useFormInstance();
+
+  const bodyDisabled = [
+    FaultType.ConnectionReset,
+    FaultType.EmptyResponse,
+    FaultType.MalformedResponse,
+    FaultType.Timeout,
+  ].includes(faultType);
 
   return (
     <>
@@ -36,6 +46,17 @@ export default function ResponseEditor({ endpointPath, endpointMethod }: Respons
         </Form.Item>
       </Space>
 
+      <Divider dashed style={{ margin: '12px 0' }} />
+      <FaultInjectionConfig
+        faultType={faultType}
+        onFaultTypeChange={(ft) => {
+          setFaultType(ft);
+          form?.setFieldValue('faultType', ft);
+        }}
+      />
+      <Form.Item name="faultType" hidden><input /></Form.Item>
+      <Divider dashed style={{ margin: '12px 0' }} />
+
       <Form.Item name="isTemplate" valuePropName="checked" style={{ marginBottom: 12 }}>
         <Space>
           <Switch
@@ -53,9 +74,9 @@ export default function ResponseEditor({ endpointPath, endpointMethod }: Respons
       <Form.Item
         name="responseBody"
         label={t('rules.responseBody')}
-        rules={[{ required: true, message: t('validation.required', { field: t('rules.responseBody') }) }]}
+        rules={[{ required: !bodyDisabled, message: t('validation.required', { field: t('rules.responseBody') }) }]}
       >
-        <CodeEditorField language={isTemplate ? 'handlebars' : 'json'} />
+        <CodeEditorField language={isTemplate ? 'handlebars' : 'json'} readOnly={bodyDisabled} />
       </Form.Item>
 
       {isTemplate && (
@@ -90,11 +111,13 @@ function CodeEditorField({
   onChange,
   height = 250,
   language = 'json' as 'json' | 'handlebars',
+  readOnly = false,
 }: {
   value?: string;
   onChange?: (v: string) => void;
   height?: number;
   language?: 'json' | 'handlebars';
+  readOnly?: boolean;
 }) {
-  return <CodeEditor value={value ?? ''} onChange={onChange} height={height} language={language} />;
+  return <CodeEditor value={value ?? ''} onChange={onChange} height={height} language={language} readOnly={readOnly} />;
 }

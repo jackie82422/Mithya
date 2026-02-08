@@ -1,6 +1,7 @@
 import { Drawer, Descriptions, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { MockRequestLog } from '@/shared/types';
+import { FaultType, FaultTypeLabel } from '@/shared/types';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
 import CodeEditor from '@/shared/components/CodeEditor';
 
@@ -92,6 +93,25 @@ export default function LogDetail({ log, open, onClose }: LogDetailProps) {
             label={log.isMatched ? t('logs.matched') : t('logs.unmatched')}
           />
         </Descriptions.Item>
+        {log.isProxied && (
+          <Descriptions.Item label={t('proxy.proxyTarget')}>
+            <Typography.Text code>{log.proxyTargetUrl ?? '-'}</Typography.Text>
+          </Descriptions.Item>
+        )}
+        {log.faultTypeApplied != null && log.faultTypeApplied !== FaultType.None && (
+          <Descriptions.Item label={t('rules.faultType')}>
+            <span style={{
+              padding: '2px 8px',
+              borderRadius: 100,
+              fontSize: 12,
+              fontWeight: 500,
+              background: 'var(--delete-bg)',
+              color: 'var(--delete-color)',
+            }}>
+              {FaultTypeLabel[log.faultTypeApplied]}
+            </span>
+          </Descriptions.Item>
+        )}
       </Descriptions>
 
       {log.headers && (
