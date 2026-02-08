@@ -97,7 +97,9 @@ public class MockRuleCache : IMockRuleCache
                     ResponseHeaders = ParseHeaders(r.ResponseHeaders),
                     DelayMs = r.DelayMs,
                     IsTemplate = r.IsTemplate,
-                    IsResponseHeadersTemplate = r.IsResponseHeadersTemplate
+                    IsResponseHeadersTemplate = r.IsResponseHeadersTemplate,
+                    FaultType = r.FaultType,
+                    FaultConfig = r.FaultConfig
                 })
                 .ToList()
         };

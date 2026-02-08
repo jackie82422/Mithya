@@ -18,4 +18,5 @@ public class MockRequestLog
     public int ResponseTimeMs { get; set; }
 
     public bool IsMatched { get; set; }
+    public int? FaultTypeApplied { get; set; }
 }

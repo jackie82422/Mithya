@@ -36,6 +36,7 @@ builder.Services.AddSingleton<ProtocolHandlerFactory>();
 builder.Services.AddSingleton<ITemplateEngine, HandlebarsTemplateEngine>();
 builder.Services.AddSingleton<IMockRuleCache, MockRuleCache>();
 builder.Services.AddSingleton<IMatchEngine, MatchEngine>();
+builder.Services.AddSingleton<IFaultInjector, FaultInjector>();
 builder.Services.AddSingleton<ResponseRenderer>();
 
 // CORS

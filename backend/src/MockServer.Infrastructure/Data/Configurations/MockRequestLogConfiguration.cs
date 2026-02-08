@@ -49,6 +49,8 @@ public class MockRequestLogConfiguration : IEntityTypeConfiguration<MockRequestL
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(l => l.FaultTypeApplied);
+
         builder.HasIndex(l => l.Timestamp)
             .HasDatabaseName("idx_log_timestamp");
 

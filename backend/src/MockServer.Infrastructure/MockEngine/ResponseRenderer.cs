@@ -7,10 +7,12 @@ namespace MockServer.Infrastructure.MockEngine;
 public class ResponseRenderer
 {
     private readonly ITemplateEngine _templateEngine;
+    private readonly IFaultInjector _faultInjector;
 
-    public ResponseRenderer(ITemplateEngine templateEngine)
+    public ResponseRenderer(ITemplateEngine templateEngine, IFaultInjector faultInjector)
     {
         _templateEngine = templateEngine;
+        _faultInjector = faultInjector;
     }
 
     public async Task RenderAsync(HttpContext httpContext, MatchResult matchResult, MockRequestContext? requestContext = null, Dictionary<string, string>? pathParams = null)
@@ -30,7 +32,12 @@ public class ResponseRenderer
 
         var rule = matchResult.Rule!;
 
-        // Apply delay if configured
+        // Apply fault injection first
+        var faultApplied = await _faultInjector.ApplyFaultAsync(httpContext, rule);
+        if (faultApplied)
+            return;
+
+        // Apply delay if configured (FixedDelay)
         if (rule.DelayMs > 0)
         {
             await Task.Delay(rule.DelayMs);

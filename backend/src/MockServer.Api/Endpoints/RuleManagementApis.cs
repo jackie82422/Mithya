@@ -48,6 +48,8 @@ public static class RuleManagementApis
                 DelayMs = request.DelayMs,
                 IsTemplate = request.IsTemplate,
                 IsResponseHeadersTemplate = request.IsResponseHeadersTemplate,
+                FaultType = request.FaultType,
+                FaultConfig = request.FaultConfig,
                 IsActive = true
             };
 
@@ -103,6 +105,8 @@ public static class RuleManagementApis
             rule.DelayMs = request.DelayMs;
             rule.IsTemplate = request.IsTemplate;
             rule.IsResponseHeadersTemplate = request.IsResponseHeadersTemplate;
+            rule.FaultType = request.FaultType;
+            rule.FaultConfig = request.FaultConfig;
 
             // Validate updated rule
             var handler = factory.GetHandler(endpoint.Protocol);

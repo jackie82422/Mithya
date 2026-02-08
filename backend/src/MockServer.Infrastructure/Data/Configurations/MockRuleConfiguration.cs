@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MockServer.Core.Entities;
+using MockServer.Core.Enums;
 
 namespace MockServer.Infrastructure.Data.Configurations;
 
@@ -49,6 +50,13 @@ public class MockRuleConfiguration : IEntityTypeConfiguration<MockRule>
         builder.Property(r => r.IsResponseHeadersTemplate)
             .IsRequired()
             .HasDefaultValue(false);
+
+        builder.Property(r => r.FaultType)
+            .IsRequired()
+            .HasDefaultValue(FaultType.None);
+
+        builder.Property(r => r.FaultConfig)
+            .HasColumnType("jsonb");
 
         builder.Property(r => r.IsActive)
             .IsRequired()

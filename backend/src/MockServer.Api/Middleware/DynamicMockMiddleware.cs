@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using MockServer.Core.Entities;
+using MockServer.Core.Enums;
 using MockServer.Core.Interfaces;
 using MockServer.Infrastructure.MockEngine;
 
@@ -71,6 +72,7 @@ public class DynamicMockMiddleware
         bool isMatched;
         Guid? endpointId = null;
         Guid? ruleId = null;
+        int? faultTypeApplied = null;
 
         if (matchResult == null)
         {
@@ -95,6 +97,9 @@ public class DynamicMockMiddleware
             responseBody = matchResult.IsDefaultResponse
                 ? matchResult.Endpoint.DefaultResponse
                 : matchResult.Rule?.ResponseBody;
+
+            if (matchResult.Rule?.FaultType != FaultType.None)
+                faultTypeApplied = (int?)matchResult.Rule?.FaultType;
         }
 
         stopwatch.Stop();
@@ -117,7 +122,8 @@ public class DynamicMockMiddleware
                 ResponseStatusCode = responseStatusCode,
                 ResponseBody = responseBody,
                 ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds,
-                IsMatched = isMatched
+                IsMatched = isMatched,
+                FaultTypeApplied = faultTypeApplied
             };
 
             await logRepo.AddAsync(log);

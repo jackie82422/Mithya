@@ -1,4 +1,5 @@
 using MockServer.Core.Entities;
+using MockServer.Core.Enums;
 
 namespace MockServer.Api.DTOs.Requests;
 
@@ -13,4 +14,6 @@ public class CreateRuleRequest
     public int DelayMs { get; set; } = 0;
     public bool IsTemplate { get; set; } = false;
     public bool IsResponseHeadersTemplate { get; set; } = false;
+    public FaultType FaultType { get; set; } = FaultType.None;
+    public string? FaultConfig { get; set; }
 }

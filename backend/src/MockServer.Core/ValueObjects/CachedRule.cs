@@ -1,4 +1,5 @@
 using MockServer.Core.Entities;
+using MockServer.Core.Enums;
 
 namespace MockServer.Core.ValueObjects;
 
@@ -15,4 +16,6 @@ public class CachedRule
     public int DelayMs { get; set; }
     public bool IsTemplate { get; set; }
     public bool IsResponseHeadersTemplate { get; set; }
+    public FaultType FaultType { get; set; }
+    public string? FaultConfig { get; set; }
 }
