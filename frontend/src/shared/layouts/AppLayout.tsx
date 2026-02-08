@@ -5,6 +5,8 @@ import {
   ApiOutlined,
   FileTextOutlined,
   SwapOutlined,
+  CloudServerOutlined,
+  BranchesOutlined,
   SunOutlined,
   MoonOutlined,
   MenuOutlined,
@@ -13,6 +15,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useTheme } from '../contexts/ThemeContext';
+import RecordingIndicator from '@/modules/proxy/components/RecordingIndicator';
 
 const { Sider, Header, Content } = Layout;
 const { useBreakpoint } = Grid;
@@ -30,6 +33,8 @@ export default function AppLayout() {
     { key: '/', icon: <DashboardOutlined />, label: t('menu.dashboard') },
     { key: '/endpoints', icon: <ApiOutlined />, label: t('menu.endpoints') },
     { key: '/logs', icon: <FileTextOutlined />, label: t('menu.logs') },
+    { key: '/proxy', icon: <CloudServerOutlined />, label: t('menu.proxy') },
+    { key: '/scenarios', icon: <BranchesOutlined />, label: t('menu.scenarios') },
     { key: '/import-export', icon: <SwapOutlined />, label: t('menu.importExport') },
   ];
 
@@ -134,7 +139,8 @@ export default function AppLayout() {
               />
             )}
           </div>
-          <Flex align="center" gap={4}>
+          <Flex align="center" gap={8}>
+            <RecordingIndicator />
             <Button
               type="text"
               icon={mode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
