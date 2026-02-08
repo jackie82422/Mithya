@@ -24,7 +24,23 @@ export enum MatchOperator {
   GreaterThan = 6,
   LessThan = 7,
   Exists = 8,
+  NotEquals = 9,
+  JsonSchema = 10,
+  IsEmpty = 11,
+  NotExists = 12,
 }
+
+export enum FaultType {
+  None = 0,
+  FixedDelay = 1,
+  RandomDelay = 2,
+  ConnectionReset = 3,
+  EmptyResponse = 4,
+  MalformedResponse = 5,
+  Timeout = 6,
+}
+
+export type LogicMode = 'AND' | 'OR';
 
 // ── Label Maps ──
 
@@ -52,6 +68,20 @@ export const MatchOperatorLabel: Record<MatchOperator, string> = {
   [MatchOperator.GreaterThan]: 'GreaterThan',
   [MatchOperator.LessThan]: 'LessThan',
   [MatchOperator.Exists]: 'Exists',
+  [MatchOperator.NotEquals]: 'NotEquals',
+  [MatchOperator.JsonSchema]: 'JsonSchema',
+  [MatchOperator.IsEmpty]: 'IsEmpty',
+  [MatchOperator.NotExists]: 'NotExists',
+};
+
+export const FaultTypeLabel: Record<FaultType, string> = {
+  [FaultType.None]: 'None',
+  [FaultType.FixedDelay]: 'Fixed Delay',
+  [FaultType.RandomDelay]: 'Random Delay',
+  [FaultType.ConnectionReset]: 'Connection Reset',
+  [FaultType.EmptyResponse]: 'Empty Response',
+  [FaultType.MalformedResponse]: 'Malformed Response',
+  [FaultType.Timeout]: 'Timeout',
 };
 
 // ── Entity Types ──
@@ -83,6 +113,11 @@ export interface MockRule {
   responseHeaders: string | null;
   delayMs: number;
   isActive: boolean;
+  isTemplate: boolean;
+  isResponseHeadersTemplate: boolean;
+  faultType: FaultType;
+  faultConfig: string | null;
+  logicMode: LogicMode;
   createdAt: string;
   updatedAt: string;
 }
@@ -123,6 +158,9 @@ export interface MockRequestLog {
   responseBody: string | null;
   responseTimeMs: number;
   isMatched: boolean;
+  isProxied: boolean;
+  proxyTargetUrl: string | null;
+  faultTypeApplied: FaultType | null;
 }
 
 export interface ProtocolSchema {
@@ -166,4 +204,108 @@ export interface CreateRuleRequest {
   responseBody: string;
   responseHeaders?: Record<string, string>;
   delayMs?: number;
+  isTemplate?: boolean;
+  isResponseHeadersTemplate?: boolean;
+  faultType?: FaultType;
+  faultConfig?: string | null;
+  logicMode?: LogicMode;
+}
+
+// ── Template Preview ──
+
+export interface TemplatePreviewRequest {
+  template: string;
+  mockRequest: {
+    method: string;
+    path: string;
+    body: string;
+    headers: Record<string, string>;
+    query: Record<string, string>;
+    pathParams: Record<string, string>;
+  };
+}
+
+export interface TemplatePreviewResponse {
+  rendered: string;
+  error: string | null;
+}
+
+// ── Proxy Config ──
+
+export interface ProxyConfig {
+  id: string;
+  endpointId: string | null;
+  targetBaseUrl: string;
+  isActive: boolean;
+  isRecording: boolean;
+  forwardHeaders: boolean;
+  additionalHeaders: string | null;
+  timeoutMs: number;
+  stripPathPrefix: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProxyConfigRequest {
+  endpointId?: string | null;
+  targetBaseUrl: string;
+  isRecording?: boolean;
+  forwardHeaders?: boolean;
+  additionalHeaders?: Record<string, string> | null;
+  timeoutMs?: number;
+  stripPathPrefix?: string | null;
+}
+
+// ── Scenarios ──
+
+export interface Scenario {
+  id: string;
+  name: string;
+  description: string | null;
+  initialState: string;
+  currentState: string;
+  isActive: boolean;
+  steps: ScenarioStep[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScenarioStep {
+  id: string;
+  scenarioId: string;
+  stateName: string;
+  endpointId: string;
+  matchConditions: string | null;
+  responseStatusCode: number;
+  responseBody: string;
+  responseHeaders: string | null;
+  isTemplate: boolean;
+  delayMs: number;
+  nextState: string | null;
+  priority: number;
+}
+
+export interface CreateScenarioRequest {
+  name: string;
+  description?: string;
+  initialState: string;
+}
+
+export interface UpdateScenarioRequest {
+  name: string;
+  description?: string;
+  initialState: string;
+}
+
+export interface CreateStepRequest {
+  stateName: string;
+  endpointId: string;
+  matchConditions?: MatchCondition[];
+  responseStatusCode: number;
+  responseBody: string;
+  responseHeaders?: Record<string, string>;
+  isTemplate?: boolean;
+  delayMs?: number;
+  nextState?: string | null;
+  priority?: number;
 }
