@@ -169,6 +169,7 @@
     "duplicateWarning": "以下 {{count}} 個端點已存在（路徑 + 方法重複），繼續匯入將建立重複項目：",
     "duplicateConfirm": "確定繼續匯入？",
     "preview": "預覽",
+    "goToEndpoints": "前往端點管理",
     "openapi": {
       "tabTitle": "匯入 OpenAPI",
       "desc": "從 OpenAPI 3.0 或 Swagger 2.0 規格檔匯入端點。",

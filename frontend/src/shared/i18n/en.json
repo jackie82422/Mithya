@@ -169,6 +169,7 @@
     "duplicateWarning": "The following {{count}} endpoint(s) already exist (same path + method). Continuing will create duplicates:",
     "duplicateConfirm": "Continue importing?",
     "preview": "Preview",
+    "goToEndpoints": "Go to Endpoints",
     "openapi": {
       "tabTitle": "Import OpenAPI",
       "desc": "Import endpoints from an OpenAPI 3.0 or Swagger 2.0 specification file.",

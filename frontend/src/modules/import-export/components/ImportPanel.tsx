@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Card, Upload, Button, Typography, message, Space, Modal } from 'antd';
-import { UploadOutlined, ImportOutlined } from '@ant-design/icons';
+import { UploadOutlined, ImportOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { endpointsApi } from '@/modules/endpoints/api';
 import { rulesApi } from '@/modules/rules/api';
@@ -10,9 +11,11 @@ import CodeEditor from '@/shared/components/CodeEditor';
 
 export default function ImportPanel() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [preview, setPreview] = useState('');
   const [importing, setImporting] = useState(false);
+  const [importedCount, setImportedCount] = useState<number | null>(null);
 
   const handleFileRead = (file: File) => {
     const reader = new FileReader();
@@ -76,6 +79,7 @@ export default function ImportPanel() {
       }
       qc.invalidateQueries({ queryKey: ['endpoints'] });
       message.success(t('importExport.importSuccess', { count }));
+      setImportedCount(count);
       setPreview('');
     } catch {
       message.error(t('importExport.importError'));
@@ -150,6 +154,17 @@ export default function ImportPanel() {
               {importing ? t('importExport.importing') : t('importExport.importButton')}
             </Button>
           </>
+        )}
+
+        {importedCount !== null && !preview && (
+          <Button
+            type="link"
+            icon={<ArrowRightOutlined />}
+            onClick={() => navigate('/endpoints')}
+            style={{ paddingLeft: 0 }}
+          >
+            {t('importExport.goToEndpoints')}
+          </Button>
         )}
       </Space>
     </Card>
