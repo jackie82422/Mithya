@@ -1,35 +1,51 @@
+import { useEffect } from 'react';
 import { Modal, Form, Input, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ProtocolType, ProtocolTypeLabel } from '@/shared/types';
-import type { CreateEndpointRequest } from '@/shared/types';
+import type { CreateEndpointRequest, MockEndpoint } from '@/shared/types';
 
 interface EndpointFormProps {
   open: boolean;
   onCancel: () => void;
   onSubmit: (values: CreateEndpointRequest) => void;
   loading?: boolean;
+  editingEndpoint?: MockEndpoint | null;
 }
 
 const httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
-export default function EndpointForm({ open, onCancel, onSubmit, loading }: EndpointFormProps) {
+export default function EndpointForm({ open, onCancel, onSubmit, loading, editingEndpoint }: EndpointFormProps) {
   const { t } = useTranslation();
   const [form] = Form.useForm<CreateEndpointRequest>();
+  const isEdit = !!editingEndpoint;
+
+  useEffect(() => {
+    if (open && editingEndpoint) {
+      form.setFieldsValue({
+        name: editingEndpoint.name,
+        serviceName: editingEndpoint.serviceName,
+        protocol: editingEndpoint.protocol,
+        httpMethod: editingEndpoint.httpMethod,
+        path: editingEndpoint.path,
+      });
+    }
+  }, [open, editingEndpoint, form]);
 
   const handleOk = async () => {
     const values = await form.validateFields();
     onSubmit(values);
+  };
+
+  const handleCancel = () => {
     form.resetFields();
+    onCancel();
   };
 
   return (
     <Modal
-      title={t('endpoints.form.title')}
+      title={isEdit ? t('endpoints.form.editTitle') : t('endpoints.form.title')}
       open={open}
-      onCancel={() => {
-        form.resetFields();
-        onCancel();
-      }}
+      onCancel={handleCancel}
       onOk={handleOk}
       confirmLoading={loading}
       okText={t('common.save')}
@@ -56,7 +72,7 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading }: Endp
           label={t('endpoints.protocol')}
           rules={[{ required: true, message: t('validation.requiredSelect', { field: t('endpoints.protocol') }) }]}
         >
-          <Select placeholder={t('endpoints.form.selectProtocol')}>
+          <Select placeholder={t('endpoints.form.selectProtocol')} disabled={isEdit}>
             {Object.entries(ProtocolTypeLabel).map(([val, label]) => (
               <Select.Option key={val} value={Number(val)}>
                 {label}

@@ -2,6 +2,7 @@ import apiClient from '@/shared/api/client';
 import type {
   MockEndpoint,
   CreateEndpointRequest,
+  UpdateEndpointRequest,
   SetDefaultResponseRequest,
 } from '@/shared/types';
 
@@ -14,6 +15,9 @@ export const endpointsApi = {
 
   create: (data: CreateEndpointRequest) =>
     apiClient.post<MockEndpoint>('/endpoints', data).then((r) => r.data),
+
+  update: (id: string, data: UpdateEndpointRequest) =>
+    apiClient.put<MockEndpoint>(`/endpoints/${id}`, data).then((r) => r.data),
 
   setDefaultResponse: (id: string, data: SetDefaultResponseRequest) =>
     apiClient.put<MockEndpoint>(`/endpoints/${id}/default`, data).then((r) => r.data),

@@ -1,5 +1,5 @@
 import { Card, Space, Typography, Button, Popconfirm, Flex, Tooltip, Switch } from 'antd';
-import { DeleteOutlined, SettingOutlined, RightOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, SettingOutlined, RightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { MockEndpoint } from '@/shared/types';
@@ -12,10 +12,11 @@ interface EndpointCardProps {
   onDelete: (id: string) => void;
   onSetDefault: (endpoint: MockEndpoint) => void;
   onToggle: (id: string) => void;
+  onEdit: (endpoint: MockEndpoint) => void;
   toggleLoading?: boolean;
 }
 
-export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggle, toggleLoading }: EndpointCardProps) {
+export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggle, onEdit, toggleLoading }: EndpointCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -71,6 +72,17 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggl
               onChange={(_, e) => {
                 e.stopPropagation();
                 onToggle(endpoint.id);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title={t('common.edit')}>
+            <Button
+              size="small"
+              type="text"
+              icon={<EditOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(endpoint);
               }}
             />
           </Tooltip>
