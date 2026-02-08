@@ -178,7 +178,12 @@
       "invalidSpec": "此檔案不是有效的 OpenAPI 3.0 或 Swagger 2.0 規格",
       "noEndpoints": "規格檔中未找到任何端點",
       "progress": "正在匯入第 {{current}} / {{total}} 個...",
-      "warnings": "警告"
+      "warnings": "警告",
+      "colMethod": "方法",
+      "colPath": "路徑",
+      "colName": "名稱",
+      "colStatus": "狀態碼",
+      "colResponse": "回應"
     }
   }
 }

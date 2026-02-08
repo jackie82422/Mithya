@@ -178,7 +178,12 @@
       "invalidSpec": "Not a valid OpenAPI 3.0 or Swagger 2.0 file",
       "noEndpoints": "No endpoints found in the spec",
       "progress": "Importing {{current}} of {{total}}...",
-      "warnings": "Warnings"
+      "warnings": "Warnings",
+      "colMethod": "Method",
+      "colPath": "Path",
+      "colName": "Name",
+      "colStatus": "Status",
+      "colResponse": "Response"
     }
   }
 }

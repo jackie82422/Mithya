@@ -100,28 +100,28 @@ export default function OpenApiImportPanel() {
   const columns: ColumnsType<ParsedEndpoint> = useMemo(
     () => [
       {
-        title: 'Method',
+        title: t('importExport.openapi.colMethod'),
         dataIndex: 'httpMethod',
         width: 100,
         render: (method: string) => <HttpMethodTag method={method} />,
       },
       {
-        title: 'Path',
+        title: t('importExport.openapi.colPath'),
         dataIndex: 'path',
         render: (path: string) => <code>{path}</code>,
       },
       {
-        title: 'Name',
+        title: t('importExport.openapi.colName'),
         dataIndex: 'name',
         ellipsis: true,
       },
       {
-        title: 'Status',
+        title: t('importExport.openapi.colStatus'),
         dataIndex: 'defaultStatusCode',
         width: 80,
       },
       {
-        title: 'Response',
+        title: t('importExport.openapi.colResponse'),
         dataIndex: 'defaultResponseBody',
         width: 200,
         ellipsis: true,
@@ -135,7 +135,7 @@ export default function OpenApiImportPanel() {
         },
       },
     ],
-    [],
+    [t],
   );
 
   const specVersionLabel = result?.specVersion === 'swagger2' ? 'Swagger 2.0' : 'OpenAPI 3.x';
