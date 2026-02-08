@@ -173,21 +173,26 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
                 onChange={() => onToggle(rule.id)}
               />
             </Tooltip>
-            <Button
-              size="small"
-              type="text"
-              icon={<CodeOutlined />}
-              onClick={() => setCurlOpen(true)}
-              title="cURL"
-            />
-            <Button size="small" type="text" icon={<EditOutlined />} onClick={() => onEdit(rule)} />
+            <Tooltip title="cURL">
+              <Button
+                size="small"
+                type="text"
+                icon={<CodeOutlined />}
+                onClick={() => setCurlOpen(true)}
+              />
+            </Tooltip>
+            <Tooltip title={t('common.edit')}>
+              <Button size="small" type="text" icon={<EditOutlined />} onClick={() => onEdit(rule)} />
+            </Tooltip>
             <Popconfirm
               title={t('rules.deleteConfirm', { name: rule.ruleName })}
               onConfirm={() => onDelete(rule.id)}
               okText={t('common.yes')}
               cancelText={t('common.no')}
             >
-              <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+              <Tooltip title={t('common.delete')}>
+                <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+              </Tooltip>
             </Popconfirm>
           </Space>
         </Flex>
