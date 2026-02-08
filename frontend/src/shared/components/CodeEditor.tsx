@@ -1,4 +1,7 @@
-import { Input } from 'antd';
+import { useMemo } from 'react';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { useTheme } from '@/shared/contexts/ThemeContext';
 
 interface CodeEditorProps {
   value: string;
@@ -8,77 +11,33 @@ interface CodeEditorProps {
   readOnly?: boolean;
 }
 
-function highlightJson(raw: string): string {
-  const escaped = raw
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  return escaped.replace(
-    /("(?:\\.|[^"\\])*")\s*(:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
-    (match, str, colon, bool, num) => {
-      if (str) {
-        if (colon) {
-          return `<span style="color:var(--code-key)">${str}</span>:`;
-        }
-        return `<span style="color:var(--code-string)">${str}</span>`;
-      }
-      if (bool) return `<span style="color:var(--code-bool)">${match}</span>`;
-      if (num) return `<span style="color:var(--code-number)">${match}</span>`;
-      return match;
-    },
-  );
-}
-
-const monoFont =
-  "'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, Consolas, monospace";
-
 export default function CodeEditor({
   value,
   onChange,
   height = 300,
   readOnly = false,
 }: CodeEditorProps) {
-  if (readOnly) {
-    return (
-      <pre
-        style={{
-          height: typeof height === 'number' ? height : undefined,
-          fontFamily: monoFont,
-          fontSize: 13,
-          lineHeight: 1.6,
-          background: 'var(--code-bg)',
-          border: '1px solid var(--color-border)',
-          borderRadius: 12,
-          padding: '8px 12px',
-          margin: 0,
-          overflow: 'auto',
-          color: 'var(--color-text)',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-        }}
-        dangerouslySetInnerHTML={{ __html: highlightJson(value || '') }}
-      />
-    );
-  }
+  const { mode } = useTheme();
+  const extensions = useMemo(() => [json()], []);
+  const h = typeof height === 'number' ? `${height}px` : height;
 
   return (
-    <Input.TextArea
+    <CodeMirror
       value={value}
-      onChange={(e) => onChange?.(e.target.value)}
+      onChange={readOnly ? undefined : onChange}
+      extensions={extensions}
+      theme={mode === 'dark' ? 'dark' : 'light'}
       readOnly={readOnly}
-      style={{
-        height: typeof height === 'number' ? height : undefined,
-        fontFamily: monoFont,
-        fontSize: 13,
-        lineHeight: 1.6,
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 12,
-        resize: 'vertical',
-        color: 'var(--color-text)',
+      editable={!readOnly}
+      height={h}
+      style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}
+      basicSetup={{
+        lineNumbers: true,
+        foldGutter: true,
+        bracketMatching: true,
+        closeBrackets: true,
+        highlightActiveLine: !readOnly,
       }}
-      autoSize={false}
     />
   );
 }
