@@ -52,7 +52,7 @@ export default function EndpointListPage() {
         placeholder={t('common.search')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 20, maxWidth: 420, height: 42, borderRadius: 12 }}
+        style={{ marginBottom: 20, height: 42, borderRadius: 12 }}
         allowClear
       />
 
