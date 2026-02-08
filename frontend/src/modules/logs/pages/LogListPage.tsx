@@ -18,9 +18,14 @@ export default function LogListPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
-        <Typography.Title level={2} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          {t('logs.title')}
-        </Typography.Title>
+        <div>
+          <Typography.Title level={3} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
+            {t('logs.title')}
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+            {t('logs.subtitle')}
+          </Typography.Text>
+        </div>
         <Space size="middle">
           <Flex align="center" gap={8}>
             <Switch

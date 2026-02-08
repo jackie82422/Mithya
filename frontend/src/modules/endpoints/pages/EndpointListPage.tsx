@@ -39,9 +39,14 @@ export default function EndpointListPage() {
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
-        <Typography.Title level={2} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
-          {t('endpoints.title')}
-        </Typography.Title>
+        <div>
+          <Typography.Title level={3} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
+            {t('endpoints.title')}
+          </Typography.Title>
+          <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+            {t('endpoints.subtitle')}
+          </Typography.Text>
+        </div>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormOpen(true)}>
           {t('endpoints.create')}
         </Button>

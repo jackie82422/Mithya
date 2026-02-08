@@ -38,6 +38,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "subtitle": "Mock Server status at a glance",
     "totalEndpoints": "Total Endpoints",
     "activeEndpoints": "Active Endpoints",
     "totalRules": "Total Rules",
@@ -49,6 +50,7 @@
   },
   "endpoints": {
     "title": "Endpoints",
+    "subtitle": "Manage mock API endpoints and their response rules",
     "create": "Create Endpoint",
     "name": "Endpoint Name",
     "serviceName": "Service Name",
@@ -114,6 +116,7 @@
   },
   "logs": {
     "title": "Request Logs",
+    "subtitle": "View all incoming requests to the Mock Server",
     "timestamp": "Timestamp",
     "method": "Method",
     "path": "Path",
@@ -147,6 +150,7 @@
   },
   "importExport": {
     "title": "Import / Export",
+    "subtitle": "Export or import endpoint rules in JSON or OpenAPI format",
     "export": "Export",
     "import": "Import",
     "exportDesc": "Export all endpoints and rules as a JSON file",

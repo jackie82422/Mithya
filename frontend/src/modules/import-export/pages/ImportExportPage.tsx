@@ -9,9 +9,14 @@ export default function ImportExportPage() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <Typography.Title level={2} style={{ fontWeight: 600, letterSpacing: '-0.5px' }}>
-        {t('importExport.title')}
-      </Typography.Title>
+      <div>
+        <Typography.Title level={3} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
+          {t('importExport.title')}
+        </Typography.Title>
+        <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+          {t('importExport.subtitle')}
+        </Typography.Text>
+      </div>
       <Tabs
         items={[
           {
