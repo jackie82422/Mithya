@@ -28,6 +28,7 @@ builder.Services.AddDbContext<MockServerDbContext>(options =>
 builder.Services.AddScoped<IEndpointRepository, EndpointRepository>();
 builder.Services.AddScoped<IRuleRepository, RuleRepository>();
 builder.Services.AddScoped<IRequestLogRepository, RequestLogRepository>();
+builder.Services.AddScoped<IProxyConfigRepository, ProxyConfigRepository>();
 
 // Protocol Handler Factory
 builder.Services.AddSingleton<ProtocolHandlerFactory>();
@@ -38,6 +39,16 @@ builder.Services.AddSingleton<IMockRuleCache, MockRuleCache>();
 builder.Services.AddSingleton<IMatchEngine, MatchEngine>();
 builder.Services.AddSingleton<IFaultInjector, FaultInjector>();
 builder.Services.AddSingleton<ResponseRenderer>();
+
+// Proxy Engine
+builder.Services.AddHttpClient("ProxyClient")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AllowAutoRedirect = false
+    });
+builder.Services.AddSingleton<IProxyEngine, ProxyEngine>();
+builder.Services.AddSingleton<IRecordingService, RecordingService>();
+builder.Services.AddSingleton<IProxyConfigCache, ProxyConfigCache>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -84,6 +95,7 @@ app.MapEndpointManagementApis();
 app.MapRuleManagementApis();
 app.MapLogApis();
 app.MapTemplateApis();
+app.MapProxyConfigApis();
 app.MapConfigEndpoints();
 
 // Load all cached rules on startup
@@ -96,6 +108,18 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"Error loading mock rule cache: {ex.Message}");
+}
+
+// Load proxy config cache on startup
+var proxyCache = app.Services.GetRequiredService<IProxyConfigCache>();
+try
+{
+    await proxyCache.LoadAllAsync();
+    Console.WriteLine("Proxy config cache loaded successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error loading proxy config cache: {ex.Message}");
 }
 
 app.Run();

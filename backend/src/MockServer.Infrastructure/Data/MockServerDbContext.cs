@@ -12,6 +12,7 @@ public class MockServerDbContext : DbContext
     public DbSet<MockEndpoint> MockEndpoints => Set<MockEndpoint>();
     public DbSet<MockRule> MockRules => Set<MockRule>();
     public DbSet<MockRequestLog> MockRequestLogs => Set<MockRequestLog>();
+    public DbSet<ProxyConfig> ProxyConfigs => Set<ProxyConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

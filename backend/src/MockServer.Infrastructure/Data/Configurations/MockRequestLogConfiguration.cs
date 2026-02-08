@@ -51,6 +51,13 @@ public class MockRequestLogConfiguration : IEntityTypeConfiguration<MockRequestL
 
         builder.Property(l => l.FaultTypeApplied);
 
+        builder.Property(l => l.IsProxied)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(l => l.ProxyTargetUrl)
+            .HasMaxLength(500);
+
         builder.HasIndex(l => l.Timestamp)
             .HasDatabaseName("idx_log_timestamp");
 

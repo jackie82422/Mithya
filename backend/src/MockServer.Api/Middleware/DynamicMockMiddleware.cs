@@ -14,17 +14,26 @@ public class DynamicMockMiddleware
     private readonly IMatchEngine _matchEngine;
     private readonly ResponseRenderer _responseRenderer;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IProxyEngine _proxyEngine;
+    private readonly IRecordingService _recordingService;
+    private readonly IProxyConfigCache _proxyConfigCache;
 
     public DynamicMockMiddleware(
         RequestDelegate next,
         IMatchEngine matchEngine,
         ResponseRenderer responseRenderer,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        IProxyEngine proxyEngine,
+        IRecordingService recordingService,
+        IProxyConfigCache proxyConfigCache)
     {
         _next = next;
         _matchEngine = matchEngine;
         _responseRenderer = responseRenderer;
         _scopeFactory = scopeFactory;
+        _proxyEngine = proxyEngine;
+        _recordingService = recordingService;
+        _proxyConfigCache = proxyConfigCache;
     }
 
     public async Task InvokeAsync(HttpContext httpContext)
@@ -73,18 +82,10 @@ public class DynamicMockMiddleware
         Guid? endpointId = null;
         Guid? ruleId = null;
         int? faultTypeApplied = null;
+        bool isProxied = false;
+        string? proxyTargetUrl = null;
 
-        if (matchResult == null)
-        {
-            // No match - return 404
-            responseStatusCode = 404;
-            isMatched = false;
-            httpContext.Response.StatusCode = 404;
-            httpContext.Response.ContentType = "application/json";
-            responseBody = JsonConvert.SerializeObject(new { error = "No matching endpoint found", path = context.Path, method = context.Method });
-            await httpContext.Response.WriteAsync(responseBody);
-        }
-        else
+        if (matchResult != null)
         {
             // Render matched response
             endpointId = matchResult.Endpoint.Id;
@@ -100,6 +101,54 @@ public class DynamicMockMiddleware
 
             if (matchResult.Rule?.FaultType != FaultType.None)
                 faultTypeApplied = (int?)matchResult.Rule?.FaultType;
+        }
+        else
+        {
+            // No match -> try proxy
+            var proxyConfig = FindActiveProxyConfig(context);
+            if (proxyConfig != null)
+            {
+                var proxyResponse = await _proxyEngine.ForwardAsync(context, proxyConfig);
+                if (proxyResponse != null)
+                {
+                    httpContext.Response.StatusCode = proxyResponse.StatusCode;
+                    foreach (var header in proxyResponse.Headers)
+                    {
+                        if (!IsResponseHopByHopHeader(header.Key))
+                            httpContext.Response.Headers.TryAdd(header.Key, header.Value);
+                    }
+                    await httpContext.Response.WriteAsync(proxyResponse.Body);
+
+                    responseStatusCode = proxyResponse.StatusCode;
+                    responseBody = proxyResponse.Body;
+                    isMatched = false;
+                    isProxied = true;
+                    proxyTargetUrl = proxyResponse.TargetUrl;
+
+                    if (proxyConfig.IsRecording)
+                        _ = _recordingService.RecordAsync(context, proxyResponse, null);
+                }
+                else
+                {
+                    // Proxy failed
+                    responseStatusCode = 502;
+                    isMatched = false;
+                    httpContext.Response.StatusCode = 502;
+                    httpContext.Response.ContentType = "application/json";
+                    responseBody = JsonConvert.SerializeObject(new { error = "Proxy request failed", path = context.Path });
+                    await httpContext.Response.WriteAsync(responseBody);
+                }
+            }
+            else
+            {
+                // No proxy config either -> 404
+                responseStatusCode = 404;
+                isMatched = false;
+                httpContext.Response.StatusCode = 404;
+                httpContext.Response.ContentType = "application/json";
+                responseBody = JsonConvert.SerializeObject(new { error = "No matching endpoint found", path = context.Path, method = context.Method });
+                await httpContext.Response.WriteAsync(responseBody);
+            }
         }
 
         stopwatch.Stop();
@@ -123,7 +172,9 @@ public class DynamicMockMiddleware
                 ResponseBody = responseBody,
                 ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds,
                 IsMatched = isMatched,
-                FaultTypeApplied = faultTypeApplied
+                FaultTypeApplied = faultTypeApplied,
+                IsProxied = isProxied,
+                ProxyTargetUrl = proxyTargetUrl
             };
 
             await logRepo.AddAsync(log);
@@ -133,5 +184,17 @@ public class DynamicMockMiddleware
         {
             Console.WriteLine($"Error writing mock request log: {ex.Message}");
         }
+    }
+
+    private ProxyConfig? FindActiveProxyConfig(MockRequestContext context)
+    {
+        // Check global proxy config (endpoint-specific proxy would require knowing the endpoint ID)
+        return _proxyConfigCache.GetGlobalActive();
+    }
+
+    private static bool IsResponseHopByHopHeader(string headerName)
+    {
+        return string.Equals(headerName, "Transfer-Encoding", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(headerName, "Connection", StringComparison.OrdinalIgnoreCase);
     }
 }

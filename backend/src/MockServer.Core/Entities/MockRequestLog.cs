@@ -19,4 +19,6 @@ public class MockRequestLog
 
     public bool IsMatched { get; set; }
     public int? FaultTypeApplied { get; set; }
+    public bool IsProxied { get; set; }
+    public string? ProxyTargetUrl { get; set; }
 }
