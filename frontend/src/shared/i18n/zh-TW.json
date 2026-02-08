@@ -135,6 +135,8 @@
     "queryString": "查詢字串",
     "noLogs": "暫無請求日誌",
     "refresh": "刷新",
+    "clear": "清除日誌",
+    "clearConfirm": "確定要清除所有日誌嗎？此操作無法復原。",
     "autoRefresh": "自動刷新",
     "allMethods": "所有方法",
     "allStatus": "所有狀態",

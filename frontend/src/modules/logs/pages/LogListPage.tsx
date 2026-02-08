@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Typography, Flex, Button, Switch, Space } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { Typography, Flex, Button, Switch, Space, Popconfirm } from 'antd';
+import { ReloadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useLogs } from '../hooks';
+import { useLogs, useClearLogs } from '../hooks';
 import LogTable from '../components/LogTable';
 import LogDetail from '../components/LogDetail';
 import type { MockRequestLog } from '@/shared/types';
@@ -13,6 +13,7 @@ export default function LogListPage() {
   const { t } = useTranslation();
   const [autoRefresh, setAutoRefresh] = useState(false);
   const { data: logs, isLoading, refetch } = useLogs(500, autoRefresh ? POLL_INTERVAL : false);
+  const clearLogs = useClearLogs();
   const [selectedLog, setSelectedLog] = useState<MockRequestLog | null>(null);
 
   return (
@@ -37,6 +38,20 @@ export default function LogListPage() {
               {t('logs.autoRefresh')}
             </Typography.Text>
           </Flex>
+          <Popconfirm
+            title={t('logs.clearConfirm')}
+            onConfirm={() => clearLogs.mutate()}
+            okText={t('common.yes')}
+            cancelText={t('common.no')}
+          >
+            <Button
+              icon={<DeleteOutlined />}
+              danger
+              loading={clearLogs.isPending}
+            >
+              {t('logs.clear')}
+            </Button>
+          </Popconfirm>
           <Button
             icon={<ReloadOutlined />}
             onClick={() => refetch()}
