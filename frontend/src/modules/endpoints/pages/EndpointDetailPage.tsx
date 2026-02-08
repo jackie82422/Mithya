@@ -17,6 +17,7 @@ import {
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoint, useToggleEndpoint } from '../hooks';
+import { useServerConfig } from '@/shared/hooks/useServerConfig';
 import { useRules, useCreateRule, useUpdateRule, useDeleteRule, useToggleRule } from '@/modules/rules/hooks';
 import ProtocolTag from '@/shared/components/ProtocolTag';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
@@ -47,6 +48,7 @@ export default function EndpointDetailPage() {
   const deleteRule = useDeleteRule(id!);
   const toggleEndpoint = useToggleEndpoint();
   const toggleRule = useToggleRule(id!);
+  const { data: config } = useServerConfig();
   const [ruleFormOpen, setRuleFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<MockRule | null>(null);
 
@@ -159,6 +161,13 @@ export default function EndpointDetailPage() {
           <InfoItem label={t('endpoints.path')}>
             <Typography.Text code>{endpoint.path}</Typography.Text>
           </InfoItem>
+          {config?.mockServerUrl && (
+            <InfoItem label={t('endpoints.mockUrl')}>
+              <Typography.Text code copyable style={{ fontSize: 13 }}>
+                {`${config.mockServerUrl}${endpoint.path}`}
+              </Typography.Text>
+            </InfoItem>
+          )}
           <InfoItem label={t('endpoints.defaultStatusCode')}>
             {endpoint.defaultStatusCode ?? '-'}
           </InfoItem>
