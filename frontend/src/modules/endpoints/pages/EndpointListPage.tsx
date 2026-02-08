@@ -3,21 +3,23 @@ import { Typography, Button, Spin, Empty, Input, Flex } from 'antd';
 import type { InputRef } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useEndpoints, useCreateEndpoint, useDeleteEndpoint, useSetDefaultResponse, useToggleEndpoint } from '../hooks';
+import { useEndpoints, useCreateEndpoint, useUpdateEndpoint, useDeleteEndpoint, useSetDefaultResponse, useToggleEndpoint } from '../hooks';
 import EndpointCard from '../components/EndpointCard';
 import EndpointForm from '../components/EndpointForm';
 import DefaultResponseForm from '../components/DefaultResponseForm';
-import type { MockEndpoint, CreateEndpointRequest, SetDefaultResponseRequest } from '@/shared/types';
+import type { MockEndpoint, CreateEndpointRequest, UpdateEndpointRequest, SetDefaultResponseRequest } from '@/shared/types';
 
 export default function EndpointListPage() {
   const { t } = useTranslation();
   const { data: endpoints, isLoading } = useEndpoints();
   const createEndpoint = useCreateEndpoint();
+  const updateEndpoint = useUpdateEndpoint();
   const deleteEndpoint = useDeleteEndpoint();
   const setDefault = useSetDefaultResponse();
   const toggleEndpoint = useToggleEndpoint();
 
   const [formOpen, setFormOpen] = useState(false);
+  const [editingEndpoint, setEditingEndpoint] = useState<MockEndpoint | null>(null);
   const [defaultFormOpen, setDefaultFormOpen] = useState(false);
   const [selectedEndpoint, setSelectedEndpoint] = useState<MockEndpoint | null>(null);
   const [search, setSearch] = useState('');
@@ -42,7 +44,21 @@ export default function EndpointListPage() {
   );
 
   const handleCreate = (values: CreateEndpointRequest) => {
-    createEndpoint.mutate(values, { onSuccess: () => setFormOpen(false) });
+    if (editingEndpoint) {
+      const updateData: UpdateEndpointRequest = {
+        name: values.name,
+        serviceName: values.serviceName,
+        path: values.path,
+        httpMethod: values.httpMethod,
+        protocolSettings: values.protocolSettings,
+      };
+      updateEndpoint.mutate(
+        { id: editingEndpoint.id, data: updateData },
+        { onSuccess: () => { setFormOpen(false); setEditingEndpoint(null); } },
+      );
+    } else {
+      createEndpoint.mutate(values, { onSuccess: () => setFormOpen(false) });
+    }
   };
 
   const handleSetDefault = (id: string, data: SetDefaultResponseRequest) => {
@@ -60,7 +76,7 @@ export default function EndpointListPage() {
             {t('endpoints.subtitle')}
           </Typography.Text>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setFormOpen(true)}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingEndpoint(null); setFormOpen(true); }}>
           {t('endpoints.create')}
         </Button>
       </Flex>
@@ -98,6 +114,10 @@ export default function EndpointListPage() {
               setDefaultFormOpen(true);
             }}
             onToggle={(id) => toggleEndpoint.mutate(id)}
+            onEdit={(ep) => {
+              setEditingEndpoint(ep);
+              setFormOpen(true);
+            }}
             toggleLoading={toggleEndpoint.isPending}
           />
         ))
@@ -105,9 +125,10 @@ export default function EndpointListPage() {
 
       <EndpointForm
         open={formOpen}
-        onCancel={() => setFormOpen(false)}
+        onCancel={() => { setFormOpen(false); setEditingEndpoint(null); }}
         onSubmit={handleCreate}
-        loading={createEndpoint.isPending}
+        loading={editingEndpoint ? updateEndpoint.isPending : createEndpoint.isPending}
+        editingEndpoint={editingEndpoint}
       />
 
       <DefaultResponseForm

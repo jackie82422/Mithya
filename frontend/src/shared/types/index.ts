@@ -145,6 +145,14 @@ export interface CreateEndpointRequest {
   protocolSettings?: string | null;
 }
 
+export interface UpdateEndpointRequest {
+  name: string;
+  serviceName: string;
+  path: string;
+  httpMethod: string;
+  protocolSettings?: string | null;
+}
+
 export interface SetDefaultResponseRequest {
   statusCode: number;
   responseBody: string;
