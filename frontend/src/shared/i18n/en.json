@@ -123,6 +123,8 @@
     "responseBody": "Response Body",
     "queryString": "Query String",
     "noLogs": "No request logs yet",
+    "refresh": "Refresh",
+    "autoRefresh": "Auto Refresh",
     "allMethods": "All Methods",
     "allStatus": "All Status",
     "ms": "ms"

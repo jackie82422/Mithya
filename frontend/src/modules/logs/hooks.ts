@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { logsApi } from './api';
 
-export function useLogs(limit = 100) {
+export function useLogs(limit = 100, refetchInterval?: number | false) {
   return useQuery({
     queryKey: ['logs', limit],
     queryFn: () => logsApi.getAll(limit),
+    refetchInterval: refetchInterval || false,
   });
 }
 

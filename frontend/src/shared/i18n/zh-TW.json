@@ -123,6 +123,8 @@
     "responseBody": "回應內容",
     "queryString": "查詢字串",
     "noLogs": "暫無請求日誌",
+    "refresh": "刷新",
+    "autoRefresh": "自動刷新",
     "allMethods": "所有方法",
     "allStatus": "所有狀態",
     "ms": "ms"
