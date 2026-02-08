@@ -82,7 +82,13 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
         {
           title: t('logs.path'),
           dataIndex: 'path',
-          render: (p: string) => <Typography.Text code>{p}</Typography.Text>,
+          ellipsis: true,
+          render: (_: string, record) => {
+            const fullPath = record.queryString
+              ? `${record.path}?${record.queryString}`
+              : record.path;
+            return <Typography.Text code>{fullPath}</Typography.Text>;
+          },
         },
         {
           title: t('logs.statusCode'),
