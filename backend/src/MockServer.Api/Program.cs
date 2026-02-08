@@ -84,6 +84,7 @@ app.MapProtocolEndpoints();
 app.MapEndpointManagementApis();
 app.MapRuleManagementApis();
 app.MapLogApis();
+app.MapConfigEndpoints();
 
 // Initialize WireMock server only if it's registered (skip in test environment)
 var wireMockManager = app.Services.GetService<WireMockServerManager>();
