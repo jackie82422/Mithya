@@ -122,8 +122,10 @@ public static class ScenarioApis
             await engine.ResetScenarioAsync(id);
             await engine.ReloadAsync();
 
-            var updated = await repo.GetByIdAsync(id);
-            return Results.Ok(updated);
+            // Use in-memory state to avoid stale DbContext read
+            // (ResetScenarioAsync writes via its own scope)
+            scenario.CurrentState = scenario.InitialState;
+            return Results.Ok(scenario);
         })
         .WithName("ResetScenario")
         .WithOpenApi();

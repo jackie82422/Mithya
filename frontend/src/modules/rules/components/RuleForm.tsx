@@ -57,7 +57,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         delayMs: editingRule.delayMs,
         isTemplate: editingRule.isTemplate ?? false,
       });
-      setLogicMode(editingRule.logicMode ?? 'AND');
+      setLogicMode(editingRule.logicMode === 1 ? 'OR' : 'AND');
     }
   }, [open, editingRule, form]);
 
@@ -95,7 +95,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
       isTemplate: values.isTemplate ?? false,
       faultType: faultType ?? FaultType.None,
       faultConfig: faultConfig && faultType !== FaultType.None ? JSON.stringify(faultConfig) : null,
-      logicMode,
+      logicMode: logicMode === 'OR' ? 1 : 0,
     });
   };
 

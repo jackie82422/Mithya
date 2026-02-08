@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using HandlebarsDotNet;
 using MockServer.Core.Interfaces;
 using Newtonsoft.Json.Linq;
@@ -16,8 +17,27 @@ public class HandlebarsTemplateEngine : ITemplateEngine
 
     public string Render(string template, TemplateContext context)
     {
-        var compiled = _handlebars.Compile(template);
-        return compiled(context);
+        // BE-03: Validate block helpers have required parameters
+        ValidateTemplate(template);
+
+        // BE-02: Fix triple-brace ambiguity (e.g., {"num":{{randomInt 1 100}}})
+        // HandlebarsDotNet can't distinguish }}+} from }}} (triple-stache close).
+        // Replace }}} with a marker before compilation, then restore after rendering.
+        const string marker = "__HBS_BRACE__";
+        var processed = template.Replace("}}}", "}}" + marker);
+
+        var compiled = _handlebars.Compile(processed);
+        var result = compiled(context);
+
+        return result.Replace(marker, "}");
+    }
+
+    private static void ValidateTemplate(string template)
+    {
+        if (Regex.IsMatch(template, @"\{\{#(if|unless)\s*\}\}"))
+        {
+            throw new HandlebarsException("Block helper requires a parameter: found {{#if}} or {{#unless}} without condition");
+        }
     }
 
     private void RegisterHelpers()

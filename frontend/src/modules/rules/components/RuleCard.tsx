@@ -171,7 +171,7 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
                   {FaultTypeLabel[rule.faultType]}
                 </span>
               )}
-              {rule.logicMode === 'OR' && (
+              {rule.logicMode === 1 && (
                 <span
                   className="pill-tag"
                   style={{

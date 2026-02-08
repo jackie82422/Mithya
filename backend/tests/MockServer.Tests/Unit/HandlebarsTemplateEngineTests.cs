@@ -267,4 +267,84 @@ public class HandlebarsTemplateEngineTests
         result.Should().Contain("\"method\": \"GET\"");
         result.Should().Contain(DateTime.UtcNow.ToString("yyyy-MM-dd"));
     }
+
+    [Fact]
+    [DisplayName("randomInt 在 JSON 三重大括號中應正確渲染")]
+    public void Render_RandomIntInJson_TripleBrace_ShouldRenderCorrectly()
+    {
+        // Arrange - this is the exact pattern from bug report BE-02
+        var template = "{\"num\":{{randomInt 1 100}}}";
+        var context = CreateContext();
+
+        // Act
+        var result = _engine.Render(template, context);
+
+        // Assert - should produce valid JSON like {"num":42}
+        result.Should().StartWith("{\"num\":");
+        result.Should().EndWith("}");
+        var numStr = result.Replace("{\"num\":", "").TrimEnd('}');
+        int.TryParse(numStr, out var value).Should().BeTrue();
+        value.Should().BeInRange(1, 100);
+    }
+
+    [Fact]
+    [DisplayName("uuid 在 JSON 三重大括號中應正確渲染")]
+    public void Render_UuidInJson_TripleBrace_ShouldRenderCorrectly()
+    {
+        // Arrange
+        var template = "{\"id\":\"{{uuid}}\"}";
+        var context = CreateContext();
+
+        // Act
+        var result = _engine.Render(template, context);
+
+        // Assert
+        result.Should().StartWith("{\"id\":\"");
+        result.Should().EndWith("\"}");
+    }
+
+    [Fact]
+    [DisplayName("{{#if}} 無參數應拋出例外")]
+    public void Render_IfWithoutParam_ShouldThrow()
+    {
+        // Arrange
+        var template = "{{#if}}content{{/if}}";
+        var context = CreateContext();
+
+        // Act
+        var act = () => _engine.Render(template, context);
+
+        // Assert
+        act.Should().Throw<Exception>().WithMessage("*requires a parameter*");
+    }
+
+    [Fact]
+    [DisplayName("{{#unless}} 無參數應拋出例外")]
+    public void Render_UnlessWithoutParam_ShouldThrow()
+    {
+        // Arrange
+        var template = "{{#unless}}content{{/unless}}";
+        var context = CreateContext();
+
+        // Act
+        var act = () => _engine.Render(template, context);
+
+        // Assert
+        act.Should().Throw<Exception>().WithMessage("*requires a parameter*");
+    }
+
+    [Fact]
+    [DisplayName("{{#if condition}} 有參數應正常渲染")]
+    public void Render_IfWithParam_ShouldRenderNormally()
+    {
+        // Arrange
+        var template = "{{#if Request.Method}}has method{{/if}}";
+        var context = CreateContext(method: "GET");
+
+        // Act
+        var result = _engine.Render(template, context);
+
+        // Assert
+        result.Should().Be("has method");
+    }
 }

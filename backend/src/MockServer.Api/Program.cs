@@ -102,6 +102,7 @@ app.MapLogApis();
 app.MapTemplateApis();
 app.MapProxyConfigApis();
 app.MapScenarioApis();
+app.MapImportExportApis();
 app.MapConfigEndpoints();
 
 // Load all cached rules on startup

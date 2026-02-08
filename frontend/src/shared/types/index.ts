@@ -117,7 +117,7 @@ export interface MockRule {
   isResponseHeadersTemplate: boolean;
   faultType: FaultType;
   faultConfig: string | null;
-  logicMode: LogicMode;
+  logicMode: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -208,7 +208,7 @@ export interface CreateRuleRequest {
   isResponseHeadersTemplate?: boolean;
   faultType?: FaultType;
   faultConfig?: string | null;
-  logicMode?: LogicMode;
+  logicMode?: number;
 }
 
 // ── Template Preview ──
