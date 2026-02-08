@@ -201,11 +201,7 @@ public class RestProtocolHandler : IProtocolHandler
         try
         {
             var conditions = JsonConvert.DeserializeObject<List<MatchCondition>>(rule.MatchConditions);
-            if (conditions == null || conditions.Count == 0)
-            {
-                errors.Add("At least one match condition is required");
-            }
-            else
+            if (conditions != null)
             {
                 foreach (var condition in conditions)
                 {

@@ -23,6 +23,14 @@ public static class LogApis
         .WithName("GetLogs")
         .WithOpenApi();
 
+        group.MapDelete("/", async (IRequestLogRepository repo) =>
+        {
+            await repo.DeleteAllAsync();
+            return Results.NoContent();
+        })
+        .WithName("DeleteAllLogs")
+        .WithOpenApi();
+
         group.MapGet("/endpoint/{endpointId}", async (
             Guid endpointId,
             IRequestLogRepository repo,

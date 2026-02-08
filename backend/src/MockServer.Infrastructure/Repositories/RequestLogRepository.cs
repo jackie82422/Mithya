@@ -38,6 +38,12 @@ public class RequestLogRepository : IRequestLogRepository
         await _context.MockRequestLogs.AddAsync(log);
     }
 
+    public async Task DeleteAllAsync()
+    {
+        _context.MockRequestLogs.RemoveRange(_context.MockRequestLogs);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<bool> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync() > 0;

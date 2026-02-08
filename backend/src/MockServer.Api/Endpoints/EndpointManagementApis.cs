@@ -97,6 +97,61 @@ public static class EndpointManagementApis
         .WithName("CreateEndpoint")
         .WithOpenApi();
 
+        group.MapPut("/{id}", async (
+            Guid id,
+            UpdateEndpointRequest request,
+            IEndpointRepository repo,
+            ProtocolHandlerFactory factory,
+            WireMockServerManager manager) =>
+        {
+            var endpoint = await repo.GetByIdAsync(id);
+            if (endpoint is null)
+            {
+                return Results.NotFound();
+            }
+
+            // Apply updates (Protocol is immutable)
+            endpoint.Name = request.Name;
+            endpoint.ServiceName = request.ServiceName;
+            endpoint.Path = request.Path;
+            endpoint.HttpMethod = request.HttpMethod.ToUpper();
+            endpoint.ProtocolSettings = request.ProtocolSettings;
+
+            var handler = factory.GetHandler(endpoint.Protocol);
+            var validation = handler.ValidateEndpoint(endpoint);
+            if (!validation.IsValid)
+            {
+                return Results.BadRequest(new { errors = validation.Errors });
+            }
+
+            // Check for duplicate path+method (exclude self)
+            var existingEndpoints = await repo.GetAllAsync();
+            var duplicate = existingEndpoints.FirstOrDefault(e =>
+                e.Id != id &&
+                e.Path == endpoint.Path &&
+                e.HttpMethod.Equals(endpoint.HttpMethod, StringComparison.OrdinalIgnoreCase));
+
+            if (duplicate != null)
+            {
+                return Results.Conflict(new
+                {
+                    error = "DuplicateEndpoint",
+                    message = $"Endpoint with path '{endpoint.Path}' and method '{endpoint.HttpMethod}' already exists",
+                    path = endpoint.Path,
+                    httpMethod = endpoint.HttpMethod,
+                    existingEndpointId = duplicate.Id
+                });
+            }
+
+            await repo.UpdateAsync(endpoint);
+            await repo.SaveChangesAsync();
+            await manager.SyncAllRulesAsync();
+
+            return Results.Ok(endpoint);
+        })
+        .WithName("UpdateEndpoint")
+        .WithOpenApi();
+
         group.MapPut("/{id}/default", async (
             Guid id,
             SetDefaultResponseRequest request,
