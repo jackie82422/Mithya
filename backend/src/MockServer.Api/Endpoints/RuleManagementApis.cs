@@ -140,5 +140,47 @@ public static class RuleManagementApis
         })
         .WithName("DeleteRule")
         .WithOpenApi();
+
+        group.MapMethods("/{ruleId}/toggle", new[] { "PATCH" }, async (
+            Guid endpointId,
+            Guid ruleId,
+            IEndpointRepository endpointRepo,
+            IRuleRepository ruleRepo,
+            WireMockServerManager manager) =>
+        {
+            var endpoint = await endpointRepo.GetByIdAsync(endpointId);
+            if (endpoint is null)
+            {
+                return Results.NotFound(new { message = "Endpoint not found" });
+            }
+
+            var rule = await ruleRepo.GetByIdAsync(ruleId);
+            if (rule is null)
+            {
+                return Results.NotFound(new { message = "Rule not found" });
+            }
+
+            if (rule.EndpointId != endpointId)
+            {
+                return Results.BadRequest(new { message = "Rule does not belong to this endpoint" });
+            }
+
+            rule.IsActive = !rule.IsActive;
+            await ruleRepo.UpdateAsync(rule);
+            await ruleRepo.SaveChangesAsync();
+
+            try
+            {
+                await manager.SyncAllRulesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: WireMock sync failed after toggling rule '{rule.RuleName}': {ex.Message}");
+            }
+
+            return Results.Ok(rule);
+        })
+        .WithName("ToggleRule")
+        .WithOpenApi();
     }
 }

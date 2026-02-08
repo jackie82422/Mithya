@@ -140,5 +140,34 @@ public static class EndpointManagementApis
         })
         .WithName("DeleteEndpoint")
         .WithOpenApi();
+
+        group.MapMethods("/{id}/toggle", new[] { "PATCH" }, async (
+            Guid id,
+            IEndpointRepository repo,
+            WireMockServerManager manager) =>
+        {
+            var endpoint = await repo.GetByIdAsync(id);
+            if (endpoint is null)
+            {
+                return Results.NotFound();
+            }
+
+            endpoint.IsActive = !endpoint.IsActive;
+            await repo.UpdateAsync(endpoint);
+            await repo.SaveChangesAsync();
+
+            try
+            {
+                await manager.SyncAllRulesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: WireMock sync failed after toggling endpoint '{endpoint.Name}': {ex.Message}");
+            }
+
+            return Results.Ok(endpoint);
+        })
+        .WithName("ToggleEndpoint")
+        .WithOpenApi();
     }
 }
