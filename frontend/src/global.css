@@ -27,6 +27,7 @@
 
   --code-bg: #F9F9F9;
   --condition-bg: #F9F9FB;
+  --table-row-hover: rgba(0, 122, 255, 0.06);
 
   /* HTTP method soft backgrounds */
   --get-bg: #F0FFF4;
@@ -91,6 +92,7 @@
 
   --code-bg: #2C2C2E;
   --condition-bg: #2C2C2E;
+  --table-row-hover: rgba(10, 132, 255, 0.1);
 
   --get-bg: rgba(48, 209, 88, 0.12);
   --get-color: #30D158;
@@ -166,11 +168,11 @@ body {
 
 .ant-table-tbody > tr > td {
   border-bottom: 1px solid var(--color-border) !important;
-  transition: background 0.2s ease !important;
+  transition: background 0.15s ease !important;
 }
 
 .ant-table-tbody > tr:hover > td {
-  background: var(--condition-bg) !important;
+  background: var(--table-row-hover) !important;
 }
 
 .ant-table-wrapper .ant-table-container {
