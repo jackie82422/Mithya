@@ -1,4 +1,4 @@
-import { Card, Space, Typography, Button, Popconfirm, Flex } from 'antd';
+import { Card, Space, Typography, Button, Popconfirm, Flex, Tooltip } from 'antd';
 import { DeleteOutlined, SettingOutlined, RightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -67,7 +67,9 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault }: Endpo
             okText={t('common.yes')}
             cancelText={t('common.no')}
           >
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+            <Tooltip title={t('common.delete')}>
+              <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
           <RightOutlined style={{ color: 'var(--color-text-secondary)', fontSize: 12 }} />
         </Space>
