@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { rulesApi } from './api';
+import { getApiErrorMessage } from '@/shared/utils/errorUtils';
 import type { CreateRuleRequest } from '@/shared/types';
 
 export function useRules(endpointId: string) {
@@ -23,7 +24,7 @@ export function useCreateRule(endpointId: string) {
       qc.invalidateQueries({ queryKey: ['endpoints'] });
       message.success(t('common.success'));
     },
-    onError: () => message.error(t('common.error')),
+    onError: (err) => message.error(getApiErrorMessage(err, t('common.error'))),
   });
 }
 
@@ -39,7 +40,7 @@ export function useUpdateRule(endpointId: string) {
       qc.invalidateQueries({ queryKey: ['endpoints'] });
       message.success(t('common.success'));
     },
-    onError: () => message.error(t('common.error')),
+    onError: (err) => message.error(getApiErrorMessage(err, t('common.error'))),
   });
 }
 
@@ -54,7 +55,7 @@ export function useDeleteRule(endpointId: string) {
       qc.invalidateQueries({ queryKey: ['endpoints'] });
       message.success(t('common.success'));
     },
-    onError: () => message.error(t('common.error')),
+    onError: (err) => message.error(getApiErrorMessage(err, t('common.error'))),
   });
 }
 
@@ -69,6 +70,6 @@ export function useToggleRule(endpointId: string) {
       qc.invalidateQueries({ queryKey: ['endpoints'] });
       message.success(t('common.success'));
     },
-    onError: () => message.error(t('common.error')),
+    onError: (err) => message.error(getApiErrorMessage(err, t('common.error'))),
   });
 }
