@@ -11,6 +11,7 @@ import EndpointListPage from './modules/endpoints/pages/EndpointListPage';
 import EndpointDetailPage from './modules/endpoints/pages/EndpointDetailPage';
 import LogListPage from './modules/logs/pages/LogListPage';
 import ImportExportPage from './modules/import-export/pages/ImportExportPage';
+import NotFoundPage from './shared/pages/NotFoundPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -56,6 +57,7 @@ function ThemedApp() {
             <Route path="/endpoints/:id" element={<EndpointDetailPage />} />
             <Route path="/logs" element={<LogListPage />} />
             <Route path="/import-export" element={<ImportExportPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

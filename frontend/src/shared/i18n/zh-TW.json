@@ -129,6 +129,11 @@
     "allStatus": "所有狀態",
     "ms": "ms"
   },
+  "notFound": {
+    "title": "頁面不存在",
+    "description": "您訪問的頁面不存在或已被移除。",
+    "backHome": "返回首頁"
+  },
   "validation": {
     "required": "請輸入{{field}}",
     "requiredSelect": "請選擇{{field}}",
