@@ -27,7 +27,7 @@ function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[]): string
   }
   path = path.replace(/\{([^}]+)\}/g, '1');
 
-  const url = `http://localhost:5001${path}`;
+  const url = `${window.location.origin}${path}`;
   const parts: string[] = ['curl'];
 
   if (method !== 'GET') {
