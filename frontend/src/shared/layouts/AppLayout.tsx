@@ -62,7 +62,7 @@ export default function AppLayout() {
             color: 'var(--color-text)',
           }}
         >
-          Mock Server
+          Mithya
         </Typography.Title>
       </div>
       <Menu
