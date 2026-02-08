@@ -44,7 +44,8 @@ export default function EndpointListPage() {
     (ep) =>
       ep.name.toLowerCase().includes(search.toLowerCase()) ||
       ep.path.toLowerCase().includes(search.toLowerCase()) ||
-      ep.serviceName.toLowerCase().includes(search.toLowerCase()),
+      ep.serviceName.toLowerCase().includes(search.toLowerCase()) ||
+      ep.httpMethod.toLowerCase().includes(search.toLowerCase()),
   );
 
   const handleCreate = (values: CreateEndpointRequest) => {

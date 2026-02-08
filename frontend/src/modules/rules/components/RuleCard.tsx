@@ -65,6 +65,11 @@ function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[], baseUrl
       setNestedValue(bodyObj, fieldPath, bc.value);
     }
     parts.push(`-d '${JSON.stringify(bodyObj)}'`);
+  } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    if (!hasContentType) {
+      parts.push("-H 'Content-Type: application/json'");
+    }
+    parts.push("-d '{}'");
   }
 
   return parts.join(' \\\n  ');
