@@ -9,4 +9,6 @@ export const logsApi = {
     apiClient
       .get<MockRequestLog[]>(`/logs/endpoint/${endpointId}`, { params: { limit } })
       .then((r) => r.data),
+
+  clearAll: () => apiClient.delete('/logs'),
 };

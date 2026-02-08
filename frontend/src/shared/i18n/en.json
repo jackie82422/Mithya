@@ -135,6 +135,8 @@
     "queryString": "Query String",
     "noLogs": "No request logs yet",
     "refresh": "Refresh",
+    "clear": "Clear Logs",
+    "clearConfirm": "Are you sure you want to clear all logs? This action cannot be undone.",
     "autoRefresh": "Auto Refresh",
     "allMethods": "All Methods",
     "allStatus": "All Status",
