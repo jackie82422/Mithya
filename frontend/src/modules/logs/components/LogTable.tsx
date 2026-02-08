@@ -84,9 +84,10 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
           dataIndex: 'path',
           ellipsis: true,
           render: (_: string, record) => {
-            const fullPath = record.queryString
-              ? `${record.path}?${record.queryString}`
-              : record.path;
+            const qs = record.queryString?.startsWith('?')
+              ? record.queryString
+              : record.queryString ? `?${record.queryString}` : '';
+            const fullPath = `${record.path}${qs}`;
             return <Typography.Text code>{fullPath}</Typography.Text>;
           },
         },
