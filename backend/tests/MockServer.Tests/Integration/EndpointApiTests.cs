@@ -95,6 +95,71 @@ public class EndpointApiTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    [DisplayName("建立 Endpoint API 使用重複的 path+method 應該返回 409")]
+    public async Task CreateEndpoint_DuplicatePathAndMethod_ShouldReturn409()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var request = new CreateEndpointRequest
+        {
+            Name = "Test Endpoint",
+            ServiceName = "Test Service",
+            Protocol = ProtocolType.REST,
+            Path = "/api/duplicate-test",
+            HttpMethod = "POST"
+        };
+
+        // Act - Create first endpoint
+        var firstResponse = await client.PostAsJsonAsync("/admin/api/endpoints", request);
+        firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // Act - Try to create duplicate endpoint
+        var duplicateResponse = await client.PostAsJsonAsync("/admin/api/endpoints", request);
+
+        // Assert
+        duplicateResponse.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        var errorContent = await duplicateResponse.Content.ReadAsStringAsync();
+        errorContent.Should().Contain("DuplicateEndpoint");
+        errorContent.Should().Contain("/api/duplicate-test");
+        errorContent.Should().Contain("POST");
+    }
+
+    [Fact]
+    [DisplayName("建立 Endpoint API 使用相同 path 但不同 method 應該成功")]
+    public async Task CreateEndpoint_SamePathDifferentMethod_ShouldSucceed()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act - Create POST endpoint
+        var postRequest = new CreateEndpointRequest
+        {
+            Name = "POST Endpoint",
+            ServiceName = "Test Service",
+            Protocol = ProtocolType.REST,
+            Path = "/api/same-path-test",
+            HttpMethod = "POST"
+        };
+        var postResponse = await client.PostAsJsonAsync("/admin/api/endpoints", postRequest);
+        postResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // Act - Create GET endpoint with same path
+        var getRequest = new CreateEndpointRequest
+        {
+            Name = "GET Endpoint",
+            ServiceName = "Test Service",
+            Protocol = ProtocolType.REST,
+            Path = "/api/same-path-test",
+            HttpMethod = "GET"
+        };
+        var getResponse = await client.PostAsJsonAsync("/admin/api/endpoints", getRequest);
+
+        // Assert
+        getResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
     [DisplayName("建立 Endpoint API 使用無效 Path 應該返回 400")]
     public async Task CreateEndpoint_InvalidPath_ShouldReturn400()
     {

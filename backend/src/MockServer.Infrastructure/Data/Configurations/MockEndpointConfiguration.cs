@@ -54,6 +54,11 @@ public class MockEndpointConfiguration : IEntityTypeConfiguration<MockEndpoint>
         builder.HasIndex(e => new { e.Path, e.HttpMethod, e.IsActive })
             .HasDatabaseName("idx_endpoint_path_method_active");
 
+        // Unique constraint: Path + HttpMethod must be unique
+        builder.HasIndex(e => new { e.Path, e.HttpMethod })
+            .IsUnique()
+            .HasDatabaseName("uq_endpoint_path_method");
+
         builder.HasMany(e => e.Rules)
             .WithOne(r => r.Endpoint)
             .HasForeignKey(r => r.EndpointId)

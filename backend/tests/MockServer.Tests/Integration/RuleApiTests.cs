@@ -109,7 +109,7 @@ public class RuleApiTests : IClassFixture<WebApplicationFactory<Program>>
             Name = "Test Endpoint",
             ServiceName = "Test Service",
             Protocol = ProtocolType.REST,
-            Path = "/api/test",
+            Path = "/api/test-invalid-jsonpath",
             HttpMethod = "POST"
         };
 

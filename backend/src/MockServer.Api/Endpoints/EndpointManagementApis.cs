@@ -1,4 +1,6 @@
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using MockServer.Api.DTOs.Requests;
 using MockServer.Core.Entities;
 using MockServer.Core.Interfaces;
@@ -54,11 +56,43 @@ public static class EndpointManagementApis
                 return Results.BadRequest(new { errors = validation.Errors });
             }
 
-            await repo.AddAsync(endpoint);
-            await repo.SaveChangesAsync();
-            await manager.SyncAllRulesAsync();
+            // Check for duplicate path+method combination
+            var existingEndpoints = await repo.GetAllAsync();
+            var duplicate = existingEndpoints.FirstOrDefault(e =>
+                e.Path == endpoint.Path &&
+                e.HttpMethod.Equals(endpoint.HttpMethod, StringComparison.OrdinalIgnoreCase));
 
-            return Results.Created($"/admin/api/endpoints/{endpoint.Id}", endpoint);
+            if (duplicate != null)
+            {
+                return Results.Conflict(new
+                {
+                    error = "DuplicateEndpoint",
+                    message = $"Endpoint with path '{endpoint.Path}' and method '{endpoint.HttpMethod}' already exists",
+                    path = endpoint.Path,
+                    httpMethod = endpoint.HttpMethod,
+                    existingEndpointId = duplicate.Id
+                });
+            }
+
+            try
+            {
+                await repo.AddAsync(endpoint);
+                await repo.SaveChangesAsync();
+                await manager.SyncAllRulesAsync();
+
+                return Results.Created($"/admin/api/endpoints/{endpoint.Id}", endpoint);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+            {
+                // 23505 = unique_violation (fallback for race conditions in production)
+                return Results.Conflict(new
+                {
+                    error = "DuplicateEndpoint",
+                    message = $"Endpoint with path '{endpoint.Path}' and method '{endpoint.HttpMethod}' already exists",
+                    path = endpoint.Path,
+                    httpMethod = endpoint.HttpMethod
+                });
+            }
         })
         .WithName("CreateEndpoint")
         .WithOpenApi();
