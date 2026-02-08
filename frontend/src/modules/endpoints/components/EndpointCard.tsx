@@ -1,4 +1,4 @@
-import { Card, Space, Typography, Button, Popconfirm, Flex, Tooltip } from 'antd';
+import { Card, Space, Typography, Button, Popconfirm, Flex, Tooltip, Switch } from 'antd';
 import { DeleteOutlined, SettingOutlined, RightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,16 +11,24 @@ interface EndpointCardProps {
   endpoint: MockEndpoint;
   onDelete: (id: string) => void;
   onSetDefault: (endpoint: MockEndpoint) => void;
+  onToggle: (id: string) => void;
+  toggleLoading?: boolean;
 }
 
-export default function EndpointCard({ endpoint, onDelete, onSetDefault }: EndpointCardProps) {
+export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggle, toggleLoading }: EndpointCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
     <Card
       className="apple-endpoint-card"
-      style={{ marginBottom: 16, borderRadius: 16, padding: 4 }}
+      style={{
+        marginBottom: 16,
+        borderRadius: 16,
+        padding: 4,
+        opacity: endpoint.isActive ? 1 : 0.55,
+        transition: 'opacity 0.2s ease',
+      }}
       onClick={() => navigate(`/endpoints/${endpoint.id}`)}
     >
       <Flex justify="space-between" align="flex-start">
@@ -46,6 +54,17 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault }: Endpo
           </Flex>
         </div>
         <Space onClick={(e) => e.stopPropagation()}>
+          <Tooltip title={endpoint.isActive ? t('common.toggleDisable') : t('common.toggleEnable')}>
+            <Switch
+              size="small"
+              checked={endpoint.isActive}
+              loading={toggleLoading}
+              onChange={(_, e) => {
+                e.stopPropagation();
+                onToggle(endpoint.id);
+              }}
+            />
+          </Tooltip>
           <Button
             size="small"
             type="text"

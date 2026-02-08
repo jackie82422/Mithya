@@ -20,4 +20,7 @@ export const endpointsApi = {
 
   delete: (id: string) =>
     apiClient.delete(`/endpoints/${id}`),
+
+  toggleActive: (id: string) =>
+    apiClient.patch<MockEndpoint>(`/endpoints/${id}/toggle`).then((r) => r.data),
 };

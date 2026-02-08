@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Typography, Button, Spin, Empty, Input, Flex } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useEndpoints, useCreateEndpoint, useDeleteEndpoint, useSetDefaultResponse } from '../hooks';
+import { useEndpoints, useCreateEndpoint, useDeleteEndpoint, useSetDefaultResponse, useToggleEndpoint } from '../hooks';
 import EndpointCard from '../components/EndpointCard';
 import EndpointForm from '../components/EndpointForm';
 import DefaultResponseForm from '../components/DefaultResponseForm';
@@ -14,6 +14,7 @@ export default function EndpointListPage() {
   const createEndpoint = useCreateEndpoint();
   const deleteEndpoint = useDeleteEndpoint();
   const setDefault = useSetDefaultResponse();
+  const toggleEndpoint = useToggleEndpoint();
 
   const [formOpen, setFormOpen] = useState(false);
   const [defaultFormOpen, setDefaultFormOpen] = useState(false);
@@ -77,6 +78,8 @@ export default function EndpointListPage() {
               setSelectedEndpoint(ep);
               setDefaultFormOpen(true);
             }}
+            onToggle={(id) => toggleEndpoint.mutate(id)}
+            toggleLoading={toggleEndpoint.isPending}
           />
         ))
       )}

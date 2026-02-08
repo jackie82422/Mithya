@@ -25,6 +25,8 @@
     "error": "Operation failed",
     "active": "Active",
     "inactive": "Inactive",
+    "toggleEnable": "Enable",
+    "toggleDisable": "Disable",
     "actions": "Actions",
     "name": "Name",
     "status": "Status",

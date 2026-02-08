@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Typography, Button, Popconfirm, Flex, Space, Modal, message } from 'antd';
+import { Card, Typography, Button, Popconfirm, Flex, Space, Modal, message, Switch, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { MockRule, MockEndpoint, MatchCondition } from '@/shared/types';
@@ -17,6 +17,8 @@ interface RuleCardProps {
   endpoint: MockEndpoint;
   onEdit: (rule: MockRule) => void;
   onDelete: (ruleId: string) => void;
+  onToggle: (ruleId: string) => void;
+  toggleLoading?: boolean;
 }
 
 function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[], baseUrl: string): string {
@@ -88,7 +90,7 @@ function formatJson(raw: string): string {
   }
 }
 
-export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardProps) {
+export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, toggleLoading }: RuleCardProps) {
   const { t } = useTranslation();
   const { data: serverConfig } = useServerConfig();
   const conditions = parseMatchConditions(rule.matchConditions);
@@ -107,7 +109,7 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardP
 
   return (
     <>
-      <Card size="small" style={{ marginBottom: 12 }}>
+      <Card size="small" style={{ marginBottom: 12, opacity: rule.isActive ? 1 : 0.55, transition: 'opacity 0.2s ease' }}>
         <Flex justify="space-between" align="flex-start">
           <div
             style={{ flex: 1, cursor: 'pointer' }}
@@ -163,6 +165,14 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardP
             </div>
           </div>
           <Space>
+            <Tooltip title={rule.isActive ? t('common.toggleDisable') : t('common.toggleEnable')}>
+              <Switch
+                size="small"
+                checked={rule.isActive}
+                loading={toggleLoading}
+                onChange={() => onToggle(rule.id)}
+              />
+            </Tooltip>
             <Button
               size="small"
               type="text"

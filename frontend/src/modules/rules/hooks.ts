@@ -57,3 +57,18 @@ export function useDeleteRule(endpointId: string) {
     onError: () => message.error(t('common.error')),
   });
 }
+
+export function useToggleRule(endpointId: string) {
+  const qc = useQueryClient();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: (ruleId: string) => rulesApi.toggleActive(endpointId, ruleId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['rules', endpointId] });
+      qc.invalidateQueries({ queryKey: ['endpoints', endpointId] });
+      qc.invalidateQueries({ queryKey: ['endpoints'] });
+      message.success(t('common.success'));
+    },
+    onError: () => message.error(t('common.error')),
+  });
+}

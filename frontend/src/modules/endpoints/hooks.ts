@@ -59,3 +59,17 @@ export function useDeleteEndpoint() {
     onError: () => message.error(t('common.error')),
   });
 }
+
+export function useToggleEndpoint() {
+  const qc = useQueryClient();
+  const { t } = useTranslation();
+  return useMutation({
+    mutationFn: (id: string) => endpointsApi.toggleActive(id),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: ['endpoints'] });
+      qc.invalidateQueries({ queryKey: ['endpoints', id] });
+      message.success(t('common.success'));
+    },
+    onError: () => message.error(t('common.error')),
+  });
+}

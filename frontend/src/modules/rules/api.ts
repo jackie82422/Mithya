@@ -13,4 +13,7 @@ export const rulesApi = {
 
   delete: (endpointId: string, ruleId: string) =>
     apiClient.delete(`/endpoints/${endpointId}/rules/${ruleId}`),
+
+  toggleActive: (endpointId: string, ruleId: string) =>
+    apiClient.patch<MockRule>(`/endpoints/${endpointId}/rules/${ruleId}/toggle`).then((r) => r.data),
 };

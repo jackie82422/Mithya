@@ -11,11 +11,13 @@ import {
   Timeline,
   Result,
   Empty,
+  Switch,
+  Tooltip,
 } from 'antd';
 import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { useEndpoint } from '../hooks';
-import { useRules, useCreateRule, useUpdateRule, useDeleteRule } from '@/modules/rules/hooks';
+import { useEndpoint, useToggleEndpoint } from '../hooks';
+import { useRules, useCreateRule, useUpdateRule, useDeleteRule, useToggleRule } from '@/modules/rules/hooks';
 import ProtocolTag from '@/shared/components/ProtocolTag';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
 import StatusBadge from '@/shared/components/StatusBadge';
@@ -43,6 +45,8 @@ export default function EndpointDetailPage() {
   const createRule = useCreateRule(id!);
   const updateRule = useUpdateRule(id!);
   const deleteRule = useDeleteRule(id!);
+  const toggleEndpoint = useToggleEndpoint();
+  const toggleRule = useToggleRule(id!);
   const [ruleFormOpen, setRuleFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<MockRule | null>(null);
 
@@ -125,6 +129,14 @@ export default function EndpointDetailPage() {
           <Typography.Title level={2} style={{ margin: 0, fontWeight: 600, letterSpacing: '-0.5px' }}>
             {endpoint.name}
           </Typography.Title>
+          <Tooltip title={endpoint.isActive ? t('common.toggleDisable') : t('common.toggleEnable')}>
+            <Switch
+              checked={endpoint.isActive}
+              loading={toggleEndpoint.isPending}
+              onChange={() => toggleEndpoint.mutate(endpoint.id)}
+              size="small"
+            />
+          </Tooltip>
           <StatusBadge active={endpoint.isActive} />
         </Flex>
       </Flex>
@@ -190,6 +202,8 @@ export default function EndpointDetailPage() {
                 endpoint={endpoint}
                 onEdit={handleEdit}
                 onDelete={(ruleId) => deleteRule.mutate(ruleId)}
+                onToggle={(ruleId) => toggleRule.mutate(ruleId)}
+                toggleLoading={toggleRule.isPending}
               />
             ),
           }))}

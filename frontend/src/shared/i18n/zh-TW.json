@@ -25,6 +25,8 @@
     "error": "操作失敗",
     "active": "啟用",
     "inactive": "停用",
+    "toggleEnable": "啟用",
+    "toggleDisable": "停用",
     "actions": "操作",
     "name": "名稱",
     "status": "狀態",
