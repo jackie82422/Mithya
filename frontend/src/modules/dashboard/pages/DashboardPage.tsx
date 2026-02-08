@@ -1,9 +1,10 @@
 import { Typography, Spin, Flex, Space, Card, Button, Empty } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, CopyOutlined, LinkOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useEndpoints } from '@/modules/endpoints/hooks';
 import { useLogs } from '@/modules/logs/hooks';
+import { useServerConfig } from '@/shared/hooks/useServerConfig';
 import StatsCards from '../components/StatsCards';
 import EndpointOverview from '../components/EndpointOverview';
 import RecentLogs from '../components/RecentLogs';
@@ -13,6 +14,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { data: endpoints, isLoading: epLoading } = useEndpoints();
   const { data: logs, isLoading: logLoading } = useLogs(100);
+  const { data: config } = useServerConfig();
 
   const isLoading = epLoading || logLoading;
 
@@ -37,6 +39,21 @@ export default function DashboardPage() {
         </Typography.Text>
       </div>
       <StatsCards endpoints={endpoints ?? []} logs={logs ?? []} />
+      {config?.mockServerUrl && (
+        <Card size="small">
+          <Flex align="center" gap={8}>
+            <LinkOutlined style={{ color: 'var(--color-primary)' }} />
+            <Typography.Text type="secondary">{t('dashboard.mockServerUrl')}:</Typography.Text>
+            <Typography.Text
+              copyable={{ icon: <CopyOutlined /> }}
+              code
+              style={{ fontSize: 13 }}
+            >
+              {config.mockServerUrl}
+            </Typography.Text>
+          </Flex>
+        </Card>
+      )}
       {hasEndpoints ? (
         <>
           <EndpointOverview endpoints={endpoints ?? []} />

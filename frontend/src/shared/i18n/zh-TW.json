@@ -47,7 +47,8 @@
     "endpointOverview": "端點總覽",
     "noLogs": "暫無請求日誌",
     "matchedRate": "匹配率",
-    "emptyDesc": "尚未建立任何端點，建立第一個 Mock 端點開始使用"
+    "emptyDesc": "尚未建立任何端點，建立第一個 Mock 端點開始使用",
+    "mockServerUrl": "Mock Server 網址"
   },
   "endpoints": {
     "title": "端點管理",
@@ -70,6 +71,7 @@
     "notFound": "找不到此端點",
     "notFoundDesc": "該端點可能已被刪除或 ID 不正確。",
     "backToList": "返回端點列表",
+    "mockUrl": "Mock 網址",
     "form": {
       "title": "新增端點",
       "editTitle": "編輯端點",

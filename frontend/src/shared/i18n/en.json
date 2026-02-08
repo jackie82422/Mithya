@@ -47,7 +47,8 @@
     "endpointOverview": "Endpoint Overview",
     "noLogs": "No request logs yet",
     "matchedRate": "Match Rate",
-    "emptyDesc": "No endpoints yet. Create your first mock endpoint to get started."
+    "emptyDesc": "No endpoints yet. Create your first mock endpoint to get started.",
+    "mockServerUrl": "Mock Server URL"
   },
   "endpoints": {
     "title": "Endpoints",
@@ -70,6 +71,7 @@
     "notFound": "Endpoint Not Found",
     "notFoundDesc": "This endpoint may have been deleted or the ID is incorrect.",
     "backToList": "Back to Endpoints",
+    "mockUrl": "Mock URL",
     "form": {
       "title": "Create Endpoint",
       "editTitle": "Edit Endpoint",
