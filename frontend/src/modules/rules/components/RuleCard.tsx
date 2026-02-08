@@ -171,6 +171,21 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
                   {FaultTypeLabel[rule.faultType]}
                 </span>
               )}
+              {rule.logicMode === 'OR' && (
+                <span
+                  className="pill-tag"
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: 100,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    background: 'var(--put-bg)',
+                    color: 'var(--put-color)',
+                  }}
+                >
+                  OR
+                </span>
+              )}
             </Flex>
             <Space size={[4, 4]} wrap style={{ marginBottom: 4 }}>
               {conditions.map((c, i) => (

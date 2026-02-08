@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Divider, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { CreateRuleRequest, MatchCondition, MockRule } from '@/shared/types';
+import type { CreateRuleRequest, LogicMode, MatchCondition, MockRule } from '@/shared/types';
 import { FaultType, FieldSourceType, parseMatchConditions } from '@/shared/types';
 import ConditionBuilder from './ConditionBuilder';
 import ResponseEditor from './ResponseEditor';
@@ -40,6 +40,7 @@ function parseJson<T>(raw: string | null, fallback: T): T {
 export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule, endpointPath, endpointMethod }: RuleFormProps) {
   const { t } = useTranslation();
   const [form] = Form.useForm<FormValues>();
+  const [logicMode, setLogicMode] = useState<LogicMode>('AND');
   const isEdit = !!editingRule;
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         delayMs: editingRule.delayMs,
         isTemplate: editingRule.isTemplate ?? false,
       });
+      setLogicMode(editingRule.logicMode ?? 'AND');
     }
   }, [open, editingRule, form]);
 
@@ -93,6 +95,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
       isTemplate: values.isTemplate ?? false,
       faultType: faultType ?? FaultType.None,
       faultConfig: faultConfig && faultType !== FaultType.None ? JSON.stringify(faultConfig) : null,
+      logicMode,
     });
   };
 
@@ -142,7 +145,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
 
         <Divider>{t('rules.conditions')}</Divider>
         <Form.Item name="conditions">
-          <ConditionBuilder />
+          <ConditionBuilder logicMode={logicMode} onLogicModeChange={setLogicMode} />
         </Form.Item>
 
         <Divider>{t('rules.response')}</Divider>

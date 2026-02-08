@@ -1,17 +1,19 @@
-import { Button, Select, Input, Card, Flex, Typography } from 'antd';
+import { Button, Select, Input, Card, Flex, Typography, Segmented } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
   FieldSourceType,
   FieldSourceTypeLabel,
   MatchOperator,
-  MatchOperatorLabel,
 } from '@/shared/types';
-import type { MatchCondition } from '@/shared/types';
+import type { MatchCondition, LogicMode } from '@/shared/types';
+import CodeEditor from '@/shared/components/CodeEditor';
 
 interface ConditionBuilderProps {
   value?: MatchCondition[];
   onChange?: (conditions: MatchCondition[]) => void;
+  logicMode?: LogicMode;
+  onLogicModeChange?: (mode: LogicMode) => void;
 }
 
 const defaultFieldPaths: Record<FieldSourceType, string> = {
@@ -30,8 +32,25 @@ const placeholders: Record<FieldSourceType, string> = {
   [FieldSourceType.Metadata]: 'key',
 };
 
-export default function ConditionBuilder({ value = [], onChange }: ConditionBuilderProps) {
+const noValueOperators = [MatchOperator.Exists, MatchOperator.IsEmpty, MatchOperator.NotExists];
+
+export default function ConditionBuilder({ value = [], onChange, logicMode = 'AND', onLogicModeChange }: ConditionBuilderProps) {
   const { t } = useTranslation();
+
+  const operatorOptions = [
+    { value: MatchOperator.Equals, label: t('rules.form.operator') !== 'Operator' ? 'Equals' : 'Equals' },
+    { value: MatchOperator.NotEquals, label: t('rules.opNotEquals') },
+    { value: MatchOperator.Contains, label: 'Contains' },
+    { value: MatchOperator.Regex, label: 'Regex' },
+    { value: MatchOperator.StartsWith, label: 'StartsWith' },
+    { value: MatchOperator.EndsWith, label: 'EndsWith' },
+    { value: MatchOperator.GreaterThan, label: 'GreaterThan' },
+    { value: MatchOperator.LessThan, label: 'LessThan' },
+    { value: MatchOperator.Exists, label: 'Exists' },
+    { value: MatchOperator.NotExists, label: t('rules.opNotExists') },
+    { value: MatchOperator.IsEmpty, label: t('rules.opIsEmpty') },
+    { value: MatchOperator.JsonSchema, label: t('rules.opJsonSchema') },
+  ];
 
   const update = (index: number, field: keyof MatchCondition, val: unknown) => {
     const next = [...value];
@@ -67,69 +86,112 @@ export default function ConditionBuilder({ value = [], onChange }: ConditionBuil
 
   return (
     <div>
+      {value.length > 1 && (
+        <Flex align="center" gap={8} style={{ marginBottom: 12 }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+            {t('rules.logicMode')}:
+          </Typography.Text>
+          <Segmented
+            size="small"
+            options={[
+              { label: t('rules.logicAnd'), value: 'AND' },
+              { label: t('rules.logicOr'), value: 'OR' },
+            ]}
+            value={logicMode}
+            onChange={(val) => onLogicModeChange?.(val as LogicMode)}
+          />
+        </Flex>
+      )}
+
       {value.map((cond, i) => {
         const needsJsonPath = cond.sourceType === FieldSourceType.Body;
         const pathError =
           needsJsonPath && cond.fieldPath && !cond.fieldPath.startsWith('$.');
+        const hideValue = noValueOperators.includes(cond.operator);
+        const isJsonSchema = cond.operator === MatchOperator.JsonSchema;
 
         return (
-          <Card
-            key={i}
-            size="small"
-            style={{ marginBottom: 8, background: 'var(--condition-bg)' }}
-          >
-            <Flex gap={8} wrap="wrap" align="center">
-              <Select
-                style={{ width: 120 }}
-                value={cond.sourceType}
-                onChange={(v) => update(i, 'sourceType', v)}
-              >
-                {Object.entries(FieldSourceTypeLabel).map(([val, label]) => (
-                  <Select.Option key={val} value={Number(val)}>
-                    {label}
-                  </Select.Option>
-                ))}
-              </Select>
-              <div>
-                <Input
-                  style={{ width: 180 }}
-                  status={pathError ? 'error' : undefined}
-                  placeholder={placeholders[cond.sourceType]}
-                  value={cond.fieldPath}
-                  onChange={(e) => update(i, 'fieldPath', e.target.value)}
+          <div key={i}>
+            <Card
+              size="small"
+              style={{ marginBottom: 0, background: 'var(--condition-bg)' }}
+            >
+              <Flex gap={8} wrap="wrap" align="center">
+                <Select
+                  style={{ width: 120 }}
+                  value={cond.sourceType}
+                  onChange={(v) => update(i, 'sourceType', v)}
+                >
+                  {Object.entries(FieldSourceTypeLabel).map(([val, label]) => (
+                    <Select.Option key={val} value={Number(val)}>
+                      {label}
+                    </Select.Option>
+                  ))}
+                </Select>
+                <div>
+                  <Input
+                    style={{ width: 180 }}
+                    status={pathError ? 'error' : undefined}
+                    placeholder={placeholders[cond.sourceType]}
+                    value={cond.fieldPath}
+                    onChange={(e) => update(i, 'fieldPath', e.target.value)}
+                  />
+                  {pathError && (
+                    <Typography.Text type="danger" style={{ fontSize: 12 }}>
+                      {t('validation.bodyFieldPathPrefix')}
+                    </Typography.Text>
+                  )}
+                </div>
+                <Select
+                  style={{ width: 140 }}
+                  value={cond.operator}
+                  onChange={(v) => update(i, 'operator', v)}
+                  options={operatorOptions}
                 />
-                {pathError && (
-                  <Typography.Text type="danger" style={{ fontSize: 12 }}>
-                    {t('validation.bodyFieldPathPrefix')}
-                  </Typography.Text>
+                {!hideValue && !isJsonSchema && (
+                  <Input
+                    style={{ flex: 1, minWidth: 120 }}
+                    placeholder={t('rules.form.matchValuePlaceholder')}
+                    value={cond.value}
+                    onChange={(e) => update(i, 'value', e.target.value)}
+                  />
                 )}
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => remove(i)}
+                  size="small"
+                />
+              </Flex>
+              {isJsonSchema && (
+                <div style={{ marginTop: 8 }}>
+                  <CodeEditor
+                    value={cond.value}
+                    onChange={(val) => update(i, 'value', val)}
+                    height={120}
+                  />
+                </div>
+              )}
+            </Card>
+            {i < value.length - 1 && (
+              <div style={{ textAlign: 'center', padding: '4px 0', color: 'var(--color-text-secondary)' }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '1px 10px',
+                    borderRadius: 100,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    background: 'var(--condition-bg)',
+                    border: '1px solid var(--color-border)',
+                  }}
+                >
+                  {logicMode === 'AND' ? t('rules.logicAnd') : t('rules.logicOr')}
+                </span>
               </div>
-              <Select
-                style={{ width: 130 }}
-                value={cond.operator}
-                onChange={(v) => update(i, 'operator', v)}
-              >
-                {Object.entries(MatchOperatorLabel).map(([val, label]) => (
-                  <Select.Option key={val} value={Number(val)}>
-                    {label}
-                  </Select.Option>
-                ))}
-              </Select>
-              <Input
-                style={{ flex: 1, minWidth: 120 }}
-                placeholder={t('rules.form.matchValuePlaceholder')}
-                value={cond.value}
-                onChange={(e) => update(i, 'value', e.target.value)}
-              />
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => remove(i)}
-                size="small"
-              />
-            </Flex>
-          </Card>
+            )}
+          </div>
         );
       })}
       <Button
@@ -137,7 +199,7 @@ export default function ConditionBuilder({ value = [], onChange }: ConditionBuil
         icon={<PlusOutlined />}
         onClick={add}
         block
-        style={{ borderRadius: 12, height: 40 }}
+        style={{ borderRadius: 12, height: 40, marginTop: 8 }}
       >
         {t('rules.form.addCondition')}
       </Button>
