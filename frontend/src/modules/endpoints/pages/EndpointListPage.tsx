@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Typography, Button, Spin, Empty, Input, Flex } from 'antd';
+import type { InputRef } from 'antd';
 import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoints, useCreateEndpoint, useDeleteEndpoint, useSetDefaultResponse, useToggleEndpoint } from '../hooks';
@@ -20,6 +21,18 @@ export default function EndpointListPage() {
   const [defaultFormOpen, setDefaultFormOpen] = useState(false);
   const [selectedEndpoint, setSelectedEndpoint] = useState<MockEndpoint | null>(null);
   const [search, setSearch] = useState('');
+  const searchRef = useRef<InputRef>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   const filtered = endpoints?.filter(
     (ep) =>
@@ -53,8 +66,9 @@ export default function EndpointListPage() {
       </Flex>
 
       <Input
+        ref={searchRef}
         prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-        placeholder={t('common.search')}
+        placeholder={`${t('common.search')}  ⌘K`}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{ marginBottom: 20, height: 42, borderRadius: 12 }}
