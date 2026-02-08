@@ -10,6 +10,7 @@ import {
   parseMatchConditions,
 } from '@/shared/types';
 import StatusBadge from '@/shared/components/StatusBadge';
+import { useServerConfig } from '@/shared/hooks/useServerConfig';
 
 interface RuleCardProps {
   rule: MockRule;
@@ -18,7 +19,7 @@ interface RuleCardProps {
   onDelete: (ruleId: string) => void;
 }
 
-function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[]): string {
+function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[], baseUrl: string): string {
   const method = endpoint.httpMethod.toUpperCase();
   let path = endpoint.path;
   const pathConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Path);
@@ -27,7 +28,7 @@ function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[]): string
   }
   path = path.replace(/\{([^}]+)\}/g, '1');
 
-  const url = `${window.location.origin}${path}`;
+  const url = `${baseUrl}${path}`;
   const parts: string[] = ['curl'];
 
   if (method !== 'GET') {
@@ -89,11 +90,13 @@ function formatJson(raw: string): string {
 
 export default function RuleCard({ rule, endpoint, onEdit, onDelete }: RuleCardProps) {
   const { t } = useTranslation();
+  const { data: serverConfig } = useServerConfig();
   const conditions = parseMatchConditions(rule.matchConditions);
   const [curlOpen, setCurlOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  const curlCmd = buildCurl(endpoint, conditions);
+  const mockBaseUrl = serverConfig?.mockServerUrl ?? window.location.origin;
+  const curlCmd = buildCurl(endpoint, conditions, mockBaseUrl);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(curlCmd);
