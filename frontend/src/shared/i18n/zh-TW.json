@@ -186,6 +186,7 @@
     "statusCode": "狀態碼",
     "responseTime": "回應時間",
     "matched": "已匹配",
+    "matchedDefault": "預設回應",
     "unmatched": "未匹配",
     "matchStatus": "匹配狀態",
     "detail": "請求詳情",

@@ -28,7 +28,9 @@ function StatusCodePill({ code }: { code: number }) {
   );
 }
 
-function MatchPill({ matched, label }: { matched: boolean; label: string }) {
+function MatchPill({ matched, isDefault, label }: { matched: boolean; isDefault?: boolean; label: string }) {
+  const bg = !matched ? 'var(--put-bg)' : isDefault ? 'var(--patch-bg, var(--put-bg))' : 'var(--active-bg)';
+  const color = !matched ? 'var(--put-color)' : isDefault ? 'var(--patch-color, var(--put-color))' : 'var(--active-color)';
   return (
     <span
       style={{
@@ -36,8 +38,8 @@ function MatchPill({ matched, label }: { matched: boolean; label: string }) {
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 500,
-        background: matched ? 'var(--active-bg)' : 'var(--put-bg)',
-        color: matched ? 'var(--active-color)' : 'var(--put-color)',
+        background: bg,
+        color: color,
       }}
     >
       {label}
@@ -114,38 +116,41 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
             { text: t('logs.unmatched'), value: false },
           ],
           onFilter: (value, record) => record.isMatched === value,
-          render: (matched: boolean, record) => (
-            <Space size={4}>
-              <MatchPill
-                matched={matched}
-                label={matched ? t('logs.matched') : t('logs.unmatched')}
-              />
-              {record.faultTypeApplied != null && record.faultTypeApplied !== FaultType.None && (
+          render: (matched: boolean, record) => {
+            if (record.isProxied) {
+              return (
                 <span style={{
-                  padding: '2px 8px',
+                  padding: '2px 10px',
                   borderRadius: 100,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 500,
-                  background: 'var(--delete-bg)',
-                  color: 'var(--delete-color)',
-                }}>
-                  {FaultTypeLabel[record.faultTypeApplied]}
-                </span>
-              )}
-              {record.isProxied && (
-                <span style={{
-                  padding: '2px 8px',
-                  borderRadius: 100,
-                  fontSize: 11,
-                  fontWeight: 500,
-                  background: 'var(--put-bg)',
-                  color: 'var(--put-color)',
+                  background: 'var(--stats-blue-bg)',
+                  color: 'var(--stats-blue-icon)',
                 }}>
                   {t('proxy.proxied')}
                 </span>
-              )}
-            </Space>
-          ),
+              );
+            }
+            const isDefault = matched && !record.ruleId;
+            const label = !matched ? t('logs.unmatched') : isDefault ? t('logs.matchedDefault') : t('logs.matched');
+            return (
+              <Space size={4}>
+                <MatchPill matched={matched} isDefault={isDefault} label={label} />
+                {record.faultTypeApplied != null && record.faultTypeApplied !== FaultType.None && (
+                  <span style={{
+                    padding: '2px 8px',
+                    borderRadius: 100,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    background: 'var(--delete-bg)',
+                    color: 'var(--delete-color)',
+                  }}>
+                    {FaultTypeLabel[record.faultTypeApplied]}
+                  </span>
+                )}
+              </Space>
+            );
+          },
         },
       ]}
     />

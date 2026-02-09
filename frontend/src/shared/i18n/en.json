@@ -186,6 +186,7 @@
     "statusCode": "Status Code",
     "responseTime": "Response Time",
     "matched": "Matched",
+    "matchedDefault": "Default",
     "unmatched": "Unmatched",
     "matchStatus": "Match Status",
     "detail": "Request Detail",

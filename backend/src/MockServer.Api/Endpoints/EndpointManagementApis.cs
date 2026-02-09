@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -12,8 +13,9 @@ namespace MockServer.Api.Endpoints;
 public static class EndpointManagementApis
 {
     private static readonly string[] ValidHttpMethods = { "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS" };
+    private static readonly Regex HtmlTagPattern = new(@"<[^>]+>", RegexOptions.Compiled);
 
-    private static List<string> ValidateEndpointRequest(string name, string path, string httpMethod, int? protocol = null)
+    private static List<string> ValidateEndpointRequest(string name, string path, string httpMethod, int? protocol = null, string? serviceName = null)
     {
         var errors = new List<string>();
 
@@ -21,9 +23,18 @@ public static class EndpointManagementApis
             errors.Add("Name is required");
         else if (name.Length > 200)
             errors.Add("Name must be 200 characters or less");
+        else if (HtmlTagPattern.IsMatch(name))
+            errors.Add("Name must not contain HTML tags");
 
         if (string.IsNullOrWhiteSpace(path))
             errors.Add("Path is required");
+        else if (path.Length > 500)
+            errors.Add("Path must be 500 characters or less");
+
+        if (serviceName != null && serviceName.Length > 200)
+            errors.Add("ServiceName must be 200 characters or less");
+        if (serviceName != null && HtmlTagPattern.IsMatch(serviceName))
+            errors.Add("ServiceName must not contain HTML tags");
 
         if (string.IsNullOrWhiteSpace(httpMethod))
             errors.Add("HttpMethod is required");
@@ -65,7 +76,7 @@ public static class EndpointManagementApis
             IMockRuleCache cache) =>
         {
             // Input validation
-            var validationErrors = ValidateEndpointRequest(request.Name, request.Path, request.HttpMethod, (int)request.Protocol);
+            var validationErrors = ValidateEndpointRequest(request.Name, request.Path, request.HttpMethod, (int)request.Protocol, request.ServiceName);
             if (validationErrors.Count > 0)
                 return Results.BadRequest(new { errors = validationErrors });
 
@@ -147,7 +158,7 @@ public static class EndpointManagementApis
             }
 
             // Input validation
-            var validationErrors = ValidateEndpointRequest(request.Name, request.Path, request.HttpMethod);
+            var validationErrors = ValidateEndpointRequest(request.Name, request.Path, request.HttpMethod, serviceName: request.ServiceName);
             if (validationErrors.Count > 0)
                 return Results.BadRequest(new { errors = validationErrors });
 

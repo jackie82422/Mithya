@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using MockServer.Api.DTOs.Requests;
 using MockServer.Core.Entities;
@@ -9,6 +10,8 @@ namespace MockServer.Api.Endpoints;
 
 public static class RuleManagementApis
 {
+    private static readonly Regex HtmlTagPattern = new(@"<[^>]+>", RegexOptions.Compiled);
+
     private static List<string> ValidateRuleRequest(CreateRuleRequest request)
     {
         var errors = new List<string>();
@@ -17,6 +20,8 @@ public static class RuleManagementApis
             errors.Add("RuleName is required");
         else if (request.RuleName.Length > 200)
             errors.Add("RuleName must be 200 characters or less");
+        else if (HtmlTagPattern.IsMatch(request.RuleName))
+            errors.Add("RuleName must not contain HTML tags");
 
         if (request.DelayMs < 0)
             errors.Add("DelayMs must be 0 or greater");
