@@ -91,7 +91,8 @@
       "serviceNamePlaceholder": "例如：UserService",
       "pathPlaceholder": "例如：/api/users/{id}",
       "selectProtocol": "選擇協議",
-      "selectMethod": "選擇 HTTP 方法"
+      "selectMethod": "選擇 HTTP 方法",
+      "protocolImmutable": "建立後無法變更協議類型"
     },
     "defaultResponseForm": {
       "title": "設定預設回應",

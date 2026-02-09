@@ -51,9 +51,12 @@ function StatCard({
         <div style={{ minWidth: 0 }}>
           <div
             style={{
-              fontSize: 13,
+              fontSize: 12,
               color: 'var(--color-text-secondary)',
               marginBottom: 2,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
             {title}

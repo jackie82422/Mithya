@@ -18,7 +18,14 @@ import NotFoundPage from './shared/pages/NotFoundPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { refetchOnWindowFocus: false, retry: 1 },
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 404 || status === 403) return false;
+        return failureCount < 1;
+      },
+    },
   },
 });
 

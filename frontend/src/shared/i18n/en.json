@@ -91,7 +91,8 @@
       "serviceNamePlaceholder": "e.g. UserService",
       "pathPlaceholder": "e.g. /api/users/{id}",
       "selectProtocol": "Select Protocol",
-      "selectMethod": "Select HTTP Method"
+      "selectMethod": "Select HTTP Method",
+      "protocolImmutable": "Protocol cannot be changed after creation"
     },
     "defaultResponseForm": {
       "title": "Set Default Response",

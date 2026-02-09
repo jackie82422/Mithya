@@ -78,7 +78,11 @@ export default function RecentLogs({ logs }: RecentLogsProps) {
             {
               title: t('logs.path'),
               dataIndex: 'path',
-              render: (p: string) => <Typography.Text code>{p}</Typography.Text>,
+              render: (p: string, record: MockRequestLog) => (
+                <Typography.Text code>
+                  {record.queryString ? `${p}${record.queryString.startsWith('?') ? '' : '?'}${record.queryString}` : p}
+                </Typography.Text>
+              ),
             },
             {
               title: t('logs.statusCode'),
