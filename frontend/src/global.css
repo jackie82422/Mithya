@@ -176,6 +176,7 @@ body {
   text-transform: uppercase !important;
   letter-spacing: 0.5px !important;
   color: var(--color-text-secondary) !important;
+  white-space: nowrap !important;
 }
 
 .ant-table-tbody > tr > td {

@@ -19,6 +19,7 @@ function StatusCodePill({ code }: { code: number }) {
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 600,
+        whiteSpace: 'nowrap',
         background: ok ? 'var(--get-bg)' : 'var(--delete-bg)',
         color: ok ? 'var(--get-color)' : 'var(--delete-color)',
       }}
@@ -38,6 +39,7 @@ function MatchPill({ matched, isDefault, label }: { matched: boolean; isDefault?
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 500,
+        whiteSpace: 'nowrap',
         background: bg,
         color: color,
       }}
@@ -56,7 +58,7 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
       rowKey="id"
       loading={loading}
       size="small"
-      scroll={{ x: 800 }}
+      scroll={{ x: 900 }}
       pagination={{ pageSize: 20, showSizeChanger: true, pageSizeOptions: [10, 20, 50, 100] }}
       onRow={(record) => ({
         onClick: () => onRowClick(record),
@@ -110,7 +112,7 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
         {
           title: t('logs.matchStatus'),
           dataIndex: 'isMatched',
-          width: 110,
+          width: 130,
           filters: [
             { text: t('logs.matched'), value: true },
             { text: t('logs.unmatched'), value: false },
@@ -124,6 +126,7 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
                   borderRadius: 100,
                   fontSize: 12,
                   fontWeight: 500,
+                  whiteSpace: 'nowrap',
                   background: 'var(--stats-blue-bg)',
                   color: 'var(--stats-blue-icon)',
                 }}>
@@ -142,6 +145,7 @@ export default function LogTable({ logs, loading, onRowClick }: LogTableProps) {
                     borderRadius: 100,
                     fontSize: 11,
                     fontWeight: 500,
+                    whiteSpace: 'nowrap',
                     background: 'var(--delete-bg)',
                     color: 'var(--delete-color)',
                   }}>

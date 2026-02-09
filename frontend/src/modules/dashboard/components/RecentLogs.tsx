@@ -16,6 +16,7 @@ function StatusCodePill({ code }: { code: number }) {
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 600,
+        whiteSpace: 'nowrap',
         background: ok ? 'var(--get-bg)' : 'var(--delete-bg)',
         color: ok ? 'var(--get-color)' : 'var(--delete-color)',
       }}
@@ -35,6 +36,7 @@ function MatchPill({ matched, isDefault, label }: { matched: boolean; isDefault?
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 500,
+        whiteSpace: 'nowrap',
         background: bg,
         color: color,
       }}
