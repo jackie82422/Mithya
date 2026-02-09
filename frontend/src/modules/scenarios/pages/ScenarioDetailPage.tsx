@@ -57,7 +57,7 @@ export default function ScenarioDetailPage() {
     return (
       <Result
         status="warning"
-        title={t('scenarios.noScenarios')}
+        title={t('scenarios.notFound')}
         extra={
           <Button type="primary" onClick={() => navigate('/scenarios')}>
             {t('scenarios.title')}
@@ -185,7 +185,7 @@ export default function ScenarioDetailPage() {
       </Flex>
 
       {steps.length === 0 ? (
-        <Empty description={t('scenarios.noScenarios')}>
+        <Empty description={t('scenarios.noSteps')}>
           <Button type="primary" onClick={() => setStepFormOpen(true)}>
             {t('scenarios.addStep')}
           </Button>

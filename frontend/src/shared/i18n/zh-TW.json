@@ -247,6 +247,8 @@
     "stateFlow": "狀態流程",
     "steps": "步驟",
     "noScenarios": "尚未建立任何場景",
+    "notFound": "找不到此場景",
+    "noSteps": "尚未建立任何步驟",
     "createFirst": "點擊上方按鈕建立第一個場景",
     "deleteConfirm": "確定要刪除場景「{{name}}」嗎？",
     "deleteStepConfirm": "確定要刪除此步驟嗎？",

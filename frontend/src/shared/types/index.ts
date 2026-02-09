@@ -251,7 +251,7 @@ export interface CreateProxyConfigRequest {
   targetBaseUrl: string;
   isRecording?: boolean;
   forwardHeaders?: boolean;
-  additionalHeaders?: Record<string, string> | null;
+  additionalHeaders?: string | null;
   timeoutMs?: number;
   stripPathPrefix?: string | null;
 }

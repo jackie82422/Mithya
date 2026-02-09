@@ -89,7 +89,8 @@ function setNestedValue(obj: Record<string, unknown>, path: string, value: strin
   current[keys[keys.length - 1]] = value;
 }
 
-function formatJson(raw: string): string {
+function formatJson(raw: string | null | undefined): string {
+  if (!raw) return '';
   try {
     return JSON.stringify(JSON.parse(raw), null, 2);
   } catch {

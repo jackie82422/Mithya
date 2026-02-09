@@ -58,14 +58,6 @@ export default function ProxyConfigForm({
 
   const handleOk = async () => {
     const values = await form.validateFields();
-    let additionalHeaders: Record<string, string> | null = null;
-    if (values.additionalHeadersStr) {
-      try {
-        additionalHeaders = JSON.parse(values.additionalHeadersStr);
-      } catch {
-        additionalHeaders = null;
-      }
-    }
     onSubmit({
       endpointId: values.scope === 'global' ? null : values.endpointId,
       targetBaseUrl: values.targetBaseUrl,
@@ -73,7 +65,9 @@ export default function ProxyConfigForm({
       timeoutMs: values.timeoutMs,
       forwardHeaders: values.forwardHeaders,
       isRecording: values.isRecording,
-      additionalHeaders,
+      additionalHeaders: values.additionalHeadersStr && values.additionalHeadersStr.trim() !== '{}'
+        ? (() => { try { JSON.parse(values.additionalHeadersStr); return values.additionalHeadersStr; } catch { return null; } })()
+        : null,
     });
   };
 
