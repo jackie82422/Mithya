@@ -21,7 +21,9 @@ public static class ScenarioApis
         group.MapGet("/{id}", async (Guid id, IScenarioRepository repo) =>
         {
             var scenario = await repo.GetByIdWithStepsAsync(id);
-            return scenario is not null ? Results.Ok(scenario) : Results.NotFound();
+            return scenario is not null
+                ? Results.Ok(scenario)
+                : Results.NotFound(new { error = "Scenario not found" });
         })
         .WithName("GetScenarioById")
         .WithOpenApi();
@@ -57,7 +59,7 @@ public static class ScenarioApis
         {
             var existing = await repo.GetByIdAsync(id);
             if (existing is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario not found" });
 
             existing.Name = request.Name;
             existing.Description = request.Description;
@@ -80,7 +82,7 @@ public static class ScenarioApis
         {
             var scenario = await repo.GetByIdAsync(id);
             if (scenario is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario not found" });
 
             await repo.DeleteAsync(id);
             await repo.SaveChangesAsync();
@@ -98,7 +100,7 @@ public static class ScenarioApis
         {
             var scenario = await repo.GetByIdAsync(id);
             if (scenario is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario not found" });
 
             scenario.IsActive = !scenario.IsActive;
             await repo.UpdateAsync(scenario);
@@ -117,7 +119,7 @@ public static class ScenarioApis
         {
             var scenario = await repo.GetByIdAsync(id);
             if (scenario is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario not found" });
 
             await engine.ResetScenarioAsync(id);
             await engine.ReloadAsync();
@@ -137,7 +139,7 @@ public static class ScenarioApis
         {
             var scenario = await repo.GetByIdAsync(id);
             if (scenario is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario not found" });
 
             var state = engine.GetCurrentState(id) ?? scenario.CurrentState;
             return Results.Ok(new { scenarioId = id, currentState = state });
@@ -155,7 +157,7 @@ public static class ScenarioApis
         {
             var scenario = await repo.GetByIdAsync(id);
             if (scenario is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario not found" });
 
             step.ScenarioId = id;
             await stepRepo.AddAsync(step);
@@ -176,7 +178,7 @@ public static class ScenarioApis
         {
             var step = await stepRepo.GetByIdAsync(stepId);
             if (step is null || step.ScenarioId != id)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario step not found" });
 
             step.StateName = request.StateName;
             step.EndpointId = request.EndpointId;
@@ -206,7 +208,7 @@ public static class ScenarioApis
         {
             var step = await stepRepo.GetByIdAsync(stepId);
             if (step is null || step.ScenarioId != id)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Scenario step not found" });
 
             await stepRepo.DeleteAsync(stepId);
             await stepRepo.SaveChangesAsync();

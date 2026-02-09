@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using MockServer.Api.DTOs.Requests;
 using MockServer.Core.Entities;
+using MockServer.Core.Enums;
 using MockServer.Core.Interfaces;
 using MockServer.Infrastructure.ProtocolHandlers;
 
@@ -8,6 +9,30 @@ namespace MockServer.Api.Endpoints;
 
 public static class RuleManagementApis
 {
+    private static List<string> ValidateRuleRequest(CreateRuleRequest request)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(request.RuleName))
+            errors.Add("RuleName is required");
+        else if (request.RuleName.Length > 200)
+            errors.Add("RuleName must be 200 characters or less");
+
+        if (request.DelayMs < 0)
+            errors.Add("DelayMs must be 0 or greater");
+
+        if (!Enum.IsDefined(typeof(FaultType), request.FaultType))
+            errors.Add($"FaultType must be one of: {string.Join(", ", Enum.GetValues<FaultType>().Select(f => $"{(int)f}({f})"))}");
+
+        if (!Enum.IsDefined(typeof(LogicMode), request.LogicMode))
+            errors.Add($"LogicMode must be one of: {string.Join(", ", Enum.GetValues<LogicMode>().Select(l => $"{(int)l}({l})"))}");
+
+        if (request.StatusCode < 100 || request.StatusCode > 599)
+            errors.Add("StatusCode must be between 100 and 599");
+
+        return errors;
+    }
+
     public static void MapRuleManagementApis(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/api/endpoints/{endpointId}/rules").WithTags("Rules");
@@ -28,10 +53,15 @@ public static class RuleManagementApis
             ProtocolHandlerFactory factory,
             IMockRuleCache cache) =>
         {
+            // Input validation
+            var validationErrors = ValidateRuleRequest(request);
+            if (validationErrors.Count > 0)
+                return Results.BadRequest(new { errors = validationErrors });
+
             var endpoint = await endpointRepo.GetByIdAsync(endpointId);
             if (endpoint is null)
             {
-                return Results.NotFound(new { message = "Endpoint not found" });
+                return Results.NotFound(new { error = "Endpoint not found" });
             }
 
             var rule = new MockRule
@@ -80,18 +110,23 @@ public static class RuleManagementApis
             ProtocolHandlerFactory factory,
             IMockRuleCache cache) =>
         {
+            // Input validation
+            var validationErrors = ValidateRuleRequest(request);
+            if (validationErrors.Count > 0)
+                return Results.BadRequest(new { errors = validationErrors });
+
             // Validate endpoint exists
             var endpoint = await endpointRepo.GetByIdAsync(endpointId);
             if (endpoint is null)
             {
-                return Results.NotFound(new { message = "Endpoint not found" });
+                return Results.NotFound(new { error = "Endpoint not found" });
             }
 
             // Validate rule exists and belongs to the endpoint
             var rule = await ruleRepo.GetByIdAsync(ruleId);
             if (rule is null || rule.EndpointId != endpointId)
             {
-                return Results.NotFound(new { message = "Rule not found" });
+                return Results.NotFound(new { error = "Rule not found" });
             }
 
             // Update rule fields
@@ -138,7 +173,7 @@ public static class RuleManagementApis
             var rule = await repo.GetByIdAsync(ruleId);
             if (rule is null || rule.EndpointId != endpointId)
             {
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Rule not found" });
             }
 
             await repo.DeleteAsync(ruleId);
@@ -160,13 +195,13 @@ public static class RuleManagementApis
             var endpoint = await endpointRepo.GetByIdAsync(endpointId);
             if (endpoint is null)
             {
-                return Results.NotFound(new { message = "Endpoint not found" });
+                return Results.NotFound(new { error = "Endpoint not found" });
             }
 
             var rule = await ruleRepo.GetByIdAsync(ruleId);
             if (rule is null)
             {
-                return Results.NotFound(new { message = "Rule not found" });
+                return Results.NotFound(new { error = "Rule not found" });
             }
 
             if (rule.EndpointId != endpointId)

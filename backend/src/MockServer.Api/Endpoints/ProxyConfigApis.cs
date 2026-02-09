@@ -6,6 +6,22 @@ namespace MockServer.Api.Endpoints;
 
 public static class ProxyConfigApis
 {
+    private static List<string> ValidateProxyConfig(ProxyConfig config)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(config.TargetBaseUrl))
+            errors.Add("TargetBaseUrl is required");
+        else if (!Uri.TryCreate(config.TargetBaseUrl, UriKind.Absolute, out var uri)
+                 || (uri.Scheme != "http" && uri.Scheme != "https"))
+            errors.Add("TargetBaseUrl must be a valid HTTP/HTTPS URL");
+
+        if (config.TimeoutMs < 0)
+            errors.Add("TimeoutMs must be 0 or greater");
+
+        return errors;
+    }
+
     public static void MapProxyConfigApis(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/api/proxy-configs").WithTags("ProxyConfigs");
@@ -21,7 +37,9 @@ public static class ProxyConfigApis
         group.MapGet("/{id}", async (Guid id, IProxyConfigRepository repo) =>
         {
             var config = await repo.GetByIdAsync(id);
-            return config is not null ? Results.Ok(config) : Results.NotFound();
+            return config is not null
+                ? Results.Ok(config)
+                : Results.NotFound(new { error = "Proxy config not found" });
         })
         .WithName("GetProxyConfigById")
         .WithOpenApi();
@@ -31,8 +49,9 @@ public static class ProxyConfigApis
             IProxyConfigRepository repo,
             IProxyConfigCache cache) =>
         {
-            if (string.IsNullOrWhiteSpace(request.TargetBaseUrl))
-                return Results.BadRequest(new { error = "TargetBaseUrl is required" });
+            var validationErrors = ValidateProxyConfig(request);
+            if (validationErrors.Count > 0)
+                return Results.BadRequest(new { errors = validationErrors });
 
             await repo.AddAsync(request);
             await repo.SaveChangesAsync();
@@ -49,9 +68,13 @@ public static class ProxyConfigApis
             IProxyConfigRepository repo,
             IProxyConfigCache cache) =>
         {
+            var validationErrors = ValidateProxyConfig(request);
+            if (validationErrors.Count > 0)
+                return Results.BadRequest(new { errors = validationErrors });
+
             var existing = await repo.GetByIdAsync(id);
             if (existing is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Proxy config not found" });
 
             existing.TargetBaseUrl = request.TargetBaseUrl;
             existing.EndpointId = request.EndpointId;
@@ -78,7 +101,7 @@ public static class ProxyConfigApis
         {
             var config = await repo.GetByIdAsync(id);
             if (config is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Proxy config not found" });
 
             await repo.DeleteAsync(id);
             await repo.SaveChangesAsync();
@@ -96,7 +119,7 @@ public static class ProxyConfigApis
         {
             var config = await repo.GetByIdAsync(id);
             if (config is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Proxy config not found" });
 
             config.IsActive = !config.IsActive;
             await repo.UpdateAsync(config);
@@ -115,7 +138,7 @@ public static class ProxyConfigApis
         {
             var config = await repo.GetByIdAsync(id);
             if (config is null)
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Proxy config not found" });
 
             config.IsRecording = !config.IsRecording;
             await repo.UpdateAsync(config);

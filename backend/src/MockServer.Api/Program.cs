@@ -89,6 +89,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Global exception handler - must be outermost to catch all unhandled exceptions
+app.UseMiddleware<GlobalExceptionHandler>();
+
 app.UseCors();
 
 // Dynamic mock middleware (must be before MapXxxApis so non-admin paths are intercepted)

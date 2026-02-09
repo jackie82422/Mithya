@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using MockServer.Api.DTOs.Requests;
 using MockServer.Core.Entities;
+using MockServer.Core.Enums;
 using MockServer.Core.Interfaces;
 using MockServer.Infrastructure.ProtocolHandlers;
 
@@ -10,6 +11,31 @@ namespace MockServer.Api.Endpoints;
 
 public static class EndpointManagementApis
 {
+    private static readonly string[] ValidHttpMethods = { "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS" };
+
+    private static List<string> ValidateEndpointRequest(string name, string path, string httpMethod, int? protocol = null)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(name))
+            errors.Add("Name is required");
+        else if (name.Length > 200)
+            errors.Add("Name must be 200 characters or less");
+
+        if (string.IsNullOrWhiteSpace(path))
+            errors.Add("Path is required");
+
+        if (string.IsNullOrWhiteSpace(httpMethod))
+            errors.Add("HttpMethod is required");
+        else if (!ValidHttpMethods.Contains(httpMethod.ToUpper()))
+            errors.Add($"HttpMethod must be one of: {string.Join(", ", ValidHttpMethods)}");
+
+        if (protocol.HasValue && !Enum.IsDefined(typeof(ProtocolType), protocol.Value))
+            errors.Add($"Protocol must be one of: {string.Join(", ", Enum.GetValues<ProtocolType>().Select(p => $"{(int)p}({p})"))}");
+
+        return errors;
+    }
+
     public static void MapEndpointManagementApis(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/api/endpoints").WithTags("Endpoints");
@@ -25,7 +51,9 @@ public static class EndpointManagementApis
         group.MapGet("/{id}", async (Guid id, IEndpointRepository repo) =>
         {
             var endpoint = await repo.GetByIdAsync(id);
-            return endpoint is not null ? Results.Ok(endpoint) : Results.NotFound();
+            return endpoint is not null
+                ? Results.Ok(endpoint)
+                : Results.NotFound(new { error = "Endpoint not found" });
         })
         .WithName("GetEndpointById")
         .WithOpenApi();
@@ -36,6 +64,15 @@ public static class EndpointManagementApis
             ProtocolHandlerFactory factory,
             IMockRuleCache cache) =>
         {
+            // Input validation
+            var validationErrors = ValidateEndpointRequest(request.Name, request.Path, request.HttpMethod, (int)request.Protocol);
+            if (validationErrors.Count > 0)
+                return Results.BadRequest(new { errors = validationErrors });
+
+            // Auto-normalize path
+            if (!request.Path.StartsWith("/"))
+                request.Path = "/" + request.Path;
+
             var endpoint = new MockEndpoint
             {
                 Name = request.Name,
@@ -106,8 +143,16 @@ public static class EndpointManagementApis
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
             {
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Endpoint not found" });
             }
+
+            // Input validation
+            var validationErrors = ValidateEndpointRequest(request.Name, request.Path, request.HttpMethod);
+            if (validationErrors.Count > 0)
+                return Results.BadRequest(new { errors = validationErrors });
+
+            if (!request.Path.StartsWith("/"))
+                request.Path = "/" + request.Path;
 
             // Apply updates (Protocol is immutable)
             endpoint.Name = request.Name;
@@ -160,7 +205,7 @@ public static class EndpointManagementApis
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
             {
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Endpoint not found" });
             }
 
             endpoint.DefaultResponse = request.ResponseBody;
@@ -183,7 +228,7 @@ public static class EndpointManagementApis
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
             {
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Endpoint not found" });
             }
 
             await repo.DeleteAsync(id);
@@ -203,7 +248,7 @@ public static class EndpointManagementApis
             var endpoint = await repo.GetByIdAsync(id);
             if (endpoint is null)
             {
-                return Results.NotFound();
+                return Results.NotFound(new { error = "Endpoint not found" });
             }
 
             endpoint.IsActive = !endpoint.IsActive;
