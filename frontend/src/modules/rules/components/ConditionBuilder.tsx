@@ -38,15 +38,15 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
   const { t } = useTranslation();
 
   const operatorOptions = [
-    { value: MatchOperator.Equals, label: t('rules.form.operator') !== 'Operator' ? 'Equals' : 'Equals' },
+    { value: MatchOperator.Equals, label: t('rules.opEquals') },
     { value: MatchOperator.NotEquals, label: t('rules.opNotEquals') },
-    { value: MatchOperator.Contains, label: 'Contains' },
-    { value: MatchOperator.Regex, label: 'Regex' },
-    { value: MatchOperator.StartsWith, label: 'StartsWith' },
-    { value: MatchOperator.EndsWith, label: 'EndsWith' },
-    { value: MatchOperator.GreaterThan, label: 'GreaterThan' },
-    { value: MatchOperator.LessThan, label: 'LessThan' },
-    { value: MatchOperator.Exists, label: 'Exists' },
+    { value: MatchOperator.Contains, label: t('rules.opContains') },
+    { value: MatchOperator.Regex, label: t('rules.opRegex') },
+    { value: MatchOperator.StartsWith, label: t('rules.opStartsWith') },
+    { value: MatchOperator.EndsWith, label: t('rules.opEndsWith') },
+    { value: MatchOperator.GreaterThan, label: t('rules.opGreaterThan') },
+    { value: MatchOperator.LessThan, label: t('rules.opLessThan') },
+    { value: MatchOperator.Exists, label: t('rules.opExists') },
     { value: MatchOperator.NotExists, label: t('rules.opNotExists') },
     { value: MatchOperator.IsEmpty, label: t('rules.opIsEmpty') },
     { value: MatchOperator.JsonSchema, label: t('rules.opJsonSchema') },
