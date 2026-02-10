@@ -38,14 +38,28 @@ public static class TryRequestApis
     {
         var group = app.MapGroup("/admin/api/try-request").WithTags("TryRequest");
 
-        group.MapPost("/", async (TryRequestPayload payload, IHttpClientFactory httpClientFactory) =>
+        group.MapPost("/", async (TryRequestPayload payload, IHttpClientFactory httpClientFactory, IConfiguration config, HttpContext context) =>
         {
             var errors = Validate(payload);
             if (errors.Count > 0)
                 return Results.BadRequest(new { errors });
 
+            // Rewrite URL when targeting the mock server itself (Docker: external port != internal port)
+            var targetUrl = payload.Url;
+            var externalBaseUrl = config.GetValue<string>("MockServer:BaseUrl")?.TrimEnd('/');
+            if (!string.IsNullOrEmpty(externalBaseUrl) &&
+                targetUrl.StartsWith(externalBaseUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                var aspnetUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? $"{context.Request.Scheme}://localhost:{context.Request.Host.Port}";
+                var internalBaseUrl = aspnetUrls.Split(';').First()
+                    .Replace("://+:", "://localhost:")
+                    .Replace("://*:", "://localhost:")
+                    .TrimEnd('/');
+                targetUrl = internalBaseUrl + targetUrl[externalBaseUrl.Length..];
+            }
+
             var client = httpClientFactory.CreateClient("TryRequest");
-            var request = new HttpRequestMessage(new HttpMethod(payload.Method.ToUpperInvariant()), payload.Url);
+            var request = new HttpRequestMessage(new HttpMethod(payload.Method.ToUpperInvariant()), targetUrl);
 
             // Set headers
             if (payload.Headers is not null)
