@@ -269,7 +269,7 @@ mServer/
 ├── backend/
 │   ├── MockServer.sln
 │   ├── src/
-│   │   ├── MockServer.Core/                    # Domain 層
+│   │   ├── Mithya.Core/                    # Domain 層
 │   │   │   ├── Entities/
 │   │   │   │   ├── MockEndpoint.cs
 │   │   │   │   ├── MockRule.cs
@@ -285,7 +285,7 @@ mServer/
 │   │   │       ├── IRequestLogRepository.cs
 │   │   │       └── IProtocolHandler.cs        # 協議處理器介面
 │   │   │
-│   │   ├── MockServer.Infrastructure/          # 基礎設施層
+│   │   ├── Mithya.Infrastructure/          # 基礎設施層
 │   │   │   ├── Data/
 │   │   │   │   ├── MockServerDbContext.cs
 │   │   │   │   └── Migrations/
@@ -303,7 +303,7 @@ mServer/
 │   │   │       ├── GrpcProtocolHandler.cs      # gRPC 處理器（未來）
 │   │   │       └── GraphQLProtocolHandler.cs   # GraphQL 處理器（未來）
 │   │   │
-│   │   └── MockServer.Api/                     # Mock API + Admin API
+│   │   └── Mithya.Api/                     # Mock API + Admin API
 │   │       ├── Program.cs
 │   │       ├── appsettings.json
 │   │       ├── Middleware/
@@ -535,22 +535,22 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["src/MockServer.Api/MockServer.Api.csproj", "MockServer.Api/"]
-COPY ["src/MockServer.Core/MockServer.Core.csproj", "MockServer.Core/"]
-COPY ["src/MockServer.Infrastructure/MockServer.Infrastructure.csproj", "MockServer.Infrastructure/"]
-RUN dotnet restore "MockServer.Api/MockServer.Api.csproj"
+COPY ["src/Mithya.Api/Mithya.Api.csproj", "Mithya.Api/"]
+COPY ["src/Mithya.Core/Mithya.Core.csproj", "Mithya.Core/"]
+COPY ["src/Mithya.Infrastructure/Mithya.Infrastructure.csproj", "Mithya.Infrastructure/"]
+RUN dotnet restore "Mithya.Api/Mithya.Api.csproj"
 
 COPY src/ .
-WORKDIR "/src/MockServer.Api"
-RUN dotnet build "MockServer.Api.csproj" -c Release -o /app/build
+WORKDIR "/src/Mithya.Api"
+RUN dotnet build "Mithya.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "MockServer.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Mithya.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MockServer.Api.dll"]
+ENTRYPOINT ["dotnet", "Mithya.Api.dll"]
 ```
 
 ```dockerfile

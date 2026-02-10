@@ -8,7 +8,7 @@ argument-hint: "[all|frontend|backend|docker]"
 
 # Build Project
 
-Build the mServer project based on the argument.
+Build the Mithya project based on the argument.
 
 ## Targets
 
@@ -44,7 +44,7 @@ For clean rebuild: `docker-compose build --no-cache`
 
 - Frontend: verify `frontend/dist/index.html` exists
 - Backend: verify no build errors in output
-- Docker: verify images with `docker images | grep mockserver`
+- Docker: verify images with `docker images | grep mithya`
 
 ## On Failure
 

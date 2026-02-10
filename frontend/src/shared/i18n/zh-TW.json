@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Mock Server",
+    "title": "Mithya",
     "subtitle": "API 模擬服務管理平台"
   },
   "menu": {
@@ -40,7 +40,7 @@
   },
   "dashboard": {
     "title": "儀表板",
-    "subtitle": "Mock Server 運行狀態一覽",
+    "subtitle": "Mithya 運行狀態一覽",
     "totalEndpoints": "端點總數",
     "activeEndpoints": "啟用端點",
     "totalRules": "規則總數",
@@ -50,7 +50,7 @@
     "noLogs": "暫無請求日誌",
     "matchedRate": "匹配率",
     "emptyDesc": "尚未建立任何端點，建立第一個 Mock 端點開始使用",
-    "mockServerUrl": "Mock Server 網址"
+    "mockServerUrl": "Mithya 網址"
   },
   "endpoints": {
     "title": "端點管理",
@@ -179,7 +179,7 @@
   },
   "logs": {
     "title": "請求日誌",
-    "subtitle": "檢視所有進入 Mock Server 的請求紀錄",
+    "subtitle": "檢視所有進入 Mithya 的請求紀錄",
     "timestamp": "時間",
     "method": "方法",
     "path": "路徑",

@@ -54,7 +54,7 @@ docker-compose up -d          # Start all services (Postgres + Backend + Fronten
 
 # Local Development
 docker-compose up -d postgres                              # Start DB only
-cd backend/src/MockServer.Api && dotnet run                # Backend on :5000
+cd backend/src/Mithya.Api && dotnet run                # Backend on :5000
 cd frontend && npm install && npm run dev                  # Frontend on :5173
 ```
 
@@ -66,16 +66,16 @@ cd frontend && npm install && npm run dev                  # Frontend on :5173
 mServer/
 ├── backend/
 │   └── src/
-│       ├── MockServer.Api/            # ASP.NET Core 8 web layer
+│       ├── Mithya.Api/            # ASP.NET Core 8 web layer
 │       │   ├── Program.cs             # DI, middleware pipeline, startup
 │       │   ├── Endpoints/             # Minimal API endpoint groups
 │       │   └── Middleware/            # DynamicMockMiddleware, GlobalExceptionHandler
-│       ├── MockServer.Core/           # Domain layer (entities, enums, interfaces)
+│       ├── Mithya.Core/           # Domain layer (entities, enums, interfaces)
 │       │   ├── Entities/              # MockEndpoint, MockRule, ServiceProxy, Scenario...
 │       │   ├── Enums/                 # ProtocolType, MatchOperator, FaultType...
 │       │   ├── Interfaces/            # Repository & engine contracts
 │       │   └── ValueObjects/          # CachedEndpoint, CachedRule, MatchResult...
-│       └── MockServer.Infrastructure/ # Data & business logic
+│       └── Mithya.Infrastructure/ # Data & business logic
 │           ├── Data/                  # DbContext, EF configurations, migrations
 │           ├── Repositories/          # EF Core repository implementations
 │           ├── MockEngine/            # MatchEngine, ProxyEngine, ResponseRenderer...
@@ -228,14 +228,14 @@ Each module under `modules/{name}/` follows:
 
 ### Backend: Add a New Entity + CRUD
 
-1. **Entity**: Create `MockServer.Core/Entities/NewEntity.cs`
-2. **Enum** (if needed): Add to `MockServer.Core/Enums/`
-3. **Repository interface**: `MockServer.Core/Interfaces/INewEntityRepository.cs`
-4. **Repository impl**: `MockServer.Infrastructure/Repositories/NewEntityRepository.cs`
-5. **EF Config**: `MockServer.Infrastructure/Data/Configurations/NewEntityConfiguration.cs`
-6. **DbSet**: Add to `MockServerDbContext.cs`
-7. **Migration**: `dotnet ef migrations add AddNewEntity --project src/MockServer.Infrastructure --startup-project src/MockServer.Api`
-8. **API endpoints**: `MockServer.Api/Endpoints/NewEntityApis.cs` with `MapNewEntityApis()`
+1. **Entity**: Create `Mithya.Core/Entities/NewEntity.cs`
+2. **Enum** (if needed): Add to `Mithya.Core/Enums/`
+3. **Repository interface**: `Mithya.Core/Interfaces/INewEntityRepository.cs`
+4. **Repository impl**: `Mithya.Infrastructure/Repositories/NewEntityRepository.cs`
+5. **EF Config**: `Mithya.Infrastructure/Data/Configurations/NewEntityConfiguration.cs`
+6. **DbSet**: Add to `MithyaDbContext.cs`
+7. **Migration**: `dotnet ef migrations add AddNewEntity --project src/Mithya.Infrastructure --startup-project src/Mithya.Api`
+8. **API endpoints**: `Mithya.Api/Endpoints/NewEntityApis.cs` with `MapNewEntityApis()`
 9. **Register DI** in `Program.cs`:
    - `builder.Services.AddScoped<INewEntityRepository, NewEntityRepository>()`
    - `app.MapNewEntityApis()`

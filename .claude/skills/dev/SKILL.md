@@ -8,7 +8,7 @@ argument-hint: "[all|db|backend|frontend]"
 
 # Start Development Environment
 
-Start the mServer development stack based on the argument.
+Start the Mithya development stack based on the argument.
 
 ## Targets
 
@@ -29,7 +29,7 @@ Wait until healthy, then confirm with `docker-compose ps`.
 
 ### Backend
 ```bash
-cd backend/src/MockServer.Api && dotnet run
+cd backend/src/Mithya.Api && dotnet run
 ```
 Runs on http://localhost:5000. Auto-applies EF migrations on startup.
 
@@ -43,7 +43,7 @@ Runs on http://localhost:5173. Proxies `/admin/api` to backend :5000.
 
 1. Start DB: `docker-compose up -d postgres`
 2. Wait for healthy: check `docker-compose ps`
-3. Start Backend in background: `cd backend/src/MockServer.Api && dotnet run`
+3. Start Backend in background: `cd backend/src/Mithya.Api && dotnet run`
 4. Start Frontend in background: `cd frontend && npm run dev`
 
 ## Troubleshooting

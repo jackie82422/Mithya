@@ -24,12 +24,12 @@
 
 | Service | Image | Container | Host Port | Container Port |
 |---------|-------|-----------|-----------|----------------|
-| `postgres` | `postgres:16-alpine` | `mockserver-db` | 5432 | 5432 |
-| `backend` | Custom (Dockerfile) | `mockserver-backend` | 5050 | 8080 |
-| `frontend` | Custom (Dockerfile) | `mockserver-frontend` | 3000 | 80 |
+| `postgres` | `postgres:16-alpine` | `mithya-db` | 5432 | 5432 |
+| `backend` | Custom (Dockerfile) | `mithya-backend` | 5050 | 8080 |
+| `frontend` | Custom (Dockerfile) | `mithya-frontend` | 3000 | 80 |
 
 ### Network
-- Bridge network: `mockserver-network`
+- Bridge network: `mithya-network`
 - Services communicate by container name (e.g., `http://backend:8080`, `Host=postgres`)
 
 ### Volumes
@@ -54,12 +54,12 @@ docker-compose build --no-cache     # Rebuild images
 
 ## Dockerfiles
 
-### Backend (`backend/src/MockServer.Api/Dockerfile`)
+### Backend (`backend/src/Mithya.Api/Dockerfile`)
 Multi-stage build:
 1. **base**: `mcr.microsoft.com/dotnet/aspnet:8.0` (runtime only)
 2. **build**: `mcr.microsoft.com/dotnet/sdk:8.0` (restore + build)
 3. **publish**: Release publish (`/app/publish`)
-4. **final**: Copy published output, entrypoint `dotnet MockServer.Api.dll`
+4. **final**: Copy published output, entrypoint `dotnet Mithya.Api.dll`
 
 ### Frontend (`frontend/Dockerfile`)
 Multi-stage build:
@@ -84,7 +84,7 @@ Multi-stage build:
 | Component | Port | Command |
 |-----------|------|---------|
 | Frontend (Vite) | `localhost:5173` | `cd frontend && npm run dev` |
-| Backend (.NET) | `localhost:5000` | `cd backend/src/MockServer.Api && dotnet run` |
+| Backend (.NET) | `localhost:5000` | `cd backend/src/Mithya.Api && dotnet run` |
 | PostgreSQL | `localhost:5432` | Docker or local install |
 
 ### Proxy Chain
@@ -111,18 +111,18 @@ Browser → :5173 (Vite)
 ```
 Host:     localhost (dev) / postgres (docker)
 Port:     5432
-Database: mockserver
-Username: mockserver
-Password: mockserver123
+Database: mithya
+Username: mithya
+Password: mithya123
 ```
 
 ### Connection String
-- **appsettings.json**: `Host=localhost;Database=mockserver;Username=mockserver;Password=mockserver123`
+- **appsettings.json**: `Host=localhost;Database=mithya;Username=mithya;Password=mithya123`
 - **Docker override**: `Host=postgres;...` via environment variable `ConnectionStrings__Default`
 
 ### EF Core Migrations
 
-Migrations are at `backend/src/MockServer.Infrastructure/Data/Migrations/`.
+Migrations are at `backend/src/Mithya.Infrastructure/Data/Migrations/`.
 
 **Auto-migration**: `Program.cs` runs `db.Database.Migrate()` on startup for relational DBs, `db.Database.EnsureCreated()` for in-memory (tests).
 
@@ -130,16 +130,16 @@ Migrations are at `backend/src/MockServer.Infrastructure/Data/Migrations/`.
 ```bash
 cd backend
 dotnet ef migrations add MigrationName \
-  --project src/MockServer.Infrastructure \
-  --startup-project src/MockServer.Api
+  --project src/Mithya.Infrastructure \
+  --startup-project src/Mithya.Api
 ```
 
 **Apply manually** (usually not needed due to auto-migration):
 ```bash
 cd backend
 dotnet ef database update \
-  --project src/MockServer.Infrastructure \
-  --startup-project src/MockServer.Api
+  --project src/Mithya.Infrastructure \
+  --startup-project src/Mithya.Api
 ```
 
 ### Current Migrations (in order)
@@ -150,13 +150,15 @@ dotnet ef database update \
 5. `AddProxyConfigAndLogExtensions` - proxy_configs table, log proxy fields
 6. `AddScenariosAndSteps` - scenarios, scenario_steps tables
 7. `AddLogicModeToMockRules` - logicMode (AND/OR)
+8. `AddServiceProxies` - service_proxies table (service-level fallback proxy)
 
 ### Tables
 ```
 mock_endpoints      - API endpoint definitions
 mock_rules          - Match rules with conditions + response
 mock_request_logs   - Request audit trail
-proxy_configs       - Proxy forwarding configuration
+proxy_configs       - Legacy proxy forwarding configuration
+service_proxies     - Service-level proxy with fallback (keyed by ServiceName)
 scenarios           - State machine definitions
 scenario_steps      - State transitions
 ```
@@ -171,7 +173,7 @@ scenario_steps      - State transitions
 ```json
 {
   "ConnectionStrings": {
-    "Default": "Host=localhost;Database=mockserver;Username=mockserver;Password=mockserver123"
+    "Default": "Host=localhost;Database=mithya;Username=mithya;Password=mithya123"
   },
   "AllowedHosts": "*"
 }
@@ -181,8 +183,8 @@ scenario_steps      - State transitions
 ```yaml
 ASPNETCORE_ENVIRONMENT: Development
 ASPNETCORE_URLS: http://+:8080
-ConnectionStrings__Default: Host=postgres;Database=mockserver;...
-MockServer__BaseUrl: http://localhost:5050
+ConnectionStrings__Default: Host=postgres;Database=mithya;...
+Mithya__BaseUrl: http://localhost:5050
 ```
 
 ### Frontend
@@ -209,7 +211,7 @@ docker-compose up -d
 docker-compose up -d postgres
 
 # Terminal 2: Backend
-cd backend/src/MockServer.Api
+cd backend/src/Mithya.Api
 dotnet run
 # Listens on http://localhost:5000
 
@@ -239,7 +241,7 @@ dotnet publish -c Release       # Release publish
 
 1. **CORS**: Backend allows all origins (`AllowAnyOrigin`) - appropriate for mock server use case
 2. **Auto-migration**: Database schema is managed by code, no manual migration needed
-3. **Cache warming**: MockRuleCache, ProxyConfigCache, ScenarioEngine all load on startup
+3. **Cache warming**: MockRuleCache, ProxyConfigCache, ServiceProxyCache, ScenarioEngine all load on startup
 4. **Swagger**: Available in Development environment at `/swagger`
 5. **Health check**: Only PostgreSQL has a health check; backend and frontend don't
 6. **Secrets**: Credentials are hardcoded for dev; use environment variables for production

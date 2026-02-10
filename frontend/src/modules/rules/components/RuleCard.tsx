@@ -109,7 +109,7 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
   const [expanded, setExpanded] = useState(false);
   const tryRequest = useTryRequest();
 
-  const mockBaseUrl = serverConfig?.mockServerUrl ?? window.location.origin;
+  const mockBaseUrl = serverConfig?.mithyaUrl ?? window.location.origin;
   const curlCmd = buildCurl(endpoint, conditions, mockBaseUrl);
 
   const handleCopy = () => {

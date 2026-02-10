@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Mock Server",
+    "title": "Mithya",
     "subtitle": "API Mock Service Management"
   },
   "menu": {
@@ -40,7 +40,7 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Mock Server status at a glance",
+    "subtitle": "Mithya status at a glance",
     "totalEndpoints": "Total Endpoints",
     "activeEndpoints": "Active Endpoints",
     "totalRules": "Total Rules",
@@ -50,7 +50,7 @@
     "noLogs": "No request logs yet",
     "matchedRate": "Match Rate",
     "emptyDesc": "No endpoints yet. Create your first mock endpoint to get started.",
-    "mockServerUrl": "Mock Server URL"
+    "mockServerUrl": "Mithya URL"
   },
   "endpoints": {
     "title": "Endpoints",
@@ -179,7 +179,7 @@
   },
   "logs": {
     "title": "Request Logs",
-    "subtitle": "View all incoming requests to the Mock Server",
+    "subtitle": "View all incoming requests to Mithya",
     "timestamp": "Timestamp",
     "method": "Method",
     "path": "Path",

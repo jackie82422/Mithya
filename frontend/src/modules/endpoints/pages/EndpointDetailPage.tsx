@@ -146,7 +146,7 @@ export default function EndpointDetailPage() {
           </Tooltip>
           <StatusBadge active={endpoint.isActive} />
         </Flex>
-        {config?.mockServerUrl && (
+        {config?.mithyaUrl && (
           <Button
             icon={<ThunderboltOutlined />}
             onClick={() => setTryDrawerOpen(true)}
@@ -176,7 +176,7 @@ export default function EndpointDetailPage() {
               {breakableUrl(endpoint.path)}
             </Typography.Text>
           </InfoItem>
-          {config?.mockServerUrl && (
+          {config?.mithyaUrl && (
             <div style={{ gridColumn: 'span 2' }}>
               <InfoItem label={t('endpoints.mockUrl')}>
                 <Flex
@@ -194,10 +194,10 @@ export default function EndpointDetailPage() {
                   }}
                 >
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    {breakableUrl(`${config.mockServerUrl}${endpoint.path}`)}
+                    {breakableUrl(`${config.mithyaUrl}${endpoint.path}`)}
                   </span>
                   <Typography.Text
-                    copyable={{ text: `${config.mockServerUrl}${endpoint.path}` }}
+                    copyable={{ text: `${config.mithyaUrl}${endpoint.path}` }}
                     style={{ flexShrink: 0 }}
                   />
                 </Flex>
@@ -309,12 +309,12 @@ export default function EndpointDetailPage() {
         endpointMethod={endpoint.httpMethod}
       />
 
-      {config?.mockServerUrl && (
+      {config?.mithyaUrl && (
         <TryRequestDrawer
           open={tryDrawerOpen}
           onClose={() => setTryDrawerOpen(false)}
           initialMethod={endpoint.httpMethod}
-          initialUrl={`${config.mockServerUrl}${endpoint.path}`}
+          initialUrl={`${config.mithyaUrl}${endpoint.path}`}
         />
       )}
     </div>

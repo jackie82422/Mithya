@@ -487,7 +487,7 @@ function TestPanel({ endpointId }: TestPanelProps) {
 ```
 mServer/
 ├── backend/
-│   ├── MockServer.Api/                    # 我們的 API 層
+│   ├── Mithya.Api/                    # 我們的 API 層
 │   │   ├── Controllers/
 │   │   │   └── AdminController.cs         # CRUD API
 │   │   ├── Services/
@@ -495,11 +495,11 @@ mServer/
 │   │   │   └── RuleMapperService.cs       # 規則轉換
 │   │   └── Program.cs
 │   │
-│   ├── MockServer.Core/                   # Domain 層
+│   ├── Mithya.Core/                   # Domain 層
 │   │   ├── Entities/                      # 簡化的 Entity
 │   │   └── Interfaces/
 │   │
-│   └── MockServer.Infrastructure/
+│   └── Mithya.Infrastructure/
 │       ├── Data/                          # EF Core + PostgreSQL
 │       └── WireMock/
 │           ├── WireMockRuleMapper.cs      # 核心轉換邏輯

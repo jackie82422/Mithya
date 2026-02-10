@@ -50,7 +50,7 @@ export default function ExportPanel() {
 
   const totalEndpoints = endpoints?.length ?? 0;
   const totalRules = endpoints?.reduce((sum, e) => sum + (e.rules?.length ?? 0), 0) ?? 0;
-  const fileName = `mock-server-export-${new Date().toISOString().slice(0, 10)}.json`;
+  const fileName = `mithya-export-${new Date().toISOString().slice(0, 10)}.json`;
 
   const handleExport = () => {
     if (!endpoints?.length) {

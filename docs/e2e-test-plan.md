@@ -351,7 +351,7 @@ export class ApiHelper {
 | # | Test Case | Steps | Expected Result |
 |---|-----------|-------|-----------------|
 | IE-01 | Export shows summary | Create 3 endpoints with 5 rules, go to Export tab | Shows "3 endpoints, 5 rules" |
-| IE-02 | Export downloads file | Click "Export JSON" | File downloaded with name `mock-server-export-{date}.json` |
+| IE-02 | Export downloads file | Click "Export JSON" | File downloaded with name `mithya-export-{date}.json` |
 | IE-03 | Exported JSON is valid | Export and read file | Valid JSON containing all endpoints and their rules |
 
 ### JSON Import

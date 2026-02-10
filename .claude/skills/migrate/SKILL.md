@@ -22,29 +22,29 @@ Create or manage EF Core migrations for PostgreSQL.
 ### Create Migration
 ```bash
 cd backend && dotnet ef migrations add $ARGUMENTS \
-  --project src/MockServer.Infrastructure \
-  --startup-project src/MockServer.Api
+  --project src/Mithya.Infrastructure \
+  --startup-project src/Mithya.Api
 ```
 
 ### Apply Migrations
 ```bash
 cd backend && dotnet ef database update \
-  --project src/MockServer.Infrastructure \
-  --startup-project src/MockServer.Api
+  --project src/Mithya.Infrastructure \
+  --startup-project src/Mithya.Api
 ```
 
 ### Check Status
 ```bash
 cd backend && dotnet ef migrations list \
-  --project src/MockServer.Infrastructure \
-  --startup-project src/MockServer.Api
+  --project src/Mithya.Infrastructure \
+  --startup-project src/Mithya.Api
 ```
 
 ### Remove Last Migration
 ```bash
 cd backend && dotnet ef migrations remove \
-  --project src/MockServer.Infrastructure \
-  --startup-project src/MockServer.Api
+  --project src/Mithya.Infrastructure \
+  --startup-project src/Mithya.Api
 ```
 
 ## Migration Naming Convention
@@ -58,7 +58,7 @@ Use PascalCase describing the change:
 ## Notes
 
 - App auto-migrates on startup (`Program.cs` calls `db.Database.Migrate()`)
-- Migrations are at `backend/src/MockServer.Infrastructure/Data/Migrations/`
-- Entity configurations are at `backend/src/MockServer.Infrastructure/Data/Configurations/`
+- Migrations are at `backend/src/Mithya.Infrastructure/Data/Migrations/`
+- Entity configurations are at `backend/src/Mithya.Infrastructure/Data/Configurations/`
 - Always create the EF Configuration class (`IEntityTypeConfiguration<T>`) before running migration
 - After creating migration, review the generated file to verify correctness

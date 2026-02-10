@@ -1,7 +1,7 @@
 # Mithya Mock Server - Backend Design Document
 
 > Target: .NET Backend Team
-> Prerequisites: Familiarity with current codebase (`MockServer.Core`, `MockServer.Infrastructure`, `MockServer.Api`)
+> Prerequisites: Familiarity with current codebase (`Mithya.Core`, `Mithya.Infrastructure`, `Mithya.Api`)
 
 ---
 
@@ -59,7 +59,7 @@ ALTER TABLE mock_rules ADD COLUMN is_response_headers_template BOOLEAN NOT NULL 
 
 ### 1.4 New Classes
 
-#### `MockServer.Infrastructure/MockEngine/TemplateEngine.cs`
+#### `Mithya.Infrastructure/MockEngine/TemplateEngine.cs`
 
 ```csharp
 public interface ITemplateEngine
@@ -270,7 +270,7 @@ ALTER TABLE mock_rules ADD COLUMN fault_config JSONB;
 
 ### 2.5 New Classes
 
-#### `MockServer.Core/Enums/FaultType.cs`
+#### `Mithya.Core/Enums/FaultType.cs`
 
 ```csharp
 public enum FaultType
@@ -285,7 +285,7 @@ public enum FaultType
 }
 ```
 
-#### `MockServer.Infrastructure/MockEngine/FaultInjector.cs`
+#### `Mithya.Infrastructure/MockEngine/FaultInjector.cs`
 
 ```csharp
 public interface IFaultInjector
@@ -445,7 +445,7 @@ CREATE TABLE proxy_configs (
 
 ### 3.4 New Classes
 
-#### `MockServer.Core/Entities/ProxyConfig.cs`
+#### `Mithya.Core/Entities/ProxyConfig.cs`
 
 ```csharp
 public class ProxyConfig
@@ -465,7 +465,7 @@ public class ProxyConfig
 }
 ```
 
-#### `MockServer.Core/Interfaces/IProxyConfigRepository.cs`
+#### `Mithya.Core/Interfaces/IProxyConfigRepository.cs`
 
 ```csharp
 public interface IProxyConfigRepository
@@ -481,7 +481,7 @@ public interface IProxyConfigRepository
 }
 ```
 
-#### `MockServer.Infrastructure/MockEngine/ProxyEngine.cs`
+#### `Mithya.Infrastructure/MockEngine/ProxyEngine.cs`
 
 ```csharp
 public interface IProxyEngine
@@ -556,7 +556,7 @@ public class ProxyResponse
 }
 ```
 
-#### `MockServer.Infrastructure/MockEngine/RecordingService.cs`
+#### `Mithya.Infrastructure/MockEngine/RecordingService.cs`
 
 ```csharp
 public interface IRecordingService
@@ -753,7 +753,7 @@ Scenario: "User Login Flow"
 
 ### 4.4 New Classes
 
-#### `MockServer.Core/Entities/Scenario.cs`
+#### `Mithya.Core/Entities/Scenario.cs`
 
 ```csharp
 public class Scenario
@@ -770,7 +770,7 @@ public class Scenario
 }
 ```
 
-#### `MockServer.Core/Entities/ScenarioStep.cs`
+#### `Mithya.Core/Entities/ScenarioStep.cs`
 
 ```csharp
 public class ScenarioStep
@@ -792,7 +792,7 @@ public class ScenarioStep
 }
 ```
 
-#### `MockServer.Infrastructure/MockEngine/ScenarioEngine.cs`
+#### `Mithya.Infrastructure/MockEngine/ScenarioEngine.cs`
 
 ```csharp
 public interface IScenarioEngine
