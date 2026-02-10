@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Card, Typography, Button, Popconfirm, Flex, Space, Modal, message, Switch, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined, SendOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -136,6 +136,14 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
     },
     [handleSend],
   );
+
+  const curlContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (curlOpen) {
+      setTimeout(() => curlContainerRef.current?.focus(), 100);
+    }
+  }, [curlOpen]);
 
   const responseHeaders = rule.responseHeaders ? formatJson(rule.responseHeaders) : null;
 
@@ -347,7 +355,7 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
         }
         width={700}
       >
-        <div onKeyDown={handleCurlKeyDown}>
+        <div tabIndex={-1} ref={curlContainerRef} onKeyDown={handleCurlKeyDown} style={{ outline: 'none' }}>
           <pre
             style={{
               background: '#1a1a2e',

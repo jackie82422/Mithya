@@ -49,6 +49,8 @@ export default function ResponseViewer({ response, loading, error }: ResponseVie
   }
 
   if (error) {
+    const axiosError = error as import('axios').AxiosError<{ error?: string }>;
+    const detail = axiosError.response?.data?.error;
     return (
       <div
         style={{
@@ -59,7 +61,7 @@ export default function ResponseViewer({ response, loading, error }: ResponseVie
           fontSize: 13,
         }}
       >
-        {error.message || t('common.error')}
+        {detail || error.message || t('common.error')}
       </div>
     );
   }
