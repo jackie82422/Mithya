@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout, Menu, Typography, Button, Flex, Drawer, Grid } from 'antd';
+import { Layout, Menu, Typography, Button, Flex, Drawer, Grid, Tooltip } from 'antd';
 import {
   DashboardOutlined,
   ApiOutlined,
@@ -10,6 +10,8 @@ import {
   SunOutlined,
   MoonOutlined,
   MenuOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +22,9 @@ import RecordingIndicator from '@/modules/proxy/components/RecordingIndicator';
 const { Sider, Header, Content } = Layout;
 const { useBreakpoint } = Grid;
 
+const SIDER_WIDTH = 240;
+const COLLAPSED_VISIBLE = 56;
+
 export default function AppLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -28,6 +33,7 @@ export default function AppLayout() {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const menuItems = [
     { key: '/', icon: <DashboardOutlined />, label: t('menu.dashboard') },
@@ -51,10 +57,12 @@ export default function AppLayout() {
     <>
       <div
         style={{
-          height: 72,
+          height: 56,
           display: 'flex',
           alignItems: 'center',
-          padding: '0 24px',
+          justifyContent: 'space-between',
+          padding: '0 16px 0 20px',
+          flexShrink: 0,
         }}
       >
         <Typography.Title
@@ -65,10 +73,23 @@ export default function AppLayout() {
             fontWeight: 700,
             letterSpacing: '-0.3px',
             color: 'var(--color-text)',
+            cursor: collapsed ? 'pointer' : undefined,
           }}
+          onClick={collapsed ? () => setCollapsed(false) : undefined}
         >
           Mithya
         </Typography.Title>
+        {!isMobile && (
+          <Tooltip title={collapsed ? t('menu.endpoints') : undefined} placement="right">
+            <Button
+              type="text"
+              size="small"
+              icon={collapsed ? <RightOutlined style={{ fontSize: 12 }} /> : <LeftOutlined style={{ fontSize: 12 }} />}
+              onClick={() => setCollapsed((v) => !v)}
+              style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }}
+            />
+          </Tooltip>
+        )}
       </div>
       <Menu
         theme="light"
@@ -81,11 +102,13 @@ export default function AppLayout() {
     </>
   );
 
+  const effectiveMargin = isMobile ? 0 : collapsed ? COLLAPSED_VISIBLE : SIDER_WIDTH;
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {!isMobile && (
         <Sider
-          width={240}
+          width={SIDER_WIDTH}
           theme="light"
           className="apple-sidebar"
           style={{
@@ -94,7 +117,9 @@ export default function AppLayout() {
             top: 0,
             bottom: 0,
             zIndex: 100,
-            overflow: 'auto',
+            overflow: collapsed ? 'hidden' : 'auto',
+            transform: collapsed ? `translateX(-${SIDER_WIDTH - COLLAPSED_VISIBLE}px)` : 'translateX(0)',
+            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
           {sidebarContent}
@@ -114,7 +139,7 @@ export default function AppLayout() {
         </Drawer>
       )}
 
-      <Layout style={{ marginLeft: isMobile ? 0 : 240 }}>
+      <Layout style={{ marginLeft: effectiveMargin, transition: 'margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1)' }}>
         <Header
           className="apple-header"
           style={{
