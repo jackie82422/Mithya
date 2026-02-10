@@ -34,7 +34,7 @@ export default function CodeEditor({
       readOnly={readOnly}
       editable={!readOnly}
       height={h}
-      style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}
+      style={{ borderRadius: 12, overflow: 'clip', border: '1px solid var(--color-border)' }}
       basicSetup={{
         lineNumbers: true,
         foldGutter: true,
