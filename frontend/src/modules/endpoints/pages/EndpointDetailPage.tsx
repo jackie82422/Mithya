@@ -145,6 +145,14 @@ export default function EndpointDetailPage() {
           </Tooltip>
           <StatusBadge active={endpoint.isActive} />
         </Flex>
+        {config?.mockServerUrl && (
+          <Button
+            icon={<ThunderboltOutlined />}
+            onClick={() => setTryDrawerOpen(true)}
+          >
+            {t('tryRequest.title')}
+          </Button>
+        )}
       </Flex>
 
       <Card style={{ marginBottom: 24 }}>
@@ -167,19 +175,9 @@ export default function EndpointDetailPage() {
           </InfoItem>
           {config?.mockServerUrl && (
             <InfoItem label={t('endpoints.mockUrl')}>
-              <Flex align="center" gap={4}>
-                <Typography.Text code copyable style={{ fontSize: 13 }}>
-                  {`${config.mockServerUrl}${endpoint.path}`}
-                </Typography.Text>
-                <Tooltip title={t('tryRequest.title')}>
-                  <Button
-                    size="small"
-                    type="text"
-                    icon={<ThunderboltOutlined />}
-                    onClick={() => setTryDrawerOpen(true)}
-                  />
-                </Tooltip>
-              </Flex>
+              <Typography.Text code copyable style={{ fontSize: 13 }}>
+                {`${config.mockServerUrl}${endpoint.path}`}
+              </Typography.Text>
             </InfoItem>
           )}
           <InfoItem label={t('endpoints.defaultStatusCode')}>
