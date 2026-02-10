@@ -141,6 +141,14 @@
   --stats-orange-icon: #FF9F0A;
 }
 
+/* ── Instant theme switch ── */
+.no-transition,
+.no-transition *,
+.no-transition *::before,
+.no-transition *::after {
+  transition: none !important;
+}
+
 /* ── Base ── */
 body {
   margin: 0;
@@ -150,7 +158,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--color-text);
-  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* ── Ant Design Card Override ── */
@@ -159,7 +166,7 @@ body {
   border-radius: 16px !important;
   box-shadow: var(--card-shadow) !important;
   background: var(--color-surface) !important;
-  transition: box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease !important;
+  transition: box-shadow 0.3s ease, transform 0.3s ease !important;
 }
 
 /* ── Ant Design Table Override ── */
