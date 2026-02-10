@@ -289,12 +289,6 @@ body {
   transition: all 0.2s ease !important;
 }
 
-.apple-sidebar .ant-menu-inline-collapsed .ant-menu-item {
-  margin: 4px 8px !important;
-  padding-inline: 0 !important;
-  text-align: center;
-}
-
 .apple-sidebar .ant-menu-item-selected {
   background: var(--color-primary) !important;
   color: #fff !important;
