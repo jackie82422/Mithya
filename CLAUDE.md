@@ -2,9 +2,7 @@
 
 Mock API Server with .NET 8 backend + React/Vite frontend, supporting multi-protocol mock, rule matching, proxy forwarding, scenario state machine, fault injection, and import/export.
 
-> Development Plans:
-> - [Backend Proxy Refactor Plan](./docs/dev/backend-proxy-refactor.md)
-> - [Frontend Proxy Refactor Plan](./docs/dev/frontend-proxy-refactor.md)
+> Development Guides:
 > - [Infrastructure Guide](./docs/dev/infrastructure.md)
 
 ---
@@ -73,7 +71,7 @@ mServer/
 │       │   ├── Endpoints/             # Minimal API endpoint groups
 │       │   └── Middleware/            # DynamicMockMiddleware, GlobalExceptionHandler
 │       ├── MockServer.Core/           # Domain layer (entities, enums, interfaces)
-│       │   ├── Entities/              # MockEndpoint, MockRule, ProxyConfig, Scenario...
+│       │   ├── Entities/              # MockEndpoint, MockRule, ServiceProxy, Scenario...
 │       │   ├── Enums/                 # ProtocolType, MatchOperator, FaultType...
 │       │   ├── Interfaces/            # Repository & engine contracts
 │       │   └── ValueObjects/          # CachedEndpoint, CachedRule, MatchResult...
@@ -91,7 +89,7 @@ mServer/
 │       │   ├── endpoints/             # Endpoint CRUD
 │       │   ├── rules/                 # Rule CRUD, condition builder
 │       │   ├── logs/                  # Request log viewer
-│       │   ├── proxy/                 # Proxy configuration
+│       │   ├── proxy/                 # Service proxy management (per-service fallback)
 │       │   ├── scenarios/             # Stateful workflows
 │       │   └── import-export/         # JSON/OpenAPI import, export
 │       └── shared/
@@ -123,12 +121,12 @@ GlobalExceptionHandler → CORS → DynamicMockMiddleware → Admin API Endpoint
 ```
 Request
  ├─ Match Endpoint (path + method)
- │   ├─ Scenario Match? → Return scenario response
- │   ├─ Rule Match?     → Return rule response (with template/fault/delay)
- │   └─ No Rule Match   → Return default response
- └─ No Endpoint Match
-     ├─ Proxy Config?   → Forward to target API
-     └─ None            → 404
+ │   ├─ Scenario Match?       → Return scenario response
+ │   ├─ Rule Match?           → Return rule response (with template/fault/delay)
+ │   └─ No Rule Match
+ │       ├─ Service Proxy?    → Forward to real API (fallback)
+ │       └─ No Proxy          → Return default response
+ └─ No Endpoint Match         → 404
 ```
 
 ### API Route Groups
@@ -138,7 +136,8 @@ Request
 | `/admin/api/endpoints` | `EndpointManagementApis.cs` | Endpoint CRUD + toggle + set default |
 | `/admin/api/endpoints/{id}/rules` | `RuleManagementApis.cs` | Rule CRUD + toggle |
 | `/admin/api/logs` | `LogApis.cs` | Log querying + clear |
-| `/admin/api/proxy-configs` | `ProxyConfigApis.cs` | Proxy CRUD + toggle |
+| `/admin/api/proxy-configs` | `ProxyConfigApis.cs` | Legacy proxy CRUD + toggle |
+| `/admin/api/service-proxies` | `ServiceProxyApis.cs` | Service-level proxy CRUD + toggle + fallback |
 | `/admin/api/scenarios` | `ScenarioApis.cs` | Scenario CRUD + toggle + reset + steps |
 | `/admin/api/templates` | `TemplateApis.cs` | Template preview |
 | `/admin/api/protocols` | `ProtocolEndpoints.cs` | Protocol schema list |
@@ -152,7 +151,8 @@ Request
 | `MockEndpoint` | `mock_endpoints` | API endpoints with path, method, protocol, serviceName |
 | `MockRule` | `mock_rules` | Match conditions + response (priority, template, fault) |
 | `MockRequestLog` | `mock_request_logs` | Request audit trail |
-| `ProxyConfig` | `proxy_configs` | Proxy forwarding config (global or per-endpoint) |
+| `ProxyConfig` | `proxy_configs` | Legacy proxy config (global or per-endpoint) |
+| `ServiceProxy` | `service_proxies` | Service-level proxy with fallback (keyed by ServiceName) |
 | `Scenario` | `scenarios` | State machine definition |
 | `ScenarioStep` | `scenario_steps` | State transitions with conditional response |
 
@@ -163,8 +163,9 @@ Request
 | `MockRuleCache` | In-memory cache of active endpoints + rules |
 | `MatchEngine` | Path matching + condition evaluation |
 | `ResponseRenderer` | Render response (template, headers, fault, delay) |
-| `ProxyEngine` | HTTP forwarding with header injection |
-| `ProxyConfigCache` | In-memory cache of proxy configs |
+| `ProxyEngine` | HTTP forwarding with header injection (accepts `IProxyTarget`) |
+| `ProxyConfigCache` | In-memory cache of legacy proxy configs |
+| `ServiceProxyCache` | In-memory cache of service proxies (keyed by ServiceName) |
 | `RecordingService` | Auto-create endpoints/rules from proxied responses |
 | `ScenarioEngine` | Stateful mock with state transitions |
 | `HandlebarsTemplateEngine` | Dynamic response rendering |
@@ -216,7 +217,7 @@ Each module under `modules/{name}/` follows:
 - All UI text uses `useTranslation()` hook
 
 ### TanStack Query Patterns
-- Query keys are hierarchical: `['endpoints']`, `['endpoints', id]`, `['rules', endpointId]`
+- Query keys are hierarchical: `['endpoints']`, `['endpoints', id]`, `['rules', endpointId]`, `['serviceProxies']`, `['serviceProxies', 'services']`
 - Mutations invalidate relevant query keys on success
 - Errors displayed via `message.error(getApiErrorMessage(err, fallback))`
 - Server config uses `staleTime: Infinity`
