@@ -307,6 +307,7 @@ export default function EndpointDetailPage() {
         editingRule={editingRule}
         endpointPath={endpoint.path}
         endpointMethod={endpoint.httpMethod}
+        endpointProtocol={endpoint.protocol}
       />
 
       {config?.mithyaUrl && (

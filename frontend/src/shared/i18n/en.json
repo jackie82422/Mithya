@@ -92,7 +92,8 @@
       "pathPlaceholder": "e.g. /api/users/{id}",
       "selectProtocol": "Select Protocol",
       "selectMethod": "Select HTTP Method",
-      "protocolImmutable": "Protocol cannot be changed after creation"
+      "protocolImmutable": "Protocol cannot be changed after creation",
+      "soapMethodNote": "SOAP endpoints only support POST method"
     },
     "defaultResponseForm": {
       "title": "Set Default Response",
@@ -212,7 +213,8 @@
     "required": "Please enter {{field}}",
     "requiredSelect": "Please select {{field}}",
     "fieldPathRequired": "Field path is required for all conditions",
-    "bodyFieldPathPrefix": "Body field path must start with $."
+    "bodyFieldPathPrefix": "Body field path must start with $.",
+    "soapBodyFieldPathPrefix": "SOAP Body field path must be a valid XPath (start with / or use local-name())"
   },
   "proxy": {
     "title": "Service Proxies",

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Button, Select, Input, Card, Flex, Typography, Segmented } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -5,8 +6,10 @@ import {
   FieldSourceType,
   FieldSourceTypeLabel,
   MatchOperator,
+  ProtocolType,
 } from '@/shared/types';
 import type { MatchCondition, LogicMode } from '@/shared/types';
+import { useProtocols } from '@/shared/hooks/useProtocols';
 import CodeEditor from '@/shared/components/CodeEditor';
 
 interface ConditionBuilderProps {
@@ -14,9 +17,10 @@ interface ConditionBuilderProps {
   onChange?: (conditions: MatchCondition[]) => void;
   logicMode?: LogicMode;
   onLogicModeChange?: (mode: LogicMode) => void;
+  protocol?: ProtocolType;
 }
 
-const defaultFieldPaths: Record<FieldSourceType, string> = {
+const restDefaultFieldPaths: Record<FieldSourceType, string> = {
   [FieldSourceType.Body]: '$.id',
   [FieldSourceType.Header]: 'Content-Type',
   [FieldSourceType.Query]: 'id',
@@ -24,7 +28,7 @@ const defaultFieldPaths: Record<FieldSourceType, string> = {
   [FieldSourceType.Metadata]: 'key',
 };
 
-const placeholders: Record<FieldSourceType, string> = {
+const restPlaceholders: Record<FieldSourceType, string> = {
   [FieldSourceType.Body]: '$.user.id',
   [FieldSourceType.Header]: 'Content-Type',
   [FieldSourceType.Query]: 'page',
@@ -32,25 +36,92 @@ const placeholders: Record<FieldSourceType, string> = {
   [FieldSourceType.Metadata]: 'key',
 };
 
+const allOperatorKeys: MatchOperator[] = [
+  MatchOperator.Equals,
+  MatchOperator.NotEquals,
+  MatchOperator.Contains,
+  MatchOperator.Regex,
+  MatchOperator.StartsWith,
+  MatchOperator.EndsWith,
+  MatchOperator.GreaterThan,
+  MatchOperator.LessThan,
+  MatchOperator.Exists,
+  MatchOperator.NotExists,
+  MatchOperator.IsEmpty,
+  MatchOperator.JsonSchema,
+];
+
+const operatorI18nKey: Record<MatchOperator, string> = {
+  [MatchOperator.Equals]: 'rules.opEquals',
+  [MatchOperator.NotEquals]: 'rules.opNotEquals',
+  [MatchOperator.Contains]: 'rules.opContains',
+  [MatchOperator.Regex]: 'rules.opRegex',
+  [MatchOperator.StartsWith]: 'rules.opStartsWith',
+  [MatchOperator.EndsWith]: 'rules.opEndsWith',
+  [MatchOperator.GreaterThan]: 'rules.opGreaterThan',
+  [MatchOperator.LessThan]: 'rules.opLessThan',
+  [MatchOperator.Exists]: 'rules.opExists',
+  [MatchOperator.NotExists]: 'rules.opNotExists',
+  [MatchOperator.IsEmpty]: 'rules.opIsEmpty',
+  [MatchOperator.JsonSchema]: 'rules.opJsonSchema',
+};
+
 const noValueOperators = [MatchOperator.Exists, MatchOperator.IsEmpty, MatchOperator.NotExists];
 
-export default function ConditionBuilder({ value = [], onChange, logicMode = 'AND', onLogicModeChange }: ConditionBuilderProps) {
-  const { t } = useTranslation();
+function isValidSoapXPath(path: string): boolean {
+  return path.startsWith('/') || path.includes('local-name(');
+}
 
-  const operatorOptions = [
-    { value: MatchOperator.Equals, label: t('rules.opEquals') },
-    { value: MatchOperator.NotEquals, label: t('rules.opNotEquals') },
-    { value: MatchOperator.Contains, label: t('rules.opContains') },
-    { value: MatchOperator.Regex, label: t('rules.opRegex') },
-    { value: MatchOperator.StartsWith, label: t('rules.opStartsWith') },
-    { value: MatchOperator.EndsWith, label: t('rules.opEndsWith') },
-    { value: MatchOperator.GreaterThan, label: t('rules.opGreaterThan') },
-    { value: MatchOperator.LessThan, label: t('rules.opLessThan') },
-    { value: MatchOperator.Exists, label: t('rules.opExists') },
-    { value: MatchOperator.NotExists, label: t('rules.opNotExists') },
-    { value: MatchOperator.IsEmpty, label: t('rules.opIsEmpty') },
-    { value: MatchOperator.JsonSchema, label: t('rules.opJsonSchema') },
-  ];
+export default function ConditionBuilder({ value = [], onChange, logicMode = 'AND', onLogicModeChange, protocol }: ConditionBuilderProps) {
+  const { t } = useTranslation();
+  const { data: protocols } = useProtocols();
+
+  const schema = useMemo(() => {
+    if (!protocol || !protocols) return null;
+    return protocols.find((p) => p.protocol === protocol) ?? null;
+  }, [protocol, protocols]);
+
+  const availableSources = useMemo(() => {
+    if (schema) {
+      return Object.values(FieldSourceType)
+        .filter((v): v is FieldSourceType => typeof v === 'number')
+        .filter((v) => schema.supportedSources.includes(v));
+    }
+    return Object.values(FieldSourceType).filter((v): v is FieldSourceType => typeof v === 'number');
+  }, [schema]);
+
+  const operatorOptions = useMemo(() => {
+    const allowed = schema
+      ? allOperatorKeys.filter((op) => schema.supportedOperators.includes(op))
+      : allOperatorKeys;
+    return allowed.map((op) => ({ value: op, label: t(operatorI18nKey[op]) }));
+  }, [schema, t]);
+
+  const defaultFieldPaths = useMemo((): Record<number, string> => {
+    if (schema?.exampleFieldPaths) {
+      const map: Record<number, string> = {};
+      for (const source of availableSources) {
+        const key = FieldSourceTypeLabel[source];
+        map[source] = schema.exampleFieldPaths[key] ?? restDefaultFieldPaths[source] ?? '';
+      }
+      return map;
+    }
+    return restDefaultFieldPaths;
+  }, [schema, availableSources]);
+
+  const placeholders = useMemo((): Record<number, string> => {
+    if (schema?.exampleFieldPaths) {
+      const map: Record<number, string> = {};
+      for (const source of availableSources) {
+        const key = FieldSourceTypeLabel[source];
+        map[source] = schema.exampleFieldPaths[key] ?? restPlaceholders[source] ?? '';
+      }
+      return map;
+    }
+    return restPlaceholders;
+  }, [schema, availableSources]);
+
+  const isSoap = protocol === ProtocolType.SOAP;
 
   const update = (index: number, field: keyof MatchCondition, val: unknown) => {
     const next = [...value];
@@ -59,7 +130,7 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
       next[index] = {
         ...next[index],
         sourceType: newSource,
-        fieldPath: defaultFieldPaths[newSource],
+        fieldPath: defaultFieldPaths[newSource] ?? '',
       };
     } else {
       next[index] = { ...next[index], [field]: val };
@@ -68,13 +139,13 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
   };
 
   const add = () => {
-    const sourceType = FieldSourceType.Body;
+    const sourceType = availableSources[0] ?? FieldSourceType.Body;
     onChange?.([
       ...value,
       {
         sourceType,
-        fieldPath: defaultFieldPaths[sourceType],
-        operator: MatchOperator.Equals,
+        fieldPath: defaultFieldPaths[sourceType] ?? '',
+        operator: operatorOptions[0]?.value ?? MatchOperator.Equals,
         value: '',
       },
     ]);
@@ -104,9 +175,12 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
       )}
 
       {value.map((cond, i) => {
-        const needsJsonPath = cond.sourceType === FieldSourceType.Body;
-        const pathError =
-          needsJsonPath && cond.fieldPath && !cond.fieldPath.startsWith('$.');
+        const needsBodyValidation = cond.sourceType === FieldSourceType.Body;
+        const pathError = needsBodyValidation && cond.fieldPath && (
+          isSoap
+            ? !isValidSoapXPath(cond.fieldPath)
+            : !cond.fieldPath.startsWith('$.')
+        );
         const hideValue = noValueOperators.includes(cond.operator);
         const isJsonSchema = cond.operator === MatchOperator.JsonSchema;
 
@@ -122,9 +196,9 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
                   value={cond.sourceType}
                   onChange={(v) => update(i, 'sourceType', v)}
                 >
-                  {Object.entries(FieldSourceTypeLabel).map(([val, label]) => (
-                    <Select.Option key={val} value={Number(val)}>
-                      {label}
+                  {availableSources.map((val) => (
+                    <Select.Option key={val} value={val}>
+                      {FieldSourceTypeLabel[val]}
                     </Select.Option>
                   ))}
                 </Select>
@@ -132,13 +206,15 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
                   <Input
                     style={{ width: 180 }}
                     status={pathError ? 'error' : undefined}
-                    placeholder={placeholders[cond.sourceType]}
+                    placeholder={placeholders[cond.sourceType] ?? ''}
                     value={cond.fieldPath}
                     onChange={(e) => update(i, 'fieldPath', e.target.value)}
                   />
                   {pathError && (
                     <Typography.Text type="danger" style={{ fontSize: 12 }}>
-                      {t('validation.bodyFieldPathPrefix')}
+                      {isSoap
+                        ? t('validation.soapBodyFieldPathPrefix')
+                        : t('validation.bodyFieldPathPrefix')}
                     </Typography.Text>
                   )}
                 </div>

@@ -92,7 +92,8 @@
       "pathPlaceholder": "例如：/api/users/{id}",
       "selectProtocol": "選擇協議",
       "selectMethod": "選擇 HTTP 方法",
-      "protocolImmutable": "建立後無法變更協議類型"
+      "protocolImmutable": "建立後無法變更協議類型",
+      "soapMethodNote": "SOAP 端點僅支援 POST 方法"
     },
     "defaultResponseForm": {
       "title": "設定預設回應",
@@ -212,7 +213,8 @@
     "required": "請輸入{{field}}",
     "requiredSelect": "請選擇{{field}}",
     "fieldPathRequired": "所有條件的欄位路徑為必填",
-    "bodyFieldPathPrefix": "Body 欄位路徑必須以 $. 開頭"
+    "bodyFieldPathPrefix": "Body 欄位路徑必須以 $. 開頭",
+    "soapBodyFieldPathPrefix": "SOAP Body 欄位路徑必須為有效的 XPath（以 / 開頭或使用 local-name()）"
   },
   "proxy": {
     "title": "服務代理",

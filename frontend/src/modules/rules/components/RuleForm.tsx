@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Divider, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { CreateRuleRequest, LogicMode, MatchCondition, MockRule } from '@/shared/types';
-import { FaultType, FieldSourceType, parseMatchConditions } from '@/shared/types';
+import type { CreateRuleRequest, LogicMode, MatchCondition, MockRule, ProtocolType } from '@/shared/types';
+import { FaultType, FieldSourceType, ProtocolType as PT, parseMatchConditions } from '@/shared/types';
 import ConditionBuilder from './ConditionBuilder';
 import ResponseEditor from './ResponseEditor';
 
@@ -14,6 +14,7 @@ interface RuleFormProps {
   editingRule?: MockRule | null;
   endpointPath?: string;
   endpointMethod?: string;
+  endpointProtocol?: ProtocolType;
 }
 
 interface FormValues {
@@ -37,7 +38,7 @@ function parseJson<T>(raw: string | null, fallback: T): T {
   }
 }
 
-export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule, endpointPath, endpointMethod }: RuleFormProps) {
+export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule, endpointPath, endpointMethod, endpointProtocol }: RuleFormProps) {
   const { t } = useTranslation();
   const [form] = Form.useForm<FormValues>();
   const [logicMode, setLogicMode] = useState<LogicMode>('AND');
@@ -69,9 +70,17 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         message.error(t('validation.fieldPathRequired'));
         return;
       }
-      if (c.sourceType === FieldSourceType.Body && !c.fieldPath.startsWith('$.')) {
-        message.error(t('validation.bodyFieldPathPrefix'));
-        return;
+      if (c.sourceType === FieldSourceType.Body) {
+        const isSoap = endpointProtocol === PT.SOAP;
+        if (isSoap) {
+          if (!c.fieldPath.startsWith('/') && !c.fieldPath.includes('local-name(')) {
+            message.error(t('validation.soapBodyFieldPathPrefix'));
+            return;
+          }
+        } else if (!c.fieldPath.startsWith('$.')) {
+          message.error(t('validation.bodyFieldPathPrefix'));
+          return;
+        }
       }
     }
     let responseHeaders: Record<string, string> | undefined;
@@ -145,7 +154,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
 
         <Divider>{t('rules.conditions')}</Divider>
         <Form.Item name="conditions">
-          <ConditionBuilder logicMode={logicMode} onLogicModeChange={setLogicMode} />
+          <ConditionBuilder logicMode={logicMode} onLogicModeChange={setLogicMode} protocol={endpointProtocol} />
         </Form.Item>
 
         <Divider>{t('rules.response')}</Divider>
