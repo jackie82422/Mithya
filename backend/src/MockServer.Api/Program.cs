@@ -49,6 +49,15 @@ builder.Services.AddHttpClient("ProxyClient")
     {
         AllowAutoRedirect = false
     });
+
+// Try Request (admin proxy for testing)
+builder.Services.AddHttpClient("TryRequest", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    AllowAutoRedirect = false
+});
 builder.Services.AddSingleton<IProxyEngine, ProxyEngine>();
 builder.Services.AddSingleton<IRecordingService, RecordingService>();
 builder.Services.AddSingleton<IProxyConfigCache, ProxyConfigCache>();
@@ -110,6 +119,7 @@ app.MapServiceProxyApis();
 app.MapScenarioApis();
 app.MapImportExportApis();
 app.MapConfigEndpoints();
+app.MapTryRequestApis();
 
 // Load all cached rules on startup
 var cache = app.Services.GetRequiredService<IMockRuleCache>();
