@@ -176,9 +176,28 @@ export default function EndpointDetailPage() {
           {config?.mockServerUrl && (
             <div style={{ gridColumn: 'span 2' }}>
               <InfoItem label={t('endpoints.mockUrl')}>
-                <Typography.Text code copyable style={{ fontSize: 13, wordBreak: 'break-all' }}>
-                  {`${config.mockServerUrl}${endpoint.path}`}
-                </Typography.Text>
+                <Flex
+                  align="flex-start"
+                  gap={8}
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                    background: 'var(--code-bg)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 6,
+                    padding: '4px 8px',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'normal',
+                  }}
+                >
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    {`${config.mockServerUrl}${endpoint.path}`}
+                  </span>
+                  <Typography.Text
+                    copyable={{ text: `${config.mockServerUrl}${endpoint.path}` }}
+                    style={{ flexShrink: 0 }}
+                  />
+                </Flex>
               </InfoItem>
             </div>
           )}
