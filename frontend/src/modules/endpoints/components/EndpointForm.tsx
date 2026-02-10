@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Modal, Form, Input, Select, Tooltip } from 'antd';
+import { Modal, Form, Input, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ProtocolType, ProtocolTypeLabel } from '@/shared/types';
 import type { CreateEndpointRequest, MockEndpoint } from '@/shared/types';
@@ -72,15 +72,13 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
           label={t('endpoints.protocol')}
           rules={[{ required: true, message: t('validation.requiredSelect', { field: t('endpoints.protocol') }) }]}
         >
-          <Tooltip title={isEdit ? t('endpoints.form.protocolImmutable') : undefined}>
-            <Select placeholder={t('endpoints.form.selectProtocol')} disabled={isEdit}>
-              {Object.entries(ProtocolTypeLabel).map(([val, label]) => (
-                <Select.Option key={val} value={Number(val)}>
-                  {label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Tooltip>
+          <Select placeholder={t('endpoints.form.selectProtocol')} disabled={isEdit}>
+            {Object.entries(ProtocolTypeLabel).map(([val, label]) => (
+              <Select.Option key={val} value={Number(val)}>
+                {label}
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
         <Form.Item
           name="httpMethod"
