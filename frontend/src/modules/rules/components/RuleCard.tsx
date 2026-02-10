@@ -27,6 +27,20 @@ interface RuleCardProps {
   toggleLoading?: boolean;
 }
 
+const XML_TAG_RE = /^[a-zA-Z_][\w.-]*$/;
+
+function extractXmlTag(xpath: string): string {
+  // Try local-name()='TagName' first
+  const localNameMatch = xpath.match(/local-name\(\)\s*=\s*['"]([^'"]+)['"]/);
+  if (localNameMatch) return localNameMatch[1];
+
+  // Try last path segment: /Envelope/Body/UserName → UserName
+  const lastSegment = xpath.replace(/\[.*?\]/g, '').split('/').filter(Boolean).pop() ?? '';
+  if (XML_TAG_RE.test(lastSegment)) return lastSegment;
+
+  return 'element';
+}
+
 function buildSoapBody(conditions: MatchCondition[], endpoint: MockEndpoint): string {
   const bodyConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Body);
   if (bodyConditions.length === 0) {
@@ -41,7 +55,7 @@ function buildSoapBody(conditions: MatchCondition[], endpoint: MockEndpoint): st
   }
 
   const elements = bodyConditions.map((bc) => {
-    const tag = bc.fieldPath.replace(/^.*\//, '').replace(/\[.*\]/, '') || 'element';
+    const tag = extractXmlTag(bc.fieldPath);
     return `    <${tag}>${bc.value}</${tag}>`;
   });
 
