@@ -10,9 +10,9 @@ export function parseCurlToPayload(curlCmd: string): TryRequestPayload {
   }
 
   let url = '';
-  const urlMatch = normalized.match(/curl\s+(?:-[^\s]+\s+)*'([^']+)'/) ||
-    normalized.match(/curl\s+(?:-[^\s]+\s+)*"([^"]+)"/) ||
-    normalized.match(/curl\s+(?:-[^\s]+\s+)*(https?:\/\/\S+)/);
+  const urlMatch = normalized.match(/'(https?:\/\/[^']+)'/) ||
+    normalized.match(/"(https?:\/\/[^"]+)"/) ||
+    normalized.match(/(https?:\/\/\S+)/);
   if (urlMatch) {
     url = urlMatch[1];
   }
