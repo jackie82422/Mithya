@@ -26,6 +26,7 @@ import StatusBadge from '@/shared/components/StatusBadge';
 import RuleCard from '@/modules/rules/components/RuleCard';
 import RuleForm from '@/modules/rules/components/RuleForm';
 import TryRequestDrawer from '@/shared/components/TryRequestDrawer';
+import { breakableUrl } from '@/shared/utils/urlFormat';
 import type { CreateRuleRequest, MockRule } from '@/shared/types';
 
 function InfoItem({ label, children }: { label: string; children: React.ReactNode }) {
@@ -171,7 +172,9 @@ export default function EndpointDetailPage() {
             <HttpMethodTag method={endpoint.httpMethod} />
           </InfoItem>
           <InfoItem label={t('endpoints.path')}>
-            <Typography.Text code>{endpoint.path}</Typography.Text>
+            <Typography.Text code style={{ fontSize: 13 }}>
+              {breakableUrl(endpoint.path)}
+            </Typography.Text>
           </InfoItem>
           {config?.mockServerUrl && (
             <div style={{ gridColumn: 'span 2' }}>
@@ -191,7 +194,7 @@ export default function EndpointDetailPage() {
                   }}
                 >
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    {`${config.mockServerUrl}${endpoint.path}`}
+                    {breakableUrl(`${config.mockServerUrl}${endpoint.path}`)}
                   </span>
                   <Typography.Text
                     copyable={{ text: `${config.mockServerUrl}${endpoint.path}` }}
