@@ -2,46 +2,46 @@ import { useState } from 'react';
 import { Typography, Button, Flex, Empty } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import type { CreateProxyConfigRequest, ProxyConfig } from '@/shared/types';
-import { useEndpoints } from '@/modules/endpoints/hooks';
+import type { CreateServiceProxyRequest, ServiceProxy } from '@/shared/types';
 import {
-  useProxyConfigs,
-  useCreateProxyConfig,
-  useUpdateProxyConfig,
-  useDeleteProxyConfig,
-  useToggleProxyConfig,
+  useServiceProxies,
+  useCreateServiceProxy,
+  useUpdateServiceProxy,
+  useDeleteServiceProxy,
+  useToggleServiceProxy,
   useToggleRecording,
+  useToggleFallback,
 } from '../hooks';
-import ProxyConfigCard from '../components/ProxyConfigCard';
-import ProxyConfigForm from '../components/ProxyConfigForm';
+import ServiceProxyCard from '../components/ServiceProxyCard';
+import ServiceProxyForm from '../components/ServiceProxyForm';
 
 export default function ProxyConfigPage() {
   const { t } = useTranslation();
-  const { data: configs, isLoading } = useProxyConfigs();
-  const { data: endpoints } = useEndpoints();
-  const createConfig = useCreateProxyConfig();
-  const updateConfig = useUpdateProxyConfig();
-  const deleteConfig = useDeleteProxyConfig();
-  const toggleConfig = useToggleProxyConfig();
+  const { data: proxies, isLoading } = useServiceProxies();
+  const createProxy = useCreateServiceProxy();
+  const updateProxy = useUpdateServiceProxy();
+  const deleteProxy = useDeleteServiceProxy();
+  const toggleProxy = useToggleServiceProxy();
   const toggleRecording = useToggleRecording();
+  const toggleFallback = useToggleFallback();
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<ProxyConfig | null>(null);
+  const [editing, setEditing] = useState<ServiceProxy | null>(null);
 
-  const handleSubmit = (values: CreateProxyConfigRequest) => {
+  const handleSubmit = (values: CreateServiceProxyRequest) => {
     if (editing) {
-      updateConfig.mutate(
+      updateProxy.mutate(
         { id: editing.id, data: values },
         { onSuccess: () => { setFormOpen(false); setEditing(null); } },
       );
     } else {
-      createConfig.mutate(values, {
+      createProxy.mutate(values, {
         onSuccess: () => setFormOpen(false),
       });
     }
   };
 
-  const handleEdit = (config: ProxyConfig) => {
-    setEditing(config);
+  const handleEdit = (proxy: ServiceProxy) => {
+    setEditing(proxy);
     setFormOpen(true);
   };
 
@@ -72,35 +72,33 @@ export default function ProxyConfigPage() {
       </Flex>
 
       <div style={{ marginTop: 24 }}>
-        {!isLoading && (!configs || configs.length === 0) ? (
+        {!isLoading && (!proxies || proxies.length === 0) ? (
           <Empty description={t('proxy.noConfigs')}>
             <Button type="primary" onClick={() => setFormOpen(true)}>
               {t('common.create')}
             </Button>
           </Empty>
         ) : (
-          configs?.map((config) => (
-            <ProxyConfigCard
-              key={config.id}
-              config={config}
-              endpoints={endpoints}
+          proxies?.map((proxy) => (
+            <ServiceProxyCard
+              key={proxy.id}
+              proxy={proxy}
               onEdit={handleEdit}
-              onDelete={(id) => deleteConfig.mutate(id)}
-              onToggle={(id) => toggleConfig.mutate(id)}
+              onDelete={(id) => deleteProxy.mutate(id)}
+              onToggle={(id) => toggleProxy.mutate(id)}
               onToggleRecording={(id) => toggleRecording.mutate(id)}
-              toggleLoading={toggleConfig.isPending}
+              onToggleFallback={(id) => toggleFallback.mutate(id)}
             />
           ))
         )}
       </div>
 
-      <ProxyConfigForm
+      <ServiceProxyForm
         open={formOpen}
         onCancel={handleCancel}
         onSubmit={handleSubmit}
-        loading={editing ? updateConfig.isPending : createConfig.isPending}
+        loading={editing ? updateProxy.isPending : createProxy.isPending}
         editing={editing}
-        endpoints={endpoints}
       />
     </div>
   );

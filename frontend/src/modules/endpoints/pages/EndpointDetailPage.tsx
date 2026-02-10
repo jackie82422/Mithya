@@ -14,10 +14,11 @@ import {
   Switch,
   Tooltip,
 } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, ArrowLeftOutlined, ApiOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoint, useToggleEndpoint } from '../hooks';
 import { useServerConfig } from '@/shared/hooks/useServerConfig';
+import { useServiceProxies } from '@/modules/proxy/hooks';
 import { useRules, useCreateRule, useUpdateRule, useDeleteRule, useToggleRule } from '@/modules/rules/hooks';
 import ProtocolTag from '@/shared/components/ProtocolTag';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
@@ -49,6 +50,7 @@ export default function EndpointDetailPage() {
   const toggleEndpoint = useToggleEndpoint();
   const toggleRule = useToggleRule(id!);
   const { data: config } = useServerConfig();
+  const { data: proxies } = useServiceProxies();
   const [ruleFormOpen, setRuleFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<MockRule | null>(null);
 
@@ -176,6 +178,50 @@ export default function EndpointDetailPage() {
           </InfoItem>
         </div>
       </Card>
+
+      {(() => {
+        const serviceProxy = proxies?.find((p) => p.serviceName === endpoint.serviceName);
+        return (
+          <Card
+            size="small"
+            style={{ marginBottom: 24 }}
+            title={
+              <Flex align="center" gap={8}>
+                <ApiOutlined />
+                <span>{t('proxy.endpointDetail.title')}</span>
+              </Flex>
+            }
+            extra={
+              <Button type="link" size="small" onClick={() => navigate('/proxy')}>
+                {t('proxy.endpointDetail.configure')}
+              </Button>
+            }
+          >
+            {!serviceProxy ? (
+              <Typography.Text type="secondary">
+                {t('proxy.endpointDetail.noProxy')}
+              </Typography.Text>
+            ) : (
+              <div>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  {t('proxy.serviceName')}: <Typography.Text strong>{serviceProxy.serviceName}</Typography.Text>
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  {t('proxy.targetBaseUrl')}: <Typography.Text code>{serviceProxy.targetBaseUrl}</Typography.Text>
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  {t('proxy.fallbackEnabled')}: <StatusBadge active={serviceProxy.fallbackEnabled} />
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                  {serviceProxy.fallbackEnabled
+                    ? t('proxy.endpointDetail.fallbackEnabled')
+                    : t('proxy.endpointDetail.fallbackDisabled')}
+                </Typography.Text>
+              </div>
+            )}
+          </Card>
+        );
+      })()}
 
       <Divider />
 

@@ -230,11 +230,11 @@ export interface TemplatePreviewResponse {
   error: string | null;
 }
 
-// ── Proxy Config ──
+// ── Service Proxy ──
 
-export interface ProxyConfig {
+export interface ServiceProxy {
   id: string;
-  endpointId: string | null;
+  serviceName: string;
   targetBaseUrl: string;
   isActive: boolean;
   isRecording: boolean;
@@ -242,18 +242,26 @@ export interface ProxyConfig {
   additionalHeaders: string | null;
   timeoutMs: number;
   stripPathPrefix: string | null;
+  fallbackEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateProxyConfigRequest {
-  endpointId?: string | null;
+export interface CreateServiceProxyRequest {
+  serviceName: string;
   targetBaseUrl: string;
   isRecording?: boolean;
   forwardHeaders?: boolean;
   additionalHeaders?: string | null;
   timeoutMs?: number;
   stripPathPrefix?: string | null;
+  fallbackEnabled?: boolean;
+}
+
+export interface ServiceInfo {
+  serviceName: string;
+  endpointCount: number;
+  hasProxy: boolean;
 }
 
 // ── Scenarios ──

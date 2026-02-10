@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { useProxyConfigs } from '../hooks';
+import { useServiceProxies } from '../hooks';
 
 export default function RecordingIndicator() {
   const { t } = useTranslation();
-  const { data: configs } = useProxyConfigs();
-  const isRecording = configs?.some((c) => c.isActive && c.isRecording);
+  const { data: proxies } = useServiceProxies();
+  const isRecording = proxies?.some((p) => p.isActive && p.isRecording);
 
   if (!isRecording) return null;
 

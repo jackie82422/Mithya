@@ -7,7 +7,7 @@
     "dashboard": "Dashboard",
     "endpoints": "Endpoints",
     "logs": "Request Logs",
-    "proxy": "Proxy Config",
+    "proxy": "Service Proxies",
     "scenarios": "Scenarios",
     "importExport": "Import / Export"
   },
@@ -215,29 +215,35 @@
     "bodyFieldPathPrefix": "Body field path must start with $."
   },
   "proxy": {
-    "title": "Proxy Config",
-    "subtitle": "Configure proxy forwarding and traffic recording",
+    "title": "Service Proxies",
+    "subtitle": "Manage proxy targets per service for fallback forwarding",
+    "noConfigs": "No service proxies configured",
+    "serviceName": "Service Name",
+    "selectService": "Select Service",
     "targetBaseUrl": "Target Base URL",
-    "stripPathPrefix": "Strip Path Prefix",
-    "forwardHeaders": "Forward Original Headers",
-    "additionalHeaders": "Additional Headers",
-    "timeout": "Timeout",
+    "targetPlaceholder": "https://api.example.com",
+    "fallbackEnabled": "Fallback Enabled",
+    "fallbackDescription": "Forward to real API when no rule matches",
+    "recording": "REC",
     "enableRecording": "Enable Recording",
-    "recording": "Recording",
-    "scope": "Scope",
-    "scopeGlobal": "Global (all unmatched requests)",
-    "scopeEndpoint": "Specific Endpoint",
-    "selectEndpoint": "Select Endpoint",
+    "forwardHeaders": "Forward Headers",
+    "additionalHeaders": "Additional Headers",
+    "stripPathPrefix": "Strip Path Prefix",
+    "timeout": "Timeout",
+    "deleteConfirm": "Delete this service proxy?",
+    "endpointCount": "{{count}} endpoints",
     "proxied": "Proxied",
     "proxyTarget": "Proxy Target",
-    "noConfigs": "No proxy configurations yet",
-    "createFirst": "Click the button above to create your first proxy config",
-    "deleteConfirm": "Are you sure you want to delete this proxy config?",
-    "targetPlaceholder": "e.g. https://api.example.com",
-    "stripPrefixPlaceholder": "e.g. /api/v1",
     "form": {
-      "title": "Create Proxy Config",
-      "editTitle": "Edit Proxy Config"
+      "title": "Create Service Proxy",
+      "editTitle": "Edit Service Proxy"
+    },
+    "endpointDetail": {
+      "title": "Proxy Fallback",
+      "noProxy": "No proxy configured for this service",
+      "configure": "Configure",
+      "fallbackEnabled": "When no rule matches, requests will be forwarded to the real API.",
+      "fallbackDisabled": "Fallback is disabled. Unmatched rules will return the default response."
     }
   },
   "scenarios": {

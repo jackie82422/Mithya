@@ -1,51 +1,50 @@
 import { useEffect } from 'react';
-import { Modal, Form, Input, InputNumber, Select, Switch, Radio, Space } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, Switch, Space } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { CreateProxyConfigRequest, ProxyConfig, MockEndpoint } from '@/shared/types';
+import type { CreateServiceProxyRequest, ServiceProxy } from '@/shared/types';
+import { useAvailableServices } from '../hooks';
 import CodeEditor from '@/shared/components/CodeEditor';
 
-interface ProxyConfigFormProps {
+interface ServiceProxyFormProps {
   open: boolean;
   onCancel: () => void;
-  onSubmit: (values: CreateProxyConfigRequest) => void;
+  onSubmit: (values: CreateServiceProxyRequest) => void;
   loading?: boolean;
-  editing?: ProxyConfig | null;
-  endpoints?: MockEndpoint[];
+  editing?: ServiceProxy | null;
 }
 
 interface FormValues {
-  scope: 'global' | 'endpoint';
-  endpointId: string | null;
+  serviceName: string;
   targetBaseUrl: string;
   stripPathPrefix: string;
   timeoutMs: number;
   forwardHeaders: boolean;
+  fallbackEnabled: boolean;
   isRecording: boolean;
   additionalHeadersStr: string;
 }
 
-export default function ProxyConfigForm({
+export default function ServiceProxyForm({
   open,
   onCancel,
   onSubmit,
   loading,
   editing,
-  endpoints,
-}: ProxyConfigFormProps) {
+}: ServiceProxyFormProps) {
   const { t } = useTranslation();
   const [form] = Form.useForm<FormValues>();
   const isEdit = !!editing;
-  const scope = Form.useWatch('scope', form);
+  const { data: services } = useAvailableServices();
 
   useEffect(() => {
     if (open && editing) {
       form.setFieldsValue({
-        scope: editing.endpointId ? 'endpoint' : 'global',
-        endpointId: editing.endpointId,
+        serviceName: editing.serviceName,
         targetBaseUrl: editing.targetBaseUrl,
         stripPathPrefix: editing.stripPathPrefix ?? '',
         timeoutMs: editing.timeoutMs,
         forwardHeaders: editing.forwardHeaders,
+        fallbackEnabled: editing.fallbackEnabled,
         isRecording: editing.isRecording,
         additionalHeadersStr: editing.additionalHeaders
           ? (typeof editing.additionalHeaders === 'string'
@@ -56,14 +55,20 @@ export default function ProxyConfigForm({
     }
   }, [open, editing, form]);
 
+  // When creating, only show services without existing proxy
+  const availableServices = isEdit
+    ? services
+    : services?.filter((s) => !s.hasProxy);
+
   const handleOk = async () => {
     const values = await form.validateFields();
     onSubmit({
-      endpointId: values.scope === 'global' ? null : values.endpointId,
+      serviceName: values.serviceName,
       targetBaseUrl: values.targetBaseUrl,
       stripPathPrefix: values.stripPathPrefix || null,
       timeoutMs: values.timeoutMs,
       forwardHeaders: values.forwardHeaders,
+      fallbackEnabled: values.fallbackEnabled,
       isRecording: values.isRecording,
       additionalHeaders: values.additionalHeadersStr && values.additionalHeadersStr.trim() !== '{}'
         ? (() => { try { JSON.parse(values.additionalHeadersStr); return values.additionalHeadersStr; } catch { return null; } })()
@@ -91,38 +96,34 @@ export default function ProxyConfigForm({
         layout="vertical"
         preserve={false}
         initialValues={{
-          scope: 'global',
-          endpointId: null,
+          serviceName: '',
           targetBaseUrl: '',
           stripPathPrefix: '',
           timeoutMs: 10000,
           forwardHeaders: true,
+          fallbackEnabled: true,
           isRecording: false,
           additionalHeadersStr: '{}',
         }}
       >
-        <Form.Item name="scope" label={t('proxy.scope')}>
-          <Radio.Group>
-            <Radio value="global">{t('proxy.scopeGlobal')}</Radio>
-            <Radio value="endpoint">{t('proxy.scopeEndpoint')}</Radio>
-          </Radio.Group>
-        </Form.Item>
-
-        {scope === 'endpoint' && (
-          <Form.Item
-            name="endpointId"
-            label={t('proxy.selectEndpoint')}
-            rules={[{ required: true, message: t('validation.requiredSelect', { field: t('proxy.selectEndpoint') }) }]}
+        <Form.Item
+          name="serviceName"
+          label={t('proxy.serviceName')}
+          rules={[{ required: true, message: t('validation.requiredSelect', { field: t('proxy.serviceName') }) }]}
+        >
+          <Select
+            placeholder={t('proxy.selectService')}
+            disabled={isEdit}
+            showSearch
+            optionFilterProp="children"
           >
-            <Select placeholder={t('proxy.selectEndpoint')}>
-              {endpoints?.map((ep) => (
-                <Select.Option key={ep.id} value={ep.id}>
-                  {ep.httpMethod} {ep.path} - {ep.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        )}
+            {availableServices?.map((s) => (
+              <Select.Option key={s.serviceName} value={s.serviceName}>
+                {s.serviceName} ({t('proxy.endpointCount', { count: s.endpointCount })})
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
 
         <Form.Item
           name="targetBaseUrl"
@@ -133,7 +134,7 @@ export default function ProxyConfigForm({
         </Form.Item>
 
         <Form.Item name="stripPathPrefix" label={t('proxy.stripPathPrefix')}>
-          <Input placeholder={t('proxy.stripPrefixPlaceholder')} />
+          <Input placeholder="/api/v1" />
         </Form.Item>
 
         <Form.Item name="timeoutMs" label={t('proxy.timeout')}>
@@ -145,6 +146,11 @@ export default function ProxyConfigForm({
             <Switch />
           </Form.Item>
           <span style={{ position: 'relative', top: -12 }}>{t('proxy.forwardHeaders')}</span>
+
+          <Form.Item name="fallbackEnabled" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+          <span style={{ position: 'relative', top: -12 }}>{t('proxy.fallbackEnabled')}</span>
 
           <Form.Item name="isRecording" valuePropName="checked">
             <Switch />
