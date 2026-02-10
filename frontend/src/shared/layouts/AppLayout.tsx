@@ -10,6 +10,8 @@ import {
   SunOutlined,
   MoonOutlined,
   MenuOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +22,9 @@ import RecordingIndicator from '@/modules/proxy/components/RecordingIndicator';
 const { Sider, Header, Content } = Layout;
 const { useBreakpoint } = Grid;
 
+const SIDER_WIDTH = 240;
+const SIDER_COLLAPSED_WIDTH = 72;
+
 export default function AppLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -28,6 +33,7 @@ export default function AppLayout() {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const menuItems = [
     { key: '/', icon: <DashboardOutlined />, label: t('menu.dashboard') },
@@ -47,6 +53,8 @@ export default function AppLayout() {
     if (isMobile) setDrawerOpen(false);
   };
 
+  const siderWidth = collapsed ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH;
+
   const sidebarContent = (
     <>
       <div
@@ -54,25 +62,39 @@ export default function AppLayout() {
           height: 72,
           display: 'flex',
           alignItems: 'center',
-          padding: '0 24px',
+          justifyContent: collapsed && !isMobile ? 'center' : 'space-between',
+          padding: collapsed && !isMobile ? '0 12px' : '0 20px',
+          transition: 'padding 0.2s ease',
         }}
       >
         <Typography.Title
           level={4}
           style={{
             margin: 0,
-            fontSize: 20,
+            fontSize: collapsed && !isMobile ? 16 : 20,
             fontWeight: 700,
             letterSpacing: '-0.3px',
             color: 'var(--color-text)',
+            whiteSpace: 'nowrap',
+            transition: 'font-size 0.2s ease',
           }}
         >
-          Mithya
+          {collapsed && !isMobile ? 'M' : 'Mithya'}
         </Typography.Title>
+        {!isMobile && !collapsed && (
+          <Button
+            type="text"
+            size="small"
+            icon={<MenuFoldOutlined />}
+            onClick={() => setCollapsed(true)}
+            style={{ color: 'var(--color-text-secondary)' }}
+          />
+        )}
       </div>
       <Menu
         theme="light"
         mode="inline"
+        inlineCollapsed={collapsed && !isMobile}
         selectedKeys={[selectedKey]}
         items={menuItems}
         onClick={handleMenuClick}
@@ -85,7 +107,10 @@ export default function AppLayout() {
     <Layout style={{ minHeight: '100vh' }}>
       {!isMobile && (
         <Sider
-          width={240}
+          width={SIDER_WIDTH}
+          collapsedWidth={SIDER_COLLAPSED_WIDTH}
+          collapsed={collapsed}
+          trigger={null}
           theme="light"
           className="apple-sidebar"
           style={{
@@ -95,9 +120,21 @@ export default function AppLayout() {
             bottom: 0,
             zIndex: 100,
             overflow: 'auto',
+            transition: 'width 0.2s ease',
           }}
         >
           {sidebarContent}
+          {collapsed && (
+            <div style={{ position: 'absolute', bottom: 16, width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <Button
+                type="text"
+                size="small"
+                icon={<MenuUnfoldOutlined />}
+                onClick={() => setCollapsed(false)}
+                style={{ color: 'var(--color-text-secondary)' }}
+              />
+            </div>
+          )}
         </Sider>
       )}
 
@@ -114,7 +151,7 @@ export default function AppLayout() {
         </Drawer>
       )}
 
-      <Layout style={{ marginLeft: isMobile ? 0 : 240 }}>
+      <Layout style={{ marginLeft: isMobile ? 0 : siderWidth, transition: 'margin-left 0.2s ease' }}>
         <Header
           className="apple-header"
           style={{
