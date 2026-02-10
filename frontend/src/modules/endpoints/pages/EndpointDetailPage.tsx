@@ -174,16 +174,13 @@ export default function EndpointDetailPage() {
             <Typography.Text code>{endpoint.path}</Typography.Text>
           </InfoItem>
           {config?.mockServerUrl && (
-            <InfoItem label={t('endpoints.mockUrl')}>
-              <Typography.Text
-                code
-                copyable
-                ellipsis={{ tooltip: `${config.mockServerUrl}${endpoint.path}` }}
-                style={{ fontSize: 13, maxWidth: '100%' }}
-              >
-                {`${config.mockServerUrl}${endpoint.path}`}
-              </Typography.Text>
-            </InfoItem>
+            <div style={{ gridColumn: 'span 2' }}>
+              <InfoItem label={t('endpoints.mockUrl')}>
+                <Typography.Text code copyable style={{ fontSize: 13, wordBreak: 'break-all' }}>
+                  {`${config.mockServerUrl}${endpoint.path}`}
+                </Typography.Text>
+              </InfoItem>
+            </div>
           )}
           <InfoItem label={t('endpoints.defaultStatusCode')}>
             {endpoint.defaultStatusCode ?? '-'}
