@@ -5,6 +5,7 @@ namespace MockServer.Core.ValueObjects;
 public class CachedEndpoint
 {
     public Guid Id { get; set; }
+    public string ServiceName { get; set; } = string.Empty;
     public string Path { get; set; } = string.Empty;
     public string HttpMethod { get; set; } = string.Empty;
     public ProtocolType Protocol { get; set; }

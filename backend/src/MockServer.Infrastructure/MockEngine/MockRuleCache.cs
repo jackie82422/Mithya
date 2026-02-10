@@ -76,6 +76,7 @@ public class MockRuleCache : IMockRuleCache
         return new CachedEndpoint
         {
             Id = endpoint.Id,
+            ServiceName = endpoint.ServiceName,
             Path = endpoint.Path,
             HttpMethod = endpoint.HttpMethod,
             Protocol = endpoint.Protocol,

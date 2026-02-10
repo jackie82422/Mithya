@@ -16,7 +16,7 @@ public class DynamicMockMiddleware
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IProxyEngine _proxyEngine;
     private readonly IRecordingService _recordingService;
-    private readonly IProxyConfigCache _proxyConfigCache;
+    private readonly IServiceProxyCache _serviceProxyCache;
     private readonly IScenarioEngine _scenarioEngine;
 
     public DynamicMockMiddleware(
@@ -26,7 +26,7 @@ public class DynamicMockMiddleware
         IServiceScopeFactory scopeFactory,
         IProxyEngine proxyEngine,
         IRecordingService recordingService,
-        IProxyConfigCache proxyConfigCache,
+        IServiceProxyCache serviceProxyCache,
         IScenarioEngine scenarioEngine)
     {
         _next = next;
@@ -35,7 +35,7 @@ public class DynamicMockMiddleware
         _scopeFactory = scopeFactory;
         _proxyEngine = proxyEngine;
         _recordingService = recordingService;
-        _proxyConfigCache = proxyConfigCache;
+        _serviceProxyCache = serviceProxyCache;
         _scenarioEngine = scenarioEngine;
     }
 
@@ -111,68 +111,80 @@ public class DynamicMockMiddleware
 
         if (matchResult != null)
         {
-            // Render matched response
             endpointId = matchResult.Endpoint.Id;
-            ruleId = matchResult.Rule?.Id;
-            isMatched = true;
 
-            await _responseRenderer.RenderAsync(httpContext, matchResult, context, matchResult.PathParams);
-
-            responseStatusCode = httpContext.Response.StatusCode;
-            responseBody = matchResult.IsDefaultResponse
-                ? matchResult.Endpoint.DefaultResponse
-                : matchResult.Rule?.ResponseBody;
-
-            if (matchResult.Rule?.FaultType != FaultType.None)
-                faultTypeApplied = (int?)matchResult.Rule?.FaultType;
-        }
-        else
-        {
-            // No match -> try proxy
-            var proxyConfig = FindActiveProxyConfig(context);
-            if (proxyConfig != null)
+            if (!matchResult.IsDefaultResponse)
             {
-                var proxyResponse = await _proxyEngine.ForwardAsync(context, proxyConfig);
-                if (proxyResponse != null)
-                {
-                    httpContext.Response.StatusCode = proxyResponse.StatusCode;
-                    foreach (var header in proxyResponse.Headers)
-                    {
-                        if (!IsResponseHopByHopHeader(header.Key))
-                            httpContext.Response.Headers.TryAdd(header.Key, header.Value);
-                    }
-                    await httpContext.Response.WriteAsync(proxyResponse.Body);
+                // Rule matched -> render rule response
+                ruleId = matchResult.Rule?.Id;
+                isMatched = true;
 
-                    responseStatusCode = proxyResponse.StatusCode;
-                    responseBody = proxyResponse.Body;
-                    isMatched = false;
-                    isProxied = true;
-                    proxyTargetUrl = proxyResponse.TargetUrl;
+                await _responseRenderer.RenderAsync(httpContext, matchResult, context, matchResult.PathParams);
 
-                    if (proxyConfig.IsRecording)
-                        _ = _recordingService.RecordAsync(context, proxyResponse, null);
-                }
-                else
-                {
-                    // Proxy failed
-                    responseStatusCode = 502;
-                    isMatched = false;
-                    httpContext.Response.StatusCode = 502;
-                    httpContext.Response.ContentType = "application/json";
-                    responseBody = JsonConvert.SerializeObject(new { error = "Proxy request failed", path = context.Path });
-                    await httpContext.Response.WriteAsync(responseBody);
-                }
+                responseStatusCode = httpContext.Response.StatusCode;
+                responseBody = matchResult.Rule?.ResponseBody;
+
+                if (matchResult.Rule?.FaultType != FaultType.None)
+                    faultTypeApplied = (int?)matchResult.Rule?.FaultType;
             }
             else
             {
-                // No proxy config either -> 404
-                responseStatusCode = 404;
-                isMatched = false;
-                httpContext.Response.StatusCode = 404;
-                httpContext.Response.ContentType = "application/json";
-                responseBody = JsonConvert.SerializeObject(new { error = "No matching endpoint found", path = context.Path, method = context.Method });
-                await httpContext.Response.WriteAsync(responseBody);
+                // No rule matched, would return default response
+                // -> Check service-level fallback proxy
+                var serviceProxy = _serviceProxyCache
+                    .GetActiveByServiceName(matchResult.Endpoint.ServiceName);
+
+                if (serviceProxy != null && serviceProxy.FallbackEnabled)
+                {
+                    // Forward to real API
+                    var proxyResponse = await _proxyEngine.ForwardAsync(context, serviceProxy);
+                    if (proxyResponse != null)
+                    {
+                        httpContext.Response.StatusCode = proxyResponse.StatusCode;
+                        foreach (var header in proxyResponse.Headers)
+                        {
+                            if (!IsResponseHopByHopHeader(header.Key))
+                                httpContext.Response.Headers.TryAdd(header.Key, header.Value);
+                        }
+                        await httpContext.Response.WriteAsync(proxyResponse.Body);
+
+                        responseStatusCode = proxyResponse.StatusCode;
+                        responseBody = proxyResponse.Body;
+                        isMatched = true;
+                        isProxied = true;
+                        proxyTargetUrl = proxyResponse.TargetUrl;
+
+                        if (serviceProxy.IsRecording)
+                            _ = _recordingService.RecordAsync(context, proxyResponse, endpointId, matchResult.Endpoint.ServiceName);
+                    }
+                    else
+                    {
+                        // Proxy failed -> fallback to default response
+                        isMatched = true;
+                        await _responseRenderer.RenderAsync(httpContext, matchResult, context, matchResult.PathParams);
+                        responseStatusCode = httpContext.Response.StatusCode;
+                        responseBody = matchResult.Endpoint.DefaultResponse;
+                    }
+                }
+                else
+                {
+                    // No service proxy -> render default response as before
+                    isMatched = true;
+                    await _responseRenderer.RenderAsync(httpContext, matchResult, context, matchResult.PathParams);
+                    responseStatusCode = httpContext.Response.StatusCode;
+                    responseBody = matchResult.Endpoint.DefaultResponse;
+                }
             }
+        }
+        else
+        {
+            // No endpoint match -> 404 (remove global proxy logic)
+            responseStatusCode = 404;
+            isMatched = false;
+            httpContext.Response.StatusCode = 404;
+            httpContext.Response.ContentType = "application/json";
+            responseBody = JsonConvert.SerializeObject(new { error = "No matching endpoint found", path = context.Path, method = context.Method });
+            await httpContext.Response.WriteAsync(responseBody);
         }
 
         stopwatch.Stop();
@@ -215,12 +227,6 @@ public class DynamicMockMiddleware
         {
             Console.WriteLine($"Error writing mock request log: {ex.Message}");
         }
-    }
-
-    private ProxyConfig? FindActiveProxyConfig(MockRequestContext context)
-    {
-        // Check global proxy config (endpoint-specific proxy would require knowing the endpoint ID)
-        return _proxyConfigCache.GetGlobalActive();
     }
 
     private static bool IsResponseHopByHopHeader(string headerName)

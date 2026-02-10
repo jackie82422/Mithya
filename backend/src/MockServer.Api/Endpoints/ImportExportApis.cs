@@ -2,6 +2,7 @@ using MockServer.Api.DTOs.Requests;
 using MockServer.Core.Entities;
 using MockServer.Core.Enums;
 using MockServer.Core.Interfaces;
+using MockServer.Infrastructure.MockEngine;
 using Newtonsoft.Json.Linq;
 
 namespace MockServer.Api.Endpoints;
@@ -13,7 +14,7 @@ public static class ImportExportApis
         var group = app.MapGroup("/admin/api").WithTags("Import/Export");
 
         // GET /admin/api/export
-        group.MapGet("/export", async (IEndpointRepository repo) =>
+        group.MapGet("/export", async (IEndpointRepository repo, IServiceProxyRepository proxyRepo) =>
         {
             var endpoints = await repo.GetAllAsync();
             var exportData = endpoints.Select(e => new
@@ -45,7 +46,21 @@ public static class ImportExportApis
                 })
             });
 
-            return Results.Ok(new { version = "1.0", exportedAt = DateTime.UtcNow, endpoints = exportData });
+            var serviceProxies = await proxyRepo.GetAllAsync();
+            var exportProxies = serviceProxies.Select(p => new
+            {
+                p.ServiceName,
+                p.TargetBaseUrl,
+                p.IsActive,
+                p.IsRecording,
+                p.ForwardHeaders,
+                p.AdditionalHeaders,
+                p.TimeoutMs,
+                p.StripPathPrefix,
+                p.FallbackEnabled
+            });
+
+            return Results.Ok(new { version = "1.1", exportedAt = DateTime.UtcNow, endpoints = exportData, serviceProxies = exportProxies });
         })
         .WithName("ExportAll")
         .WithOpenApi();
@@ -55,81 +70,140 @@ public static class ImportExportApis
             ImportJsonRequest request,
             IEndpointRepository endpointRepo,
             IRuleRepository ruleRepo,
-            IMockRuleCache cache) =>
+            IServiceProxyRepository proxyRepo,
+            IMockRuleCache cache,
+            IServiceProxyCache proxyCache) =>
         {
-            if (request.Endpoints == null || request.Endpoints.Count == 0)
-                return Results.BadRequest(new { error = "No endpoints to import" });
+            if ((request.Endpoints == null || request.Endpoints.Count == 0) &&
+                (request.ServiceProxies == null || request.ServiceProxies.Count == 0))
+                return Results.BadRequest(new { error = "No endpoints or service proxies to import" });
 
             var existingEndpoints = await endpointRepo.GetAllAsync();
             var imported = new List<object>();
             var skipped = new List<object>();
 
-            foreach (var ep in request.Endpoints)
+            if (request.Endpoints != null)
             {
-                var method = ep.HttpMethod.ToUpper();
-
-                // Check for duplicate path+method
-                var duplicate = existingEndpoints.FirstOrDefault(e =>
-                    e.Path == ep.Path &&
-                    e.HttpMethod.Equals(method, StringComparison.OrdinalIgnoreCase));
-
-                if (duplicate != null)
+                foreach (var ep in request.Endpoints)
                 {
-                    skipped.Add(new { ep.Name, ep.Path, httpMethod = method, reason = "duplicate", existingEndpointId = duplicate.Id });
-                    continue;
-                }
+                    var method = ep.HttpMethod.ToUpper();
 
-                var endpoint = new MockEndpoint
-                {
-                    Name = ep.Name,
-                    ServiceName = ep.ServiceName,
-                    Protocol = (ProtocolType)ep.Protocol,
-                    Path = ep.Path,
-                    HttpMethod = method,
-                    DefaultResponse = ep.DefaultResponse,
-                    DefaultStatusCode = ep.DefaultStatusCode,
-                    ProtocolSettings = ep.ProtocolSettings,
-                    IsActive = ep.IsActive
-                };
+                    // Check for duplicate path+method
+                    var duplicate = existingEndpoints.FirstOrDefault(e =>
+                        e.Path == ep.Path &&
+                        e.HttpMethod.Equals(method, StringComparison.OrdinalIgnoreCase));
 
-                await endpointRepo.AddAsync(endpoint);
-                await endpointRepo.SaveChangesAsync();
-
-                if (ep.Rules != null)
-                {
-                    foreach (var r in ep.Rules)
+                    if (duplicate != null)
                     {
-                        var rule = new MockRule
-                        {
-                            EndpointId = endpoint.Id,
-                            RuleName = r.RuleName,
-                            Priority = r.Priority,
-                            MatchConditions = r.MatchConditions,
-                            ResponseStatusCode = r.ResponseStatusCode,
-                            ResponseBody = r.ResponseBody,
-                            ResponseHeaders = r.ResponseHeaders,
-                            DelayMs = r.DelayMs,
-                            IsTemplate = r.IsTemplate,
-                            IsResponseHeadersTemplate = r.IsResponseHeadersTemplate,
-                            FaultType = (FaultType)r.FaultType,
-                            FaultConfig = r.FaultConfig,
-                            LogicMode = (LogicMode)r.LogicMode,
-                            IsActive = r.IsActive
-                        };
-
-                        await ruleRepo.AddAsync(rule);
+                        skipped.Add(new { ep.Name, ep.Path, httpMethod = method, reason = "duplicate", existingEndpointId = duplicate.Id });
+                        continue;
                     }
-                    await ruleRepo.SaveChangesAsync();
+
+                    var endpoint = new MockEndpoint
+                    {
+                        Name = ep.Name,
+                        ServiceName = ep.ServiceName,
+                        Protocol = (ProtocolType)ep.Protocol,
+                        Path = ep.Path,
+                        HttpMethod = method,
+                        DefaultResponse = ep.DefaultResponse,
+                        DefaultStatusCode = ep.DefaultStatusCode,
+                        ProtocolSettings = ep.ProtocolSettings,
+                        IsActive = ep.IsActive
+                    };
+
+                    await endpointRepo.AddAsync(endpoint);
+                    await endpointRepo.SaveChangesAsync();
+
+                    if (ep.Rules != null)
+                    {
+                        foreach (var r in ep.Rules)
+                        {
+                            var rule = new MockRule
+                            {
+                                EndpointId = endpoint.Id,
+                                RuleName = r.RuleName,
+                                Priority = r.Priority,
+                                MatchConditions = r.MatchConditions,
+                                ResponseStatusCode = r.ResponseStatusCode,
+                                ResponseBody = r.ResponseBody,
+                                ResponseHeaders = r.ResponseHeaders,
+                                DelayMs = r.DelayMs,
+                                IsTemplate = r.IsTemplate,
+                                IsResponseHeadersTemplate = r.IsResponseHeadersTemplate,
+                                FaultType = (FaultType)r.FaultType,
+                                FaultConfig = r.FaultConfig,
+                                LogicMode = (LogicMode)r.LogicMode,
+                                IsActive = r.IsActive
+                            };
+
+                            await ruleRepo.AddAsync(rule);
+                        }
+                        await ruleRepo.SaveChangesAsync();
+                    }
+
+                    await cache.ReloadEndpointAsync(endpoint.Id);
+                    imported.Add(new { endpoint.Id, endpoint.Name, endpoint.Path, rulesCount = ep.Rules?.Count ?? 0 });
+
+                    // Track newly added for duplicate detection within same batch
+                    existingEndpoints = existingEndpoints.Append(endpoint);
                 }
-
-                await cache.ReloadEndpointAsync(endpoint.Id);
-                imported.Add(new { endpoint.Id, endpoint.Name, endpoint.Path, rulesCount = ep.Rules?.Count ?? 0 });
-
-                // Track newly added for duplicate detection within same batch
-                existingEndpoints = existingEndpoints.Append(endpoint);
             }
 
-            return Results.Ok(new { imported = imported.Count, skipped = skipped.Count, endpoints = imported, duplicates = skipped });
+            // Import service proxies
+            var importedProxies = new List<object>();
+            var skippedProxies = new List<object>();
+
+            if (request.ServiceProxies != null)
+            {
+                foreach (var sp in request.ServiceProxies)
+                {
+                    var existing = await proxyRepo.GetByServiceNameAsync(sp.ServiceName);
+                    if (existing != null)
+                    {
+                        // Update existing
+                        existing.TargetBaseUrl = sp.TargetBaseUrl;
+                        existing.IsActive = sp.IsActive;
+                        existing.IsRecording = sp.IsRecording;
+                        existing.ForwardHeaders = sp.ForwardHeaders;
+                        existing.AdditionalHeaders = sp.AdditionalHeaders;
+                        existing.TimeoutMs = sp.TimeoutMs;
+                        existing.StripPathPrefix = sp.StripPathPrefix;
+                        existing.FallbackEnabled = sp.FallbackEnabled;
+                        await proxyRepo.UpdateAsync(existing);
+                        importedProxies.Add(new { existing.Id, sp.ServiceName, action = "updated" });
+                    }
+                    else
+                    {
+                        // Create new
+                        var proxy = new ServiceProxy
+                        {
+                            ServiceName = sp.ServiceName,
+                            TargetBaseUrl = sp.TargetBaseUrl,
+                            IsActive = sp.IsActive,
+                            IsRecording = sp.IsRecording,
+                            ForwardHeaders = sp.ForwardHeaders,
+                            AdditionalHeaders = sp.AdditionalHeaders,
+                            TimeoutMs = sp.TimeoutMs,
+                            StripPathPrefix = sp.StripPathPrefix,
+                            FallbackEnabled = sp.FallbackEnabled
+                        };
+                        await proxyRepo.AddAsync(proxy);
+                        importedProxies.Add(new { proxy.Id, sp.ServiceName, action = "created" });
+                    }
+                }
+                await proxyRepo.SaveChangesAsync();
+                await proxyCache.ReloadAsync();
+            }
+
+            return Results.Ok(new
+            {
+                imported = imported.Count,
+                skipped = skipped.Count,
+                endpoints = imported,
+                duplicates = skipped,
+                serviceProxies = new { imported = importedProxies.Count, details = importedProxies }
+            });
         })
         .WithName("ImportJson")
         .WithOpenApi();

@@ -3,6 +3,20 @@ namespace MockServer.Api.DTOs.Requests;
 public class ImportJsonRequest
 {
     public List<ImportEndpointData> Endpoints { get; set; } = new();
+    public List<ImportServiceProxyData>? ServiceProxies { get; set; }
+}
+
+public class ImportServiceProxyData
+{
+    public string ServiceName { get; set; } = string.Empty;
+    public string TargetBaseUrl { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+    public bool IsRecording { get; set; }
+    public bool ForwardHeaders { get; set; } = true;
+    public string? AdditionalHeaders { get; set; }
+    public int TimeoutMs { get; set; } = 10000;
+    public string? StripPathPrefix { get; set; }
+    public bool FallbackEnabled { get; set; } = true;
 }
 
 public class ImportEndpointData

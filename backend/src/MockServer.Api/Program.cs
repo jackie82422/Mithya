@@ -29,6 +29,7 @@ builder.Services.AddScoped<IEndpointRepository, EndpointRepository>();
 builder.Services.AddScoped<IRuleRepository, RuleRepository>();
 builder.Services.AddScoped<IRequestLogRepository, RequestLogRepository>();
 builder.Services.AddScoped<IProxyConfigRepository, ProxyConfigRepository>();
+builder.Services.AddScoped<IServiceProxyRepository, ServiceProxyRepository>();
 builder.Services.AddScoped<IScenarioRepository, ScenarioRepository>();
 builder.Services.AddScoped<IScenarioStepRepository, ScenarioStepRepository>();
 
@@ -51,6 +52,7 @@ builder.Services.AddHttpClient("ProxyClient")
 builder.Services.AddSingleton<IProxyEngine, ProxyEngine>();
 builder.Services.AddSingleton<IRecordingService, RecordingService>();
 builder.Services.AddSingleton<IProxyConfigCache, ProxyConfigCache>();
+builder.Services.AddSingleton<IServiceProxyCache, ServiceProxyCache>();
 
 // Scenario Engine
 builder.Services.AddSingleton<IScenarioEngine, ScenarioEngine>();
@@ -104,6 +106,7 @@ app.MapRuleManagementApis();
 app.MapLogApis();
 app.MapTemplateApis();
 app.MapProxyConfigApis();
+app.MapServiceProxyApis();
 app.MapScenarioApis();
 app.MapImportExportApis();
 app.MapConfigEndpoints();
@@ -130,6 +133,18 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"Error loading proxy config cache: {ex.Message}");
+}
+
+// Load service proxy cache on startup
+var serviceProxyCache = app.Services.GetRequiredService<IServiceProxyCache>();
+try
+{
+    await serviceProxyCache.LoadAllAsync();
+    Console.WriteLine("Service proxy cache loaded successfully");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error loading service proxy cache: {ex.Message}");
 }
 
 // Load scenario engine on startup

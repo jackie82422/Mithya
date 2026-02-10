@@ -15,7 +15,7 @@ public class ProxyResponse
 
 public interface IProxyEngine
 {
-    Task<ProxyResponse?> ForwardAsync(MockRequestContext requestContext, ProxyConfig config);
+    Task<ProxyResponse?> ForwardAsync(MockRequestContext requestContext, IProxyTarget config);
 }
 
 public class ProxyEngine : IProxyEngine
@@ -33,7 +33,7 @@ public class ProxyEngine : IProxyEngine
         _httpClientFactory = httpClientFactory;
     }
 
-    public async Task<ProxyResponse?> ForwardAsync(MockRequestContext context, ProxyConfig config)
+    public async Task<ProxyResponse?> ForwardAsync(MockRequestContext context, IProxyTarget config)
     {
         try
         {

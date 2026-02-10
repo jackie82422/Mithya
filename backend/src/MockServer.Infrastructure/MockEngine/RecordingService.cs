@@ -8,7 +8,7 @@ namespace MockServer.Infrastructure.MockEngine;
 
 public interface IRecordingService
 {
-    Task RecordAsync(MockRequestContext request, ProxyResponse response, Guid? endpointId);
+    Task RecordAsync(MockRequestContext request, ProxyResponse response, Guid? endpointId, string? serviceName = null);
 }
 
 public class RecordingService : IRecordingService
@@ -22,7 +22,7 @@ public class RecordingService : IRecordingService
         _cache = cache;
     }
 
-    public async Task RecordAsync(MockRequestContext request, ProxyResponse response, Guid? endpointId)
+    public async Task RecordAsync(MockRequestContext request, ProxyResponse response, Guid? endpointId, string? serviceName = null)
     {
         try
         {
@@ -35,7 +35,7 @@ public class RecordingService : IRecordingService
                 var endpoint = new MockEndpoint
                 {
                     Name = $"Recorded: {request.Method} {request.Path}",
-                    ServiceName = "recorded",
+                    ServiceName = serviceName ?? "recorded",
                     Protocol = ProtocolType.REST,
                     Path = request.Path,
                     HttpMethod = request.Method,
