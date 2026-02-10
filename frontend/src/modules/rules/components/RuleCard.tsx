@@ -9,6 +9,7 @@ import {
   FieldSourceType,
   FieldSourceTypeLabel,
   MatchOperatorLabel,
+  ProtocolType,
   parseMatchConditions,
 } from '@/shared/types';
 import StatusBadge from '@/shared/components/StatusBadge';
@@ -26,8 +27,40 @@ interface RuleCardProps {
   toggleLoading?: boolean;
 }
 
+function buildSoapBody(conditions: MatchCondition[], endpoint: MockEndpoint): string {
+  const bodyConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Body);
+  if (bodyConditions.length === 0) {
+    return [
+      '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">',
+      '  <soapenv:Header/>',
+      '  <soapenv:Body>',
+      '    <!-- TODO: add request body -->',
+      '  </soapenv:Body>',
+      '</soapenv:Envelope>',
+    ].join('\n');
+  }
+
+  const elements = bodyConditions.map((bc) => {
+    const tag = bc.fieldPath.replace(/^.*\//, '').replace(/\[.*\]/, '') || 'element';
+    return `    <${tag}>${bc.value}</${tag}>`;
+  });
+
+  const action = endpoint.path.replace(/^\//, '').replace(/\//g, '.');
+  return [
+    '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">',
+    '  <soapenv:Header/>',
+    '  <soapenv:Body>',
+    `    <${action}>`,
+    ...elements.map((e) => '  ' + e),
+    `    </${action}>`,
+    '  </soapenv:Body>',
+    '</soapenv:Envelope>',
+  ].join('\n');
+}
+
 function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[], baseUrl: string): string {
   const method = endpoint.httpMethod.toUpperCase();
+  const isSoap = endpoint.protocol === ProtocolType.SOAP;
   let path = endpoint.path;
   const pathConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Path);
   for (const pc of pathConditions) {
@@ -59,22 +92,34 @@ function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[], baseUrl
     parts.push(`-H '${hc.fieldPath}: ${hc.value}'`);
   }
 
-  const bodyConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Body);
-  if (bodyConditions.length > 0) {
+  if (isSoap) {
     if (!hasContentType) {
-      parts.push("-H 'Content-Type: application/json'");
+      parts.push("-H 'Content-Type: text/xml; charset=utf-8'");
     }
-    const bodyObj: Record<string, unknown> = {};
-    for (const bc of bodyConditions) {
-      const fieldPath = bc.fieldPath.startsWith('$.') ? bc.fieldPath.slice(2) : bc.fieldPath;
-      setNestedValue(bodyObj, fieldPath, bc.value);
+    const soapAction = headerConditions.find((c) => c.fieldPath.toLowerCase() === 'soapaction');
+    if (!soapAction) {
+      parts.push(`-H 'SOAPAction: "${endpoint.path}"'`);
     }
-    parts.push(`-d '${JSON.stringify(bodyObj)}'`);
-  } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
-    if (!hasContentType) {
-      parts.push("-H 'Content-Type: application/json'");
+    const soapBody = buildSoapBody(conditions, endpoint);
+    parts.push(`-d '${soapBody}'`);
+  } else {
+    const bodyConditions = conditions.filter((c) => c.sourceType === FieldSourceType.Body);
+    if (bodyConditions.length > 0) {
+      if (!hasContentType) {
+        parts.push("-H 'Content-Type: application/json'");
+      }
+      const bodyObj: Record<string, unknown> = {};
+      for (const bc of bodyConditions) {
+        const fieldPath = bc.fieldPath.startsWith('$.') ? bc.fieldPath.slice(2) : bc.fieldPath;
+        setNestedValue(bodyObj, fieldPath, bc.value);
+      }
+      parts.push(`-d '${JSON.stringify(bodyObj)}'`);
+    } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+      if (!hasContentType) {
+        parts.push("-H 'Content-Type: application/json'");
+      }
+      parts.push("-d '{}'");
     }
-    parts.push("-d '{}'");
   }
 
   return parts.join(' \\\n  ');
