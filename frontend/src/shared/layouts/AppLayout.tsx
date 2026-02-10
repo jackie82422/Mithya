@@ -19,11 +19,11 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useTheme } from '../contexts/ThemeContext';
 import RecordingIndicator from '@/modules/proxy/components/RecordingIndicator';
 
-const { Sider, Header, Content } = Layout;
+const { Header, Content } = Layout;
 const { useBreakpoint } = Grid;
 
 const SIDER_EXPANDED = 240;
-const SIDER_COLLAPSED = 96;
+const SIDER_COLLAPSED = 68;
 
 export default function AppLayout() {
   const { t } = useTranslation();
@@ -94,60 +94,69 @@ export default function AppLayout() {
             overflow: 'hidden',
           }}
         >
-          {/* Header: always visible */}
-          <div
-            style={{
-              height: 56,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0 12px 0 20px',
-              flexShrink: 0,
-            }}
-          >
-            <Typography.Title
-              level={4}
-              style={{
-                margin: 0,
-                fontSize: 18,
-                fontWeight: 700,
-                letterSpacing: '-0.3px',
-                color: 'var(--color-text)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Mithya
-            </Typography.Title>
-            <Tooltip title={collapsed ? undefined : undefined} placement="right">
-              <Button
-                type="text"
-                size="small"
-                icon={collapsed
-                  ? <DoubleRightOutlined style={{ fontSize: 11 }} />
-                  : <DoubleLeftOutlined style={{ fontSize: 11 }} />
-                }
-                onClick={() => setCollapsed((v) => !v)}
-                style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }}
+          {/* Logo */}
+          {collapsed ? (
+            <div style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <img src="/mithya.svg" alt="Mithya" style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--color-border)' }} />
+            </div>
+          ) : (
+            <div style={{ height: 56, display: 'flex', alignItems: 'center', padding: '0 20px', flexShrink: 0 }}>
+              <img src="/mithya.svg" alt="Mithya" style={{ width: 28, height: 28, borderRadius: 6, marginRight: 10, flexShrink: 0, border: '1px solid var(--color-border)' }} />
+              <Typography.Title
+                level={4}
+                style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: '-0.3px', color: 'var(--color-text)', whiteSpace: 'nowrap' }}
+              >
+                Mithya
+              </Typography.Title>
+            </div>
+          )}
+
+          {/* Menu */}
+          <div style={{ flex: 1, overflowX: 'hidden', overflowY: 'auto' }}>
+            {collapsed ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, paddingTop: 4 }}>
+                {menuItems.map((item) => (
+                  <Tooltip key={item.key} title={item.label} placement="right">
+                    <div
+                      onClick={() => handleMenuClick({ key: item.key })}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 10,
+                        cursor: 'pointer',
+                        fontSize: 16,
+                        color: selectedKey === item.key ? '#fff' : 'var(--color-text-secondary)',
+                        background: selectedKey === item.key ? 'var(--color-primary)' : 'transparent',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {item.icon}
+                    </div>
+                  </Tooltip>
+                ))}
+              </div>
+            ) : (
+              <Menu
+                theme="light"
+                mode="inline"
+                selectedKeys={[selectedKey]}
+                items={menuItems}
+                onClick={handleMenuClick}
+                style={{ border: 'none', padding: '0 4px' }}
               />
-            </Tooltip>
+            )}
           </div>
 
-          {/* Menu: visible only when expanded */}
-          <div
-            style={{
-              flex: 1,
-              overflow: collapsed ? 'hidden' : 'auto',
-              opacity: collapsed ? 0 : 1,
-              transition: 'opacity 0.2s ease',
-            }}
-          >
-            <Menu
-              theme="light"
-              mode="inline"
-              selectedKeys={[selectedKey]}
-              items={menuItems}
-              onClick={handleMenuClick}
-              style={{ border: 'none', padding: '0 4px', minWidth: SIDER_EXPANDED - 8 }}
+          {/* Collapse toggle */}
+          <div style={{ padding: 8, borderTop: '1px solid var(--sidebar-border)', flexShrink: 0, display: 'flex', justifyContent: collapsed ? 'center' : 'flex-end' }}>
+            <Button
+              type="text"
+              icon={collapsed ? <DoubleRightOutlined /> : <DoubleLeftOutlined />}
+              onClick={() => setCollapsed((v) => !v)}
+              style={{ color: 'var(--color-text-secondary)' }}
             />
           </div>
         </div>
