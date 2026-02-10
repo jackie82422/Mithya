@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Modal, Form, Input, Select } from 'antd';
+import { Modal, Form, Input, Select, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ProtocolType, ProtocolTypeLabel } from '@/shared/types';
 import type { CreateEndpointRequest, MockEndpoint } from '@/shared/types';
@@ -18,6 +18,8 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
   const { t } = useTranslation();
   const [form] = Form.useForm<CreateEndpointRequest>();
   const isEdit = !!editingEndpoint;
+  const watchedProtocol = Form.useWatch('protocol', form);
+  const isSoap = watchedProtocol === ProtocolType.SOAP;
 
   useEffect(() => {
     if (open && editingEndpoint) {
@@ -30,6 +32,12 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
       });
     }
   }, [open, editingEndpoint, form]);
+
+  useEffect(() => {
+    if (isSoap) {
+      form.setFieldValue('httpMethod', 'POST');
+    }
+  }, [isSoap, form]);
 
   const handleOk = async () => {
     const values = await form.validateFields();
@@ -84,9 +92,10 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
           name="httpMethod"
           label={t('endpoints.httpMethod')}
           rules={[{ required: true, message: t('validation.requiredSelect', { field: t('endpoints.httpMethod') }) }]}
+          extra={isSoap ? <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t('endpoints.form.soapMethodNote')}</Typography.Text> : undefined}
         >
-          <Select placeholder={t('endpoints.form.selectMethod')}>
-            {httpMethods.map((m) => (
+          <Select placeholder={t('endpoints.form.selectMethod')} disabled={isSoap}>
+            {(isSoap ? ['POST'] : httpMethods).map((m) => (
               <Select.Option key={m} value={m}>
                 {m}
               </Select.Option>
