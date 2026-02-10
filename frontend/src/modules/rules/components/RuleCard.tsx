@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, Typography, Button, Popconfirm, Flex, Space, Modal, message, Switch, Tooltip } from 'antd';
-import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, CodeOutlined, CopyOutlined, SendOutlined, DownOutlined, RightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import type { MockRule, MockEndpoint, MatchCondition } from '@/shared/types';
 import {
@@ -13,6 +13,9 @@ import {
 } from '@/shared/types';
 import StatusBadge from '@/shared/components/StatusBadge';
 import { useServerConfig } from '@/shared/hooks/useServerConfig';
+import { useTryRequest } from '@/shared/hooks/useTryRequest';
+import { parseCurlToPayload } from '@/shared/utils/curlParser';
+import ResponseViewer from '@/shared/components/ResponseViewer';
 
 interface RuleCardProps {
   rule: MockRule;
@@ -104,6 +107,7 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
   const conditions = parseMatchConditions(rule.matchConditions);
   const [curlOpen, setCurlOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const tryRequest = useTryRequest();
 
   const mockBaseUrl = serverConfig?.mockServerUrl ?? window.location.origin;
   const curlCmd = buildCurl(endpoint, conditions, mockBaseUrl);
@@ -112,6 +116,26 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
     navigator.clipboard.writeText(curlCmd);
     message.success(t('rules.copiedCurl'));
   };
+
+  const handleSend = useCallback(() => {
+    const payload = parseCurlToPayload(curlCmd);
+    tryRequest.mutate(payload);
+  }, [curlCmd, tryRequest]);
+
+  const handleModalClose = () => {
+    setCurlOpen(false);
+    tryRequest.reset();
+  };
+
+  const handleCurlKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend],
+  );
 
   const responseHeaders = rule.responseHeaders ? formatJson(rule.responseHeaders) : null;
 
@@ -305,29 +329,46 @@ export default function RuleCard({ rule, endpoint, onEdit, onDelete, onToggle, t
       <Modal
         title="cURL"
         open={curlOpen}
-        onCancel={() => setCurlOpen(false)}
+        onCancel={handleModalClose}
         footer={
-          <Button icon={<CopyOutlined />} type="primary" onClick={handleCopy}>
-            {t('rules.copyCurl')}
-          </Button>
+          <Flex justify="space-between">
+            <Button
+              icon={<SendOutlined />}
+              type="primary"
+              onClick={handleSend}
+              loading={tryRequest.isPending}
+            >
+              {t('tryRequest.send')}
+            </Button>
+            <Button icon={<CopyOutlined />} onClick={handleCopy}>
+              {t('rules.copyCurl')}
+            </Button>
+          </Flex>
         }
         width={700}
       >
-        <pre
-          style={{
-            background: '#1a1a2e',
-            color: '#e0e0e0',
-            padding: 20,
-            borderRadius: 14,
-            fontSize: 13,
-            lineHeight: 1.6,
-            overflowX: 'auto',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-          }}
-        >
-          {curlCmd}
-        </pre>
+        <div onKeyDown={handleCurlKeyDown}>
+          <pre
+            style={{
+              background: '#1a1a2e',
+              color: '#e0e0e0',
+              padding: 20,
+              borderRadius: 14,
+              fontSize: 13,
+              lineHeight: 1.6,
+              overflowX: 'auto',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+            }}
+          >
+            {curlCmd}
+          </pre>
+          <ResponseViewer
+            response={tryRequest.data}
+            loading={tryRequest.isPending}
+            error={tryRequest.error}
+          />
+        </div>
       </Modal>
     </>
   );

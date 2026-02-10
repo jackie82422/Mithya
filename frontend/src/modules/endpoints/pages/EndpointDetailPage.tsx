@@ -14,7 +14,7 @@ import {
   Switch,
   Tooltip,
 } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined, ApiOutlined } from '@ant-design/icons';
+import { PlusOutlined, ArrowLeftOutlined, ApiOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoint, useToggleEndpoint } from '../hooks';
 import { useServerConfig } from '@/shared/hooks/useServerConfig';
@@ -25,6 +25,7 @@ import HttpMethodTag from '@/shared/components/HttpMethodTag';
 import StatusBadge from '@/shared/components/StatusBadge';
 import RuleCard from '@/modules/rules/components/RuleCard';
 import RuleForm from '@/modules/rules/components/RuleForm';
+import TryRequestDrawer from '@/shared/components/TryRequestDrawer';
 import type { CreateRuleRequest, MockRule } from '@/shared/types';
 
 function InfoItem({ label, children }: { label: string; children: React.ReactNode }) {
@@ -53,6 +54,7 @@ export default function EndpointDetailPage() {
   const { data: proxies } = useServiceProxies();
   const [ruleFormOpen, setRuleFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<MockRule | null>(null);
+  const [tryDrawerOpen, setTryDrawerOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -165,9 +167,19 @@ export default function EndpointDetailPage() {
           </InfoItem>
           {config?.mockServerUrl && (
             <InfoItem label={t('endpoints.mockUrl')}>
-              <Typography.Text code copyable style={{ fontSize: 13 }}>
-                {`${config.mockServerUrl}${endpoint.path}`}
-              </Typography.Text>
+              <Flex align="center" gap={4}>
+                <Typography.Text code copyable style={{ fontSize: 13 }}>
+                  {`${config.mockServerUrl}${endpoint.path}`}
+                </Typography.Text>
+                <Tooltip title={t('tryRequest.title')}>
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<ThunderboltOutlined />}
+                    onClick={() => setTryDrawerOpen(true)}
+                  />
+                </Tooltip>
+              </Flex>
             </InfoItem>
           )}
           <InfoItem label={t('endpoints.defaultStatusCode')}>
@@ -274,6 +286,15 @@ export default function EndpointDetailPage() {
         endpointPath={endpoint.path}
         endpointMethod={endpoint.httpMethod}
       />
+
+      {config?.mockServerUrl && (
+        <TryRequestDrawer
+          open={tryDrawerOpen}
+          onClose={() => setTryDrawerOpen(false)}
+          initialMethod={endpoint.httpMethod}
+          initialUrl={`${config.mockServerUrl}${endpoint.path}`}
+        />
+      )}
     </div>
   );
 }

@@ -284,6 +284,18 @@
       "editTitle": "Edit Step"
     }
   },
+  "tryRequest": {
+    "title": "Try Request",
+    "send": "Send",
+    "sending": "Sending...",
+    "headers": "Headers",
+    "body": "Body",
+    "responseHeaders": "Response Headers",
+    "responseBody": "Response Body",
+    "copyCurl": "Copy cURL",
+    "showMore": "Show more",
+    "showLess": "Show less"
+  },
   "importExport": {
     "title": "Import / Export",
     "subtitle": "Export or import endpoint rules in JSON or OpenAPI format",
