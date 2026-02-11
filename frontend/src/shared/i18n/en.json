@@ -299,6 +299,24 @@
     "showMore": "Show more",
     "showLess": "Show less"
   },
+  "groups": {
+    "title": "Groups",
+    "all": "All",
+    "ungrouped": "Ungrouped",
+    "manage": "Manage Groups",
+    "create": "Create Group",
+    "edit": "Edit Group",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this group? Endpoints will not be deleted.",
+    "name": "Group Name",
+    "description": "Description",
+    "color": "Color",
+    "addToGroup": "Add to Group",
+    "removeFromGroup": "Remove from Group",
+    "endpointCount": "{{count}} endpoints",
+    "assignEndpoints": "Add {{count}} endpoint(s) to selected groups",
+    "moreGroups": "+{{count}} more"
+  },
   "soap": {
     "insertTemplate": "Insert SOAP Template",
     "soapAction": "SOAPAction",

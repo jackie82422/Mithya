@@ -299,6 +299,24 @@
     "showMore": "顯示更多",
     "showLess": "收起"
   },
+  "groups": {
+    "title": "群組",
+    "all": "全部",
+    "ungrouped": "未分組",
+    "manage": "管理群組",
+    "create": "建立群組",
+    "edit": "編輯群組",
+    "delete": "刪除",
+    "deleteConfirm": "確定要刪除此群組嗎？端點不會被刪除。",
+    "name": "群組名稱",
+    "description": "描述",
+    "color": "顏色",
+    "addToGroup": "加入群組",
+    "removeFromGroup": "從群組移除",
+    "endpointCount": "{{count}} 個端點",
+    "assignEndpoints": "將 {{count}} 個端點加入所選群組",
+    "moreGroups": "+{{count}} 個群組"
+  },
   "soap": {
     "insertTemplate": "插入 SOAP 範本",
     "soapAction": "SOAPAction",
