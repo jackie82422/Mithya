@@ -316,6 +316,7 @@ export default function EndpointDetailPage() {
           onClose={() => setTryDrawerOpen(false)}
           initialMethod={endpoint.httpMethod}
           initialUrl={`${config.mithyaUrl}${endpoint.path}`}
+          protocol={endpoint.protocol}
         />
       )}
     </div>

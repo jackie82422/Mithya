@@ -1,8 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Modal, Form, Input, Select, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ProtocolType, ProtocolTypeLabel } from '@/shared/types';
 import type { CreateEndpointRequest, MockEndpoint } from '@/shared/types';
+
+function parseProtocolSettings(raw: string | null): Record<string, string> {
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
+}
 
 interface EndpointFormProps {
   open: boolean;
@@ -12,14 +17,23 @@ interface EndpointFormProps {
   editingEndpoint?: MockEndpoint | null;
 }
 
+interface EndpointFormValues extends CreateEndpointRequest {
+  soapAction?: string;
+}
+
 const httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
 export default function EndpointForm({ open, onCancel, onSubmit, loading, editingEndpoint }: EndpointFormProps) {
   const { t } = useTranslation();
-  const [form] = Form.useForm<CreateEndpointRequest>();
+  const [form] = Form.useForm<EndpointFormValues>();
   const isEdit = !!editingEndpoint;
   const watchedProtocol = Form.useWatch('protocol', form);
   const isSoap = watchedProtocol === ProtocolType.SOAP;
+
+  const editSettings = useMemo(
+    () => editingEndpoint ? parseProtocolSettings(editingEndpoint.protocolSettings) : {},
+    [editingEndpoint],
+  );
 
   useEffect(() => {
     if (open && editingEndpoint) {
@@ -29,9 +43,10 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
         protocol: editingEndpoint.protocol,
         httpMethod: editingEndpoint.httpMethod,
         path: editingEndpoint.path,
+        soapAction: editSettings.soapAction ?? '',
       });
     }
-  }, [open, editingEndpoint, form]);
+  }, [open, editingEndpoint, editSettings, form]);
 
   useEffect(() => {
     if (isSoap) {
@@ -41,7 +56,11 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
 
   const handleOk = async () => {
     const values = await form.validateFields();
-    onSubmit(values);
+    const { soapAction, ...rest } = values as CreateEndpointRequest & { soapAction?: string };
+    if (soapAction) {
+      rest.protocolSettings = JSON.stringify({ soapAction });
+    }
+    onSubmit(rest);
   };
 
   const handleCancel = () => {
@@ -109,6 +128,14 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
         >
           <Input placeholder={t('endpoints.form.pathPlaceholder')} />
         </Form.Item>
+        {isSoap && (
+          <Form.Item
+            name="soapAction"
+            label={t('soap.soapAction')}
+          >
+            <Input placeholder={t('soap.soapActionPlaceholder')} />
+          </Form.Item>
+        )}
       </Form>
     </Modal>
   );

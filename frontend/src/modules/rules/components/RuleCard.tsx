@@ -112,7 +112,12 @@ function buildCurl(endpoint: MockEndpoint, conditions: MatchCondition[], baseUrl
     }
     const soapAction = headerConditions.find((c) => c.fieldPath.toLowerCase() === 'soapaction');
     if (!soapAction) {
-      parts.push(`-H 'SOAPAction: "${endpoint.path}"'`);
+      let actionValue = endpoint.path;
+      try {
+        const settings = endpoint.protocolSettings ? JSON.parse(endpoint.protocolSettings) : {};
+        if (settings.soapAction) actionValue = settings.soapAction;
+      } catch { /* ignore */ }
+      parts.push(`-H 'SOAPAction: "${actionValue}"'`);
     }
     const soapBody = buildSoapBody(conditions, endpoint);
     parts.push(`-d '${soapBody}'`);

@@ -299,6 +299,15 @@
     "showMore": "Show more",
     "showLess": "Show less"
   },
+  "soap": {
+    "insertTemplate": "Insert SOAP Template",
+    "soapAction": "SOAPAction",
+    "soapActionPlaceholder": "e.g. http://example.com/GetUser",
+    "pickXPath": "Pick XPath",
+    "pasteXml": "Paste a sample SOAP XML to pick element paths",
+    "parseError": "Failed to parse XML",
+    "selectElement": "Click an element to generate XPath"
+  },
   "importExport": {
     "title": "Import / Export",
     "subtitle": "Export or import endpoint rules in JSON or OpenAPI format",

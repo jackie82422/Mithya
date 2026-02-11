@@ -43,6 +43,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
   const [form] = Form.useForm<FormValues>();
   const [logicMode, setLogicMode] = useState<LogicMode>('AND');
   const isEdit = !!editingRule;
+  const isSoap = endpointProtocol === PT.SOAP;
 
   useEffect(() => {
     if (open && editingRule) {
@@ -132,8 +133,12 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
           statusCode: 200,
           delayMs: 0,
           conditions: [],
-          responseBody: '{\n  \n}',
-          responseHeadersStr: '{\n  "Content-Type": "application/json"\n}',
+          responseBody: isSoap
+            ? '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">\n  <soapenv:Header/>\n  <soapenv:Body>\n    \n  </soapenv:Body>\n</soapenv:Envelope>'
+            : '{\n  \n}',
+          responseHeadersStr: isSoap
+            ? '{\n  "Content-Type": "text/xml; charset=utf-8"\n}'
+            : '{\n  "Content-Type": "application/json"\n}',
           isTemplate: false,
         }}
       >
@@ -158,7 +163,7 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         </Form.Item>
 
         <Divider>{t('rules.response')}</Divider>
-        <ResponseEditor endpointPath={endpointPath} endpointMethod={endpointMethod} />
+        <ResponseEditor endpointPath={endpointPath} endpointMethod={endpointMethod} endpointProtocol={endpointProtocol} />
       </Form>
     </Modal>
   );

@@ -1,10 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Drawer, Select, Input, Button, Flex, Space, Typography, message } from 'antd';
-import { SendOutlined, CopyOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { SendOutlined, CopyOutlined, PlusOutlined, DeleteOutlined, FileTextOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useTryRequest } from '../hooks/useTryRequest';
+import { ProtocolType } from '@/shared/types';
 import ResponseViewer from './ResponseViewer';
 import CodeEditor from './CodeEditor';
+
+const SOAP_TEMPLATE = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Header/>
+  <soapenv:Body>
+
+  </soapenv:Body>
+</soapenv:Envelope>`;
 
 interface TryRequestDrawerProps {
   open: boolean;
@@ -13,6 +21,7 @@ interface TryRequestDrawerProps {
   initialUrl?: string;
   initialHeaders?: Record<string, string>;
   initialBody?: string;
+  protocol?: ProtocolType;
 }
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
@@ -30,6 +39,7 @@ export default function TryRequestDrawer({
   initialUrl = '',
   initialHeaders,
   initialBody,
+  protocol,
 }: TryRequestDrawerProps) {
   const { t } = useTranslation();
   const mutation = useTryRequest();
@@ -162,10 +172,28 @@ export default function TryRequestDrawer({
         {/* Body */}
         {!BODY_HIDDEN_METHODS.includes(method) && (
           <div style={{ marginTop: 12 }}>
-            <Typography.Text strong style={{ fontSize: 13, display: 'block', marginBottom: 8 }}>
-              {t('tryRequest.body')}
-            </Typography.Text>
-            <CodeEditor value={body} onChange={setBody} height={160} />
+            <Flex justify="space-between" align="center" style={{ marginBottom: 8 }}>
+              <Typography.Text strong style={{ fontSize: 13 }}>
+                {t('tryRequest.body')}
+              </Typography.Text>
+              {protocol === ProtocolType.SOAP && (
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<FileTextOutlined />}
+                  onClick={() => {
+                    setBody(SOAP_TEMPLATE);
+                    const hasContentType = headers.some((h) => h.key.toLowerCase() === 'content-type');
+                    if (!hasContentType) {
+                      setHeaders((prev) => [...prev, { key: 'Content-Type', value: 'text/xml; charset=utf-8' }]);
+                    }
+                  }}
+                >
+                  {t('soap.insertTemplate')}
+                </Button>
+              )}
+            </Flex>
+            <CodeEditor value={body} onChange={setBody} height={160} language={protocol === ProtocolType.SOAP ? 'xml' : 'json'} />
           </div>
         )}
 

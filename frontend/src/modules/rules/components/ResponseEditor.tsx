@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Form, InputNumber, Space, Switch, Tooltip, Button, Divider } from 'antd';
 import { QuestionCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { FaultType } from '@/shared/types';
+import { FaultType, ProtocolType } from '@/shared/types';
 import CodeEditor from '@/shared/components/CodeEditor';
 import TemplateVariableRef from './TemplateVariableRef';
 import TemplatePreview from './TemplatePreview';
@@ -11,9 +11,10 @@ import FaultInjectionConfig from './FaultInjectionConfig';
 interface ResponseEditorProps {
   endpointPath?: string;
   endpointMethod?: string;
+  endpointProtocol?: ProtocolType;
 }
 
-export default function ResponseEditor({ endpointPath, endpointMethod }: ResponseEditorProps) {
+export default function ResponseEditor({ endpointPath, endpointMethod, endpointProtocol }: ResponseEditorProps) {
   const { t } = useTranslation();
   const [isTemplate, setIsTemplate] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -76,7 +77,7 @@ export default function ResponseEditor({ endpointPath, endpointMethod }: Respons
         label={t('rules.responseBody')}
         rules={[{ required: !bodyDisabled, message: t('validation.required', { field: t('rules.responseBody') }) }]}
       >
-        <CodeEditorField language={isTemplate ? 'handlebars' : 'json'} readOnly={bodyDisabled} />
+        <CodeEditorField language={isTemplate ? 'handlebars' : endpointProtocol === ProtocolType.SOAP ? 'xml' : 'json'} readOnly={bodyDisabled} />
       </Form.Item>
 
       {isTemplate && (
@@ -110,13 +111,13 @@ function CodeEditorField({
   value,
   onChange,
   height = 250,
-  language = 'json' as 'json' | 'handlebars',
+  language = 'json' as 'json' | 'handlebars' | 'xml',
   readOnly = false,
 }: {
   value?: string;
   onChange?: (v: string) => void;
   height?: number;
-  language?: 'json' | 'handlebars';
+  language?: 'json' | 'handlebars' | 'xml';
   readOnly?: boolean;
 }) {
   return <CodeEditor value={value ?? ''} onChange={onChange} height={height} language={language} readOnly={readOnly} />;

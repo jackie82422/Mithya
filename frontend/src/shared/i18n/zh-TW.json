@@ -299,6 +299,15 @@
     "showMore": "顯示更多",
     "showLess": "收起"
   },
+  "soap": {
+    "insertTemplate": "插入 SOAP 範本",
+    "soapAction": "SOAPAction",
+    "soapActionPlaceholder": "例如：http://example.com/GetUser",
+    "pickXPath": "選取 XPath",
+    "pasteXml": "貼上 SOAP XML 範例以選取元素路徑",
+    "parseError": "XML 解析失敗",
+    "selectElement": "點擊元素以產生 XPath"
+  },
   "importExport": {
     "title": "匯入 / 匯出",
     "subtitle": "匯出或匯入端點規則，支援 JSON 及 OpenAPI 格式",
