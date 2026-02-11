@@ -39,7 +39,7 @@ export default function EndpointListPage() {
 
   const { groups: allGroups, endpointGroupMap, groupedEndpointIds } = useGroupsWithEndpoints();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>('groups');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [groupManageOpen, setGroupManageOpen] = useState(false);
   const [groupAssignOpen, setGroupAssignOpen] = useState(false);
