@@ -112,7 +112,7 @@ export default function ServiceProxyCard({
                   onChange={() => onToggleRecording(proxy.id)}
                   checkedChildren="REC"
                 />
-                <Typography.Text style={{ fontSize: 12 }}>{t('proxy.recording')}</Typography.Text>
+                <Typography.Text style={{ fontSize: 12 }}>{proxy.isRecording ? t('proxy.recording') : t('proxy.record')}</Typography.Text>
               </Space>
             </Tooltip>
           </Flex>

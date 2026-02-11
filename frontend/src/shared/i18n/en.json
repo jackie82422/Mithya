@@ -226,6 +226,7 @@
     "targetPlaceholder": "https://api.example.com",
     "fallbackEnabled": "Fallback Enabled",
     "fallbackDescription": "Forward to real API when no rule matches",
+    "record": "Record",
     "recording": "REC",
     "enableRecording": "Enable Recording",
     "forwardHeaders": "Forward Headers",

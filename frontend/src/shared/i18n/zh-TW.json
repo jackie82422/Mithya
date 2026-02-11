@@ -226,6 +226,7 @@
     "targetPlaceholder": "https://api.example.com",
     "fallbackEnabled": "啟用回退",
     "fallbackDescription": "當無規則匹配時轉發至真實 API",
+    "record": "錄製",
     "recording": "錄製中",
     "enableRecording": "啟用錄製",
     "forwardHeaders": "轉發標頭",
