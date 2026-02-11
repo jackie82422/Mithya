@@ -16,6 +16,8 @@ public class MithyaDbContext : DbContext
     public DbSet<ServiceProxy> ServiceProxies => Set<ServiceProxy>();
     public DbSet<Scenario> Scenarios => Set<Scenario>();
     public DbSet<ScenarioStep> ScenarioSteps => Set<ScenarioStep>();
+    public DbSet<EndpointGroup> EndpointGroups => Set<EndpointGroup>();
+    public DbSet<EndpointGroupMapping> EndpointGroupMappings => Set<EndpointGroupMapping>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

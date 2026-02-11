@@ -32,6 +32,7 @@ builder.Services.AddScoped<IProxyConfigRepository, ProxyConfigRepository>();
 builder.Services.AddScoped<IServiceProxyRepository, ServiceProxyRepository>();
 builder.Services.AddScoped<IScenarioRepository, ScenarioRepository>();
 builder.Services.AddScoped<IScenarioStepRepository, ScenarioStepRepository>();
+builder.Services.AddScoped<IEndpointGroupRepository, EndpointGroupRepository>();
 
 // Protocol Handler Factory
 builder.Services.AddSingleton<ProtocolHandlerFactory>();
@@ -117,6 +118,7 @@ app.MapTemplateApis();
 app.MapProxyConfigApis();
 app.MapServiceProxyApis();
 app.MapScenarioApis();
+app.MapEndpointGroupApis();
 app.MapImportExportApis();
 app.MapConfigEndpoints();
 app.MapTryRequestApis();
