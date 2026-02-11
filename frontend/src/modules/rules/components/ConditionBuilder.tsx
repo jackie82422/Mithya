@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Button, Select, Input, Card, Flex, Typography, Segmented } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, AimOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import {
   FieldSourceType,
@@ -11,6 +11,7 @@ import {
 import type { MatchCondition, LogicMode } from '@/shared/types';
 import { useProtocols } from '@/shared/hooks/useProtocols';
 import CodeEditor from '@/shared/components/CodeEditor';
+import XPathPicker from './XPathPicker';
 
 interface ConditionBuilderProps {
   value?: MatchCondition[];
@@ -75,6 +76,7 @@ function isValidSoapXPath(path: string): boolean {
 export default function ConditionBuilder({ value = [], onChange, logicMode = 'AND', onLogicModeChange, protocol }: ConditionBuilderProps) {
   const { t } = useTranslation();
   const { data: protocols } = useProtocols();
+  const [xpathPickerIndex, setXpathPickerIndex] = useState<number | null>(null);
 
   const schema = useMemo(() => {
     if (!protocol || !protocols) return null;
@@ -203,13 +205,24 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
                   ))}
                 </Select>
                 <div>
-                  <Input
-                    style={{ width: 180 }}
-                    status={pathError ? 'error' : undefined}
-                    placeholder={placeholders[cond.sourceType] ?? ''}
-                    value={cond.fieldPath}
-                    onChange={(e) => update(i, 'fieldPath', e.target.value)}
-                  />
+                  <Flex gap={4} align="center">
+                    <Input
+                      style={{ width: 180 }}
+                      status={pathError ? 'error' : undefined}
+                      placeholder={placeholders[cond.sourceType] ?? ''}
+                      value={cond.fieldPath}
+                      onChange={(e) => update(i, 'fieldPath', e.target.value)}
+                    />
+                    {isSoap && cond.sourceType === FieldSourceType.Body && (
+                      <Button
+                        size="small"
+                        type="text"
+                        icon={<AimOutlined />}
+                        onClick={() => setXpathPickerIndex(i)}
+                        title={t('soap.pickXPath')}
+                      />
+                    )}
+                  </Flex>
                   {pathError && (
                     <Typography.Text type="danger" style={{ fontSize: 12 }}>
                       {isSoap
@@ -279,6 +292,15 @@ export default function ConditionBuilder({ value = [], onChange, logicMode = 'AN
       >
         {t('rules.form.addCondition')}
       </Button>
+      <XPathPicker
+        open={xpathPickerIndex !== null}
+        onClose={() => setXpathPickerIndex(null)}
+        onSelect={(xpath) => {
+          if (xpathPickerIndex !== null) {
+            update(xpathPickerIndex, 'fieldPath', xpath);
+          }
+        }}
+      />
     </div>
   );
 }
