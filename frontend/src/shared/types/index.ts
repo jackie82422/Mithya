@@ -317,3 +317,28 @@ export interface CreateStepRequest {
   nextState?: string | null;
   priority?: number;
 }
+
+// ── Endpoint Groups ──
+
+export interface EndpointGroup {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  endpointCount?: number;
+  endpoints?: MockEndpoint[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateGroupRequest {
+  name: string;
+  description?: string;
+  color?: string;
+}
+
+export interface UpdateGroupRequest {
+  name: string;
+  description?: string;
+  color?: string;
+}
