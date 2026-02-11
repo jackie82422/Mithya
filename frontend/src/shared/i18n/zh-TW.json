@@ -315,7 +315,10 @@
     "removeFromGroup": "從群組移除",
     "endpointCount": "{{count}} 個端點",
     "assignEndpoints": "將 {{count}} 個端點加入所選群組",
-    "moreGroups": "+{{count}} 個群組"
+    "addEndpoints": "新增端點到群組",
+    "moreGroups": "+{{count}} 個群組",
+    "viewList": "列表檢視",
+    "viewGroups": "群組檢視"
   },
   "soap": {
     "insertTemplate": "插入 SOAP 範本",

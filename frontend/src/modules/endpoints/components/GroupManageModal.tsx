@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Input, Flex, Typography, Popconfirm, ColorPicker, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ interface GroupManageModalProps {
   open: boolean;
   onClose: () => void;
   groups: EndpointGroup[];
+  editingGroup?: EndpointGroup | null;
 }
 
 const PRESET_COLORS = [
@@ -16,7 +17,7 @@ const PRESET_COLORS = [
   '#eb2f96', '#13c2c2', '#fa8c16', '#2f54eb', '#a0d911',
 ];
 
-export default function GroupManageModal({ open, onClose, groups }: GroupManageModalProps) {
+export default function GroupManageModal({ open, onClose, groups, editingGroup }: GroupManageModalProps) {
   const { t } = useTranslation();
   const createGroup = useCreateGroup();
   const updateGroup = useUpdateGroup();
@@ -31,6 +32,14 @@ export default function GroupManageModal({ open, onClose, groups }: GroupManageM
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#1677ff');
   const [newDesc, setNewDesc] = useState('');
+
+  useEffect(() => {
+    if (open && editingGroup) {
+      startEdit(editingGroup);
+    } else if (open && !editingGroup && groups.length === 0) {
+      setCreating(true);
+    }
+  }, [open, editingGroup]);
 
   const handleCreate = () => {
     if (!newName.trim()) return;

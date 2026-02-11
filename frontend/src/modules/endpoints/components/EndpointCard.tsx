@@ -1,5 +1,5 @@
 import { Card, Space, Typography, Button, Popconfirm, Flex, Tooltip, Switch, Checkbox } from 'antd';
-import { DeleteOutlined, EditOutlined, SettingOutlined, RightOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, SettingOutlined, RightOutlined, DisconnectOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { MockEndpoint, EndpointGroup } from '@/shared/types';
@@ -19,9 +19,11 @@ interface EndpointCardProps {
   onSelect?: (id: string) => void;
   groups?: EndpointGroup[];
   onGroupClick?: (groupId: string) => void;
+  inGroupView?: boolean;
+  onRemoveFromGroup?: (endpointId: string) => void;
 }
 
-export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggle, onEdit, toggleLoading, selectable, selected, onSelect, groups, onGroupClick }: EndpointCardProps) {
+export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggle, onEdit, toggleLoading, selectable, selected, onSelect, groups, onGroupClick, inGroupView, onRemoveFromGroup }: EndpointCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -73,7 +75,7 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggl
               <Typography.Text type="secondary">
                 {t('endpoints.rulesCount', { count: endpoint.rules?.length ?? 0 })}
               </Typography.Text>
-              {groups && groups.length > 0 && (
+              {!inGroupView && groups && groups.length > 0 && (
                 <Flex gap={4} onClick={(e) => e.stopPropagation()}>
                   {groups.slice(0, 2).map((g) => (
                     <span
@@ -172,6 +174,19 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggl
                 <Button size="small" type="text" danger icon={<DeleteOutlined />} />
               </Tooltip>
             </Popconfirm>
+            {inGroupView && onRemoveFromGroup && (
+              <Tooltip title={t('groups.removeFromGroup')}>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<DisconnectOutlined />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveFromGroup(endpoint.id);
+                  }}
+                />
+              </Tooltip>
+            )}
             <RightOutlined style={{ color: 'var(--color-primary)', fontSize: 14, marginLeft: 4 }} />
           </Flex>
         )}

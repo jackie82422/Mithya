@@ -315,7 +315,10 @@
     "removeFromGroup": "Remove from Group",
     "endpointCount": "{{count}} endpoints",
     "assignEndpoints": "Add {{count}} endpoint(s) to selected groups",
-    "moreGroups": "+{{count}} more"
+    "addEndpoints": "Add Endpoints",
+    "moreGroups": "+{{count}} more",
+    "viewList": "List View",
+    "viewGroups": "Group View"
   },
   "soap": {
     "insertTemplate": "Insert SOAP Template",
