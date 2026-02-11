@@ -17,6 +17,7 @@ import {
 import { PlusOutlined, ArrowLeftOutlined, ApiOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoint, useToggleEndpoint } from '../hooks';
+import { useEndpointGroups, useRemoveEndpointFromGroup } from '../groupHooks';
 import { useServerConfig } from '@/shared/hooks/useServerConfig';
 import { useServiceProxies } from '@/modules/proxy/hooks';
 import { useRules, useCreateRule, useUpdateRule, useDeleteRule, useToggleRule } from '@/modules/rules/hooks';
@@ -53,6 +54,8 @@ export default function EndpointDetailPage() {
   const toggleRule = useToggleRule(id!);
   const { data: config } = useServerConfig();
   const { data: proxies } = useServiceProxies();
+  const { data: endpointGroups } = useEndpointGroups(id!);
+  const removeFromGroup = useRemoveEndpointFromGroup();
   const [ruleFormOpen, setRuleFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<MockRule | null>(null);
   const [tryDrawerOpen, setTryDrawerOpen] = useState(false);
@@ -207,6 +210,37 @@ export default function EndpointDetailPage() {
           <InfoItem label={t('endpoints.defaultStatusCode')}>
             {endpoint.defaultStatusCode ?? '-'}
           </InfoItem>
+          {endpointGroups && endpointGroups.length > 0 && (
+            <InfoItem label={t('groups.title')}>
+              <Flex gap={6} wrap="wrap">
+                {endpointGroups.map((g) => (
+                  <span
+                    key={g.id}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '2px 10px',
+                      borderRadius: 100,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      background: `${g.color || '#1677ff'}18`,
+                      color: g.color || '#1677ff',
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color || '#1677ff' }} />
+                    {g.name}
+                    <span
+                      style={{ cursor: 'pointer', marginLeft: 4, opacity: 0.6 }}
+                      onClick={() => removeFromGroup.mutate({ groupId: g.id, endpointId: endpoint.id })}
+                    >
+                      ×
+                    </span>
+                  </span>
+                ))}
+              </Flex>
+            </InfoItem>
+          )}
           <InfoItem label={t('common.createdAt')}>
             {new Date(endpoint.createdAt).toLocaleString()}
           </InfoItem>

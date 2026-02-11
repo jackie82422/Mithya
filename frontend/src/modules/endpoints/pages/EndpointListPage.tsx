@@ -1,12 +1,16 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Typography, Button, Spin, Empty, Input, Flex, Space, Popconfirm, message } from 'antd';
 import type { InputRef } from 'antd';
-import { PlusOutlined, SearchOutlined, CheckSquareOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, CheckSquareOutlined, CloseOutlined, GroupOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoints, useCreateEndpoint, useUpdateEndpoint, useDeleteEndpoint, useSetDefaultResponse, useToggleEndpoint } from '../hooks';
+import { useGroupsWithEndpoints } from '../groupHooks';
 import EndpointCard from '../components/EndpointCard';
 import EndpointForm from '../components/EndpointForm';
 import DefaultResponseForm from '../components/DefaultResponseForm';
+import EndpointGroupBar from '../components/EndpointGroupBar';
+import GroupManageModal from '../components/GroupManageModal';
+import GroupAssignModal from '../components/GroupAssignModal';
 import type { MockEndpoint, CreateEndpointRequest, UpdateEndpointRequest, SetDefaultResponseRequest } from '@/shared/types';
 
 export default function EndpointListPage() {
@@ -29,6 +33,11 @@ export default function EndpointListPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchLoading, setBatchLoading] = useState(false);
 
+  const { groups: allGroups, endpointGroupMap, groupedEndpointIds } = useGroupsWithEndpoints();
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [groupManageOpen, setGroupManageOpen] = useState(false);
+  const [groupAssignOpen, setGroupAssignOpen] = useState(false);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -40,13 +49,35 @@ export default function EndpointListPage() {
     return () => document.removeEventListener('keydown', handler);
   }, []);
 
-  const filtered = endpoints?.filter(
-    (ep) =>
-      ep.name.toLowerCase().includes(search.toLowerCase()) ||
-      ep.path.toLowerCase().includes(search.toLowerCase()) ||
-      ep.serviceName.toLowerCase().includes(search.toLowerCase()) ||
-      ep.httpMethod.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = useMemo(() => {
+    let list = endpoints ?? [];
+    // Text search
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (ep) =>
+          ep.name.toLowerCase().includes(q) ||
+          ep.path.toLowerCase().includes(q) ||
+          ep.serviceName.toLowerCase().includes(q) ||
+          ep.httpMethod.toLowerCase().includes(q),
+      );
+    }
+    // Group filter
+    if (selectedGroupId === 'ungrouped') {
+      list = list.filter((ep) => !groupedEndpointIds.has(ep.id));
+    } else if (selectedGroupId) {
+      const groupDetail = allGroups.find((g) => g.id === selectedGroupId);
+      if (groupDetail) {
+        const idsInGroup = new Set(
+          (endpointGroupMap ? Object.entries(endpointGroupMap) : [])
+            .filter(([, gs]) => gs.some((g) => g.id === selectedGroupId))
+            .map(([id]) => id),
+        );
+        list = list.filter((ep) => idsInGroup.has(ep.id));
+      }
+    }
+    return list;
+  }, [endpoints, search, selectedGroupId, allGroups, endpointGroupMap, groupedEndpointIds]);
 
   const handleCreate = (values: CreateEndpointRequest) => {
     if (editingEndpoint) {
@@ -166,6 +197,15 @@ export default function EndpointListPage() {
         </Space>
       </Flex>
 
+      {allGroups.length > 0 && (
+        <EndpointGroupBar
+          groups={allGroups}
+          selectedGroupId={selectedGroupId}
+          onSelect={setSelectedGroupId}
+          onManage={() => setGroupManageOpen(true)}
+        />
+      )}
+
       <Input
         ref={searchRef}
         prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
@@ -207,6 +247,8 @@ export default function EndpointListPage() {
             selectable={batchMode}
             selected={selectedIds.has(ep.id)}
             onSelect={handleSelectToggle}
+            groups={endpointGroupMap[ep.id]}
+            onGroupClick={(groupId) => setSelectedGroupId(groupId)}
           />
         ))
       )}
@@ -231,6 +273,9 @@ export default function EndpointListPage() {
             <Typography.Text strong>
               {t('endpoints.batch.selected', { count: selectedCount })}
             </Typography.Text>
+            <Button size="small" icon={<GroupOutlined />} onClick={() => setGroupAssignOpen(true)}>
+              {t('groups.addToGroup')}
+            </Button>
             <Button size="small" onClick={handleBatchEnable} loading={batchLoading}>
               {t('endpoints.batch.enable')}
             </Button>
@@ -265,6 +310,19 @@ export default function EndpointListPage() {
         onCancel={() => setDefaultFormOpen(false)}
         onSubmit={handleSetDefault}
         loading={setDefault.isPending}
+      />
+
+      <GroupManageModal
+        open={groupManageOpen}
+        onClose={() => setGroupManageOpen(false)}
+        groups={allGroups}
+      />
+
+      <GroupAssignModal
+        open={groupAssignOpen}
+        onClose={() => { setGroupAssignOpen(false); exitBatchMode(); }}
+        groups={allGroups}
+        endpointIds={Array.from(selectedIds)}
       />
     </div>
   );
