@@ -96,7 +96,14 @@ export default function GroupDetailView({ groupId, isUngrouped, ungroupedEndpoin
         { onSuccess: () => { setFormOpen(false); setEditingEndpoint(null); } },
       );
     } else {
-      createEndpoint.mutate(values, { onSuccess: () => setFormOpen(false) });
+      createEndpoint.mutate(values, {
+        onSuccess: (created) => {
+          setFormOpen(false);
+          if (!isUngrouped && created?.id) {
+            addEndpoints.mutate({ groupId, endpointIds: [created.id] });
+          }
+        },
+      });
     }
   };
 
@@ -124,11 +131,16 @@ export default function GroupDetailView({ groupId, isUngrouped, ungroupedEndpoin
             {groupName}
           </Typography.Title>
         </Flex>
-        {!isUngrouped && (
-          <Button icon={<PlusOutlined />} onClick={() => { setAddModalOpen(true); setAddSelected(new Set()); setAddSearch(''); }}>
-            {t('groups.addEndpoints')}
+        <Flex gap={8}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingEndpoint(null); setFormOpen(true); }}>
+            {t('endpoints.create')}
           </Button>
-        )}
+          {!isUngrouped && (
+            <Button icon={<PlusOutlined />} onClick={() => { setAddModalOpen(true); setAddSelected(new Set()); setAddSearch(''); }}>
+              {t('groups.addEndpoints')}
+            </Button>
+          )}
+        </Flex>
       </Flex>
 
       {!endpoints?.length ? (
