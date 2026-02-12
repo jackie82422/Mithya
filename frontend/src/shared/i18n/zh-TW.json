@@ -50,7 +50,8 @@
     "noLogs": "暫無請求日誌",
     "matchedRate": "匹配率",
     "emptyDesc": "尚未建立任何端點，建立第一個 Mock 端點開始使用",
-    "mockServerUrl": "Mithya 網址"
+    "mockServerUrl": "Mithya 網址",
+    "mithyaUrl": "Mithya 網址"
   },
   "endpoints": {
     "title": "端點管理",

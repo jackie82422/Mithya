@@ -50,7 +50,8 @@
     "noLogs": "No request logs yet",
     "matchedRate": "Match Rate",
     "emptyDesc": "No endpoints yet. Create your first mock endpoint to get started.",
-    "mockServerUrl": "Mithya URL"
+    "mockServerUrl": "Mithya URL",
+    "mithyaUrl": "Mithya URL"
   },
   "endpoints": {
     "title": "Endpoints",
