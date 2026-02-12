@@ -21,6 +21,7 @@ interface EndpointFormValues extends CreateEndpointRequest {
   soapAction?: string;
 }
 
+const VISIBLE_PROTOCOLS = [ProtocolType.REST, ProtocolType.SOAP];
 const httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 
 export default function EndpointForm({ open, onCancel, onSubmit, loading, editingEndpoint }: EndpointFormProps) {
@@ -100,9 +101,9 @@ export default function EndpointForm({ open, onCancel, onSubmit, loading, editin
           rules={[{ required: true, message: t('validation.requiredSelect', { field: t('endpoints.protocol') }) }]}
         >
           <Select placeholder={t('endpoints.form.selectProtocol')} disabled={isEdit}>
-            {Object.entries(ProtocolTypeLabel).map(([val, label]) => (
-              <Select.Option key={val} value={Number(val)}>
-                {label}
+            {VISIBLE_PROTOCOLS.map((val) => (
+              <Select.Option key={val} value={val}>
+                {ProtocolTypeLabel[val]}
               </Select.Option>
             ))}
           </Select>
