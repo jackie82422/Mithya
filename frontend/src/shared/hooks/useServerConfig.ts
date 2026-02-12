@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client';
 
 interface ServerConfig {
-  mockServerPort: number;
-  mockServerUrl: string;
-  mockServerHost: string;
+  mithyaPort: number;
+  mithyaUrl: string;
+  mithyaHost: string;
   adminApiUrl: string;
 }
 

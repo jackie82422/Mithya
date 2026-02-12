@@ -14,16 +14,20 @@ import {
   Switch,
   Tooltip,
 } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { PlusOutlined, ArrowLeftOutlined, ApiOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoint, useToggleEndpoint } from '../hooks';
+import { useEndpointGroups, useRemoveEndpointFromGroup } from '../groupHooks';
 import { useServerConfig } from '@/shared/hooks/useServerConfig';
+import { useServiceProxies } from '@/modules/proxy/hooks';
 import { useRules, useCreateRule, useUpdateRule, useDeleteRule, useToggleRule } from '@/modules/rules/hooks';
 import ProtocolTag from '@/shared/components/ProtocolTag';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
 import StatusBadge from '@/shared/components/StatusBadge';
 import RuleCard from '@/modules/rules/components/RuleCard';
 import RuleForm from '@/modules/rules/components/RuleForm';
+import TryRequestDrawer from '@/shared/components/TryRequestDrawer';
+import { breakableUrl } from '@/shared/utils/urlFormat';
 import type { CreateRuleRequest, MockRule } from '@/shared/types';
 
 function InfoItem({ label, children }: { label: string; children: React.ReactNode }) {
@@ -49,8 +53,12 @@ export default function EndpointDetailPage() {
   const toggleEndpoint = useToggleEndpoint();
   const toggleRule = useToggleRule(id!);
   const { data: config } = useServerConfig();
+  const { data: proxies } = useServiceProxies();
+  const { data: endpointGroups } = useEndpointGroups(id!);
+  const removeFromGroup = useRemoveEndpointFromGroup();
   const [ruleFormOpen, setRuleFormOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<MockRule | null>(null);
+  const [tryDrawerOpen, setTryDrawerOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -141,6 +149,14 @@ export default function EndpointDetailPage() {
           </Tooltip>
           <StatusBadge active={endpoint.isActive} />
         </Flex>
+        {config?.mithyaUrl && (
+          <Button
+            icon={<ThunderboltOutlined />}
+            onClick={() => setTryDrawerOpen(true)}
+          >
+            {t('tryRequest.title')}
+          </Button>
+        )}
       </Flex>
 
       <Card style={{ marginBottom: 24 }}>
@@ -159,23 +175,121 @@ export default function EndpointDetailPage() {
             <HttpMethodTag method={endpoint.httpMethod} />
           </InfoItem>
           <InfoItem label={t('endpoints.path')}>
-            <Typography.Text code>{endpoint.path}</Typography.Text>
+            <Typography.Text code style={{ fontSize: 13 }}>
+              {breakableUrl(endpoint.path)}
+            </Typography.Text>
           </InfoItem>
-          {config?.mockServerUrl && (
-            <InfoItem label={t('endpoints.mockUrl')}>
-              <Typography.Text code copyable style={{ fontSize: 13 }}>
-                {`${config.mockServerUrl}${endpoint.path}`}
-              </Typography.Text>
-            </InfoItem>
+          {config?.mithyaUrl && (
+            <div style={{ gridColumn: 'span 2' }}>
+              <InfoItem label={t('endpoints.mockUrl')}>
+                <Flex
+                  align="flex-start"
+                  gap={8}
+                  style={{
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                    background: 'var(--code-bg)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 6,
+                    padding: '4px 8px',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'normal',
+                  }}
+                >
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    {breakableUrl(`${config.mithyaUrl}${endpoint.path}`)}
+                  </span>
+                  <Typography.Text
+                    copyable={{ text: `${config.mithyaUrl}${endpoint.path}` }}
+                    style={{ flexShrink: 0 }}
+                  />
+                </Flex>
+              </InfoItem>
+            </div>
           )}
           <InfoItem label={t('endpoints.defaultStatusCode')}>
             {endpoint.defaultStatusCode ?? '-'}
           </InfoItem>
+          {endpointGroups && endpointGroups.length > 0 && (
+            <InfoItem label={t('groups.title')}>
+              <Flex gap={6} wrap="wrap">
+                {endpointGroups.map((g) => (
+                  <span
+                    key={g.id}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '2px 10px',
+                      borderRadius: 100,
+                      fontSize: 12,
+                      fontWeight: 500,
+                      background: `${g.color || '#1677ff'}18`,
+                      color: g.color || '#1677ff',
+                    }}
+                  >
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color || '#1677ff' }} />
+                    {g.name}
+                    <span
+                      style={{ cursor: 'pointer', marginLeft: 4, opacity: 0.6 }}
+                      onClick={() => removeFromGroup.mutate({ groupId: g.id, endpointId: endpoint.id })}
+                    >
+                      ×
+                    </span>
+                  </span>
+                ))}
+              </Flex>
+            </InfoItem>
+          )}
           <InfoItem label={t('common.createdAt')}>
             {new Date(endpoint.createdAt).toLocaleString()}
           </InfoItem>
         </div>
       </Card>
+
+      {(() => {
+        const serviceProxy = proxies?.find((p) => p.serviceName === endpoint.serviceName);
+        return (
+          <Card
+            size="small"
+            style={{ marginBottom: 24 }}
+            title={
+              <Flex align="center" gap={8}>
+                <ApiOutlined />
+                <span>{t('proxy.endpointDetail.title')}</span>
+              </Flex>
+            }
+            extra={
+              <Button type="link" size="small" onClick={() => navigate('/proxy')}>
+                {t('proxy.endpointDetail.configure')}
+              </Button>
+            }
+          >
+            {!serviceProxy ? (
+              <Typography.Text type="secondary">
+                {t('proxy.endpointDetail.noProxy')}
+              </Typography.Text>
+            ) : (
+              <div>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  {t('proxy.serviceName')}: <Typography.Text strong>{serviceProxy.serviceName}</Typography.Text>
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  {t('proxy.targetBaseUrl')}: <Typography.Text code>{serviceProxy.targetBaseUrl}</Typography.Text>
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                  {t('proxy.fallbackEnabled')}: <StatusBadge active={serviceProxy.fallbackEnabled} />
+                </Typography.Text>
+                <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block' }}>
+                  {serviceProxy.fallbackEnabled
+                    ? t('proxy.endpointDetail.fallbackEnabled')
+                    : t('proxy.endpointDetail.fallbackDisabled')}
+                </Typography.Text>
+              </div>
+            )}
+          </Card>
+        );
+      })()}
 
       <Divider />
 
@@ -225,7 +339,20 @@ export default function EndpointDetailPage() {
         onSubmit={handleSubmitRule}
         loading={editingRule ? updateRule.isPending : createRule.isPending}
         editingRule={editingRule}
+        endpointPath={endpoint.path}
+        endpointMethod={endpoint.httpMethod}
+        endpointProtocol={endpoint.protocol}
       />
+
+      {config?.mithyaUrl && (
+        <TryRequestDrawer
+          open={tryDrawerOpen}
+          onClose={() => setTryDrawerOpen(false)}
+          initialMethod={endpoint.httpMethod}
+          initialUrl={`${config.mithyaUrl}${endpoint.path}`}
+          protocol={endpoint.protocol}
+        />
+      )}
     </div>
   );
 }

@@ -39,17 +39,17 @@ export default function DashboardPage() {
         </Typography.Text>
       </div>
       <StatsCards endpoints={endpoints ?? []} logs={logs ?? []} />
-      {config?.mockServerUrl && (
+      {config?.mithyaUrl && (
         <Card size="small">
           <Flex align="center" gap={8}>
             <LinkOutlined style={{ color: 'var(--color-primary)' }} />
-            <Typography.Text type="secondary">{t('dashboard.mockServerUrl')}:</Typography.Text>
+            <Typography.Text type="secondary">{t('dashboard.mithyaUrl')}:</Typography.Text>
             <Typography.Text
               copyable={{ icon: <CopyOutlined /> }}
               code
               style={{ fontSize: 13 }}
             >
-              {config.mockServerUrl}
+              {config.mithyaUrl}
             </Typography.Text>
           </Flex>
         </Card>

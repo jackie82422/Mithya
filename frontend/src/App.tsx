@@ -11,11 +11,21 @@ import EndpointListPage from './modules/endpoints/pages/EndpointListPage';
 import EndpointDetailPage from './modules/endpoints/pages/EndpointDetailPage';
 import LogListPage from './modules/logs/pages/LogListPage';
 import ImportExportPage from './modules/import-export/pages/ImportExportPage';
+import ProxyConfigPage from './modules/proxy/pages/ProxyConfigPage';
+import ScenarioListPage from './modules/scenarios/pages/ScenarioListPage';
+import ScenarioDetailPage from './modules/scenarios/pages/ScenarioDetailPage';
 import NotFoundPage from './shared/pages/NotFoundPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { refetchOnWindowFocus: false, retry: 1 },
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: (failureCount, error) => {
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        if (status === 404 || status === 403) return false;
+        return failureCount < 1;
+      },
+    },
   },
 });
 
@@ -56,6 +66,9 @@ function ThemedApp() {
             <Route path="/endpoints" element={<EndpointListPage />} />
             <Route path="/endpoints/:id" element={<EndpointDetailPage />} />
             <Route path="/logs" element={<LogListPage />} />
+            <Route path="/proxy" element={<ProxyConfigPage />} />
+            <Route path="/scenarios" element={<ScenarioListPage />} />
+            <Route path="/scenarios/:id" element={<ScenarioDetailPage />} />
             <Route path="/import-export" element={<ImportExportPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

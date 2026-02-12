@@ -1,6 +1,6 @@
-# Mock Server Backend - Phase 1
+# Mithya Backend
 
-A multi-protocol mock server with admin UI support, built with ASP.NET Core 8 and WireMock.NET.
+A multi-protocol mock server with admin UI support, built with ASP.NET Core 8.
 
 ## Features
 
@@ -40,7 +40,7 @@ docker-compose down
 docker-compose up -d postgres
 
 # Run migrations
-cd src/MockServer.Api
+cd src/Mithya.Api
 export PATH="$PATH:/Users/chachalin/.dotnet/tools"
 dotnet ef database update
 
@@ -113,9 +113,9 @@ curl -X POST http://localhost:5001/api/v1/credit/query \
 ```
 backend/
 ├── src/
-│   ├── MockServer.Core/          # Domain layer
-│   ├── MockServer.Infrastructure/ # Data + WireMock integration
-│   └── MockServer.Api/            # REST API + Minimal APIs
+│   ├── Mithya.Core/          # Domain layer
+│   ├── Mithya.Infrastructure/ # Data + WireMock integration
+│   └── Mithya.Api/            # REST API + Minimal APIs
 ├── docker-compose.yml
 └── README.md
 ```
@@ -127,7 +127,7 @@ Edit `appsettings.json`:
 ```json
 {
   "ConnectionStrings": {
-    "Default": "Host=localhost;Database=mockserver;..."
+    "Default": "Host=localhost;Database=mithya;..."
   },
   "WireMock": {
     "Port": 5001
@@ -145,7 +145,7 @@ dotnet build
 dotnet test
 
 # Create migration
-dotnet ef migrations add MigrationName --project src/MockServer.Infrastructure
+dotnet ef migrations add MigrationName --project src/Mithya.Infrastructure
 
 # Apply migration
 dotnet ef database update

@@ -1,6 +1,7 @@
 import { Drawer, Descriptions, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { MockRequestLog } from '@/shared/types';
+import { FaultType, FaultTypeLabel } from '@/shared/types';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
 import CodeEditor from '@/shared/components/CodeEditor';
 
@@ -37,7 +38,9 @@ function StatusCodePill({ code }: { code: number }) {
   );
 }
 
-function MatchPill({ matched, label }: { matched: boolean; label: string }) {
+function MatchPill({ matched, isDefault, label }: { matched: boolean; isDefault?: boolean; label: string }) {
+  const bg = !matched ? 'var(--put-bg)' : isDefault ? 'var(--patch-bg, var(--put-bg))' : 'var(--active-bg)';
+  const color = !matched ? 'var(--put-color)' : isDefault ? 'var(--patch-color, var(--put-color))' : 'var(--active-color)';
   return (
     <span
       style={{
@@ -45,8 +48,8 @@ function MatchPill({ matched, label }: { matched: boolean; label: string }) {
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 500,
-        background: matched ? 'var(--active-bg)' : 'var(--put-bg)',
-        color: matched ? 'var(--active-color)' : 'var(--put-color)',
+        background: bg,
+        color: color,
       }}
     >
       {label}
@@ -87,11 +90,31 @@ export default function LogDetail({ log, open, onClose }: LogDetailProps) {
           {log.responseTimeMs} {t('logs.ms')}
         </Descriptions.Item>
         <Descriptions.Item label={t('logs.matchStatus')}>
-          <MatchPill
-            matched={log.isMatched}
-            label={log.isMatched ? t('logs.matched') : t('logs.unmatched')}
-          />
+          {(() => {
+            const isDefault = log.isMatched && !log.ruleId;
+            const label = !log.isMatched ? t('logs.unmatched') : isDefault ? t('logs.matchedDefault') : t('logs.matched');
+            return <MatchPill matched={log.isMatched} isDefault={isDefault} label={label} />;
+          })()}
         </Descriptions.Item>
+        {log.isProxied && (
+          <Descriptions.Item label={t('proxy.proxyTarget')}>
+            <Typography.Text code>{log.proxyTargetUrl ?? '-'}</Typography.Text>
+          </Descriptions.Item>
+        )}
+        {log.faultTypeApplied != null && log.faultTypeApplied !== FaultType.None && (
+          <Descriptions.Item label={t('rules.faultType')}>
+            <span style={{
+              padding: '2px 8px',
+              borderRadius: 100,
+              fontSize: 12,
+              fontWeight: 500,
+              background: 'var(--delete-bg)',
+              color: 'var(--delete-color)',
+            }}>
+              {FaultTypeLabel[log.faultTypeApplied]}
+            </span>
+          </Descriptions.Item>
+        )}
       </Descriptions>
 
       {log.headers && (

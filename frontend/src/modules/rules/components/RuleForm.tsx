@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Divider, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { CreateRuleRequest, MatchCondition, MockRule } from '@/shared/types';
-import { FieldSourceType, parseMatchConditions } from '@/shared/types';
+import type { CreateRuleRequest, LogicMode, MatchCondition, MockRule, ProtocolType } from '@/shared/types';
+import { FaultType, FieldSourceType, ProtocolType as PT, parseMatchConditions } from '@/shared/types';
 import ConditionBuilder from './ConditionBuilder';
 import ResponseEditor from './ResponseEditor';
 
@@ -12,6 +12,9 @@ interface RuleFormProps {
   onSubmit: (values: CreateRuleRequest) => void;
   loading?: boolean;
   editingRule?: MockRule | null;
+  endpointPath?: string;
+  endpointMethod?: string;
+  endpointProtocol?: ProtocolType;
 }
 
 interface FormValues {
@@ -22,6 +25,8 @@ interface FormValues {
   responseBody: string;
   responseHeadersStr: string;
   delayMs: number;
+  isTemplate: boolean;
+  faultConfig?: { minDelay?: number; maxDelay?: number; statusCode?: number; byteCount?: number; timeoutMs?: number };
 }
 
 function parseJson<T>(raw: string | null, fallback: T): T {
@@ -33,10 +38,12 @@ function parseJson<T>(raw: string | null, fallback: T): T {
   }
 }
 
-export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule }: RuleFormProps) {
+export default function RuleForm({ open, onCancel, onSubmit, loading, editingRule, endpointPath, endpointMethod, endpointProtocol }: RuleFormProps) {
   const { t } = useTranslation();
   const [form] = Form.useForm<FormValues>();
+  const [logicMode, setLogicMode] = useState<LogicMode>('AND');
   const isEdit = !!editingRule;
+  const isSoap = endpointProtocol === PT.SOAP;
 
   useEffect(() => {
     if (open && editingRule) {
@@ -50,7 +57,9 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
           ? JSON.stringify(parseJson(editingRule.responseHeaders, {}), null, 2)
           : '{\n  "Content-Type": "application/json"\n}',
         delayMs: editingRule.delayMs,
+        isTemplate: editingRule.isTemplate ?? false,
       });
+      setLogicMode(editingRule.logicMode === 1 ? 'OR' : 'AND');
     }
   }, [open, editingRule, form]);
 
@@ -62,9 +71,17 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         message.error(t('validation.fieldPathRequired'));
         return;
       }
-      if (c.sourceType === FieldSourceType.Body && !c.fieldPath.startsWith('$.')) {
-        message.error(t('validation.bodyFieldPathPrefix'));
-        return;
+      if (c.sourceType === FieldSourceType.Body) {
+        const isSoap = endpointProtocol === PT.SOAP;
+        if (isSoap) {
+          if (!c.fieldPath.startsWith('/') && !c.fieldPath.includes('local-name(')) {
+            message.error(t('validation.soapBodyFieldPathPrefix'));
+            return;
+          }
+        } else if (!c.fieldPath.startsWith('$.')) {
+          message.error(t('validation.bodyFieldPathPrefix'));
+          return;
+        }
       }
     }
     let responseHeaders: Record<string, string> | undefined;
@@ -75,6 +92,8 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
         responseHeaders = undefined;
       }
     }
+    const faultType = (values as unknown as Record<string, unknown>).faultType as FaultType | undefined;
+    const faultConfig = values.faultConfig;
     onSubmit({
       ruleName: values.ruleName,
       priority: values.priority,
@@ -83,6 +102,10 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
       responseBody: values.responseBody,
       responseHeaders,
       delayMs: values.delayMs,
+      isTemplate: values.isTemplate ?? false,
+      faultType: faultType ?? FaultType.None,
+      faultConfig: faultConfig && faultType !== FaultType.None ? JSON.stringify(faultConfig) : null,
+      logicMode: logicMode === 'OR' ? 1 : 0,
     });
   };
 
@@ -110,8 +133,13 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
           statusCode: 200,
           delayMs: 0,
           conditions: [],
-          responseBody: '{\n  \n}',
-          responseHeadersStr: '{\n  "Content-Type": "application/json"\n}',
+          responseBody: isSoap
+            ? '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">\n  <soapenv:Header/>\n  <soapenv:Body>\n    \n  </soapenv:Body>\n</soapenv:Envelope>'
+            : '{\n  \n}',
+          responseHeadersStr: isSoap
+            ? '{\n  "Content-Type": "text/xml; charset=utf-8"\n}'
+            : '{\n  "Content-Type": "application/json"\n}',
+          isTemplate: false,
         }}
       >
         <Form.Item
@@ -131,11 +159,11 @@ export default function RuleForm({ open, onCancel, onSubmit, loading, editingRul
 
         <Divider>{t('rules.conditions')}</Divider>
         <Form.Item name="conditions">
-          <ConditionBuilder />
+          <ConditionBuilder logicMode={logicMode} onLogicModeChange={setLogicMode} protocol={endpointProtocol} />
         </Form.Item>
 
         <Divider>{t('rules.response')}</Divider>
-        <ResponseEditor />
+        <ResponseEditor endpointPath={endpointPath} endpointMethod={endpointMethod} endpointProtocol={endpointProtocol} />
       </Form>
     </Modal>
   );

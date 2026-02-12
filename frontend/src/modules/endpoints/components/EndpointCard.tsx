@@ -1,8 +1,8 @@
 import { Card, Space, Typography, Button, Popconfirm, Flex, Tooltip, Switch, Checkbox } from 'antd';
-import { DeleteOutlined, EditOutlined, SettingOutlined, RightOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, SettingOutlined, RightOutlined, DisconnectOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { MockEndpoint } from '@/shared/types';
+import type { MockEndpoint, EndpointGroup } from '@/shared/types';
 import ProtocolTag from '@/shared/components/ProtocolTag';
 import HttpMethodTag from '@/shared/components/HttpMethodTag';
 import StatusBadge from '@/shared/components/StatusBadge';
@@ -17,9 +17,13 @@ interface EndpointCardProps {
   selectable?: boolean;
   selected?: boolean;
   onSelect?: (id: string) => void;
+  groups?: EndpointGroup[];
+  onGroupClick?: (groupId: string) => void;
+  inGroupView?: boolean;
+  onRemoveFromGroup?: (endpointId: string) => void;
 }
 
-export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggle, onEdit, toggleLoading, selectable, selected, onSelect }: EndpointCardProps) {
+export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggle, onEdit, toggleLoading, selectable, selected, onSelect, groups, onGroupClick, inGroupView, onRemoveFromGroup }: EndpointCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -64,13 +68,51 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggl
               <HttpMethodTag method={endpoint.httpMethod} />
               <Typography.Text code>{endpoint.path}</Typography.Text>
             </Flex>
-            <Flex align="center" gap={16}>
+            <Flex align="center" gap={16} wrap="wrap">
               <Typography.Text type="secondary">
                 {endpoint.serviceName}
               </Typography.Text>
               <Typography.Text type="secondary">
                 {t('endpoints.rulesCount', { count: endpoint.rules?.length ?? 0 })}
               </Typography.Text>
+              {!inGroupView && groups && groups.length > 0 && (
+                <Flex gap={4} onClick={(e) => e.stopPropagation()}>
+                  {groups.slice(0, 2).map((g) => (
+                    <span
+                      key={g.id}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '1px 8px',
+                        borderRadius: 100,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        background: `${g.color || '#1677ff'}18`,
+                        color: g.color || '#1677ff',
+                        cursor: onGroupClick ? 'pointer' : 'default',
+                      }}
+                      onClick={() => onGroupClick?.(g.id)}
+                    >
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: g.color || '#1677ff' }} />
+                      {g.name}
+                    </span>
+                  ))}
+                  {groups.length > 2 && (
+                    <span
+                      style={{
+                        padding: '1px 6px',
+                        borderRadius: 100,
+                        fontSize: 11,
+                        color: 'var(--color-text-secondary)',
+                        background: 'var(--condition-bg)',
+                      }}
+                    >
+                      +{groups.length - 2}
+                    </span>
+                  )}
+                </Flex>
+              )}
             </Flex>
           </div>
         </Flex>
@@ -132,6 +174,19 @@ export default function EndpointCard({ endpoint, onDelete, onSetDefault, onToggl
                 <Button size="small" type="text" danger icon={<DeleteOutlined />} />
               </Tooltip>
             </Popconfirm>
+            {inGroupView && onRemoveFromGroup && (
+              <Tooltip title={t('groups.removeFromGroup')}>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={<DisconnectOutlined />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveFromGroup(endpoint.id);
+                  }}
+                />
+              </Tooltip>
+            )}
             <RightOutlined style={{ color: 'var(--color-primary)', fontSize: 14, marginLeft: 4 }} />
           </Flex>
         )}

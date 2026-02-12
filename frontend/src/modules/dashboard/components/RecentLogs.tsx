@@ -16,6 +16,7 @@ function StatusCodePill({ code }: { code: number }) {
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 600,
+        whiteSpace: 'nowrap',
         background: ok ? 'var(--get-bg)' : 'var(--delete-bg)',
         color: ok ? 'var(--get-color)' : 'var(--delete-color)',
       }}
@@ -25,7 +26,9 @@ function StatusCodePill({ code }: { code: number }) {
   );
 }
 
-function MatchPill({ matched, label }: { matched: boolean; label: string }) {
+function MatchPill({ matched, isDefault, label }: { matched: boolean; isDefault?: boolean; label: string }) {
+  const bg = !matched ? 'var(--put-bg)' : isDefault ? 'var(--patch-bg, var(--put-bg))' : 'var(--active-bg)';
+  const color = !matched ? 'var(--put-color)' : isDefault ? 'var(--patch-color, var(--put-color))' : 'var(--active-color)';
   return (
     <span
       style={{
@@ -33,8 +36,9 @@ function MatchPill({ matched, label }: { matched: boolean; label: string }) {
         borderRadius: 100,
         fontSize: 12,
         fontWeight: 500,
-        background: matched ? 'var(--active-bg)' : 'var(--put-bg)',
-        color: matched ? 'var(--active-color)' : 'var(--put-color)',
+        whiteSpace: 'nowrap',
+        background: bg,
+        color: color,
       }}
     >
       {label}
@@ -78,7 +82,11 @@ export default function RecentLogs({ logs }: RecentLogsProps) {
             {
               title: t('logs.path'),
               dataIndex: 'path',
-              render: (p: string) => <Typography.Text code>{p}</Typography.Text>,
+              render: (p: string, record: MockRequestLog) => (
+                <Typography.Text code>
+                  {record.queryString ? `${p}${record.queryString.startsWith('?') ? '' : '?'}${record.queryString}` : p}
+                </Typography.Text>
+              ),
             },
             {
               title: t('logs.statusCode'),
@@ -90,12 +98,13 @@ export default function RecentLogs({ logs }: RecentLogsProps) {
               title: t('logs.matchStatus'),
               dataIndex: 'isMatched',
               width: 100,
-              render: (matched: boolean) => (
-                <MatchPill
-                  matched={matched}
-                  label={matched ? t('logs.matched') : t('logs.unmatched')}
-                />
-              ),
+              render: (matched: boolean, record: MockRequestLog) => {
+                const isDefault = matched && !record.ruleId;
+                const label = !matched ? t('logs.unmatched') : isDefault ? t('logs.matchedDefault') : t('logs.matched');
+                return (
+                  <MatchPill matched={matched} isDefault={isDefault} label={label} />
+                );
+              },
             },
           ]}
         />

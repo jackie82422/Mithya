@@ -21,7 +21,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.setAttribute('data-theme', mode);
   }, [mode]);
 
-  const toggle = () => setMode((m) => (m === 'light' ? 'dark' : 'light'));
+  const toggle = () => {
+    document.documentElement.classList.add('no-transition');
+    setMode((m) => (m === 'light' ? 'dark' : 'light'));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.documentElement.classList.remove('no-transition');
+      });
+    });
+  };
 
   return (
     <ThemeContext.Provider value={{ mode, toggle }}>

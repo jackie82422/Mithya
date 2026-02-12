@@ -3,59 +3,59 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: mockserver-db
+    container_name: mithya-db
     environment:
-      POSTGRES_DB: mockserver
-      POSTGRES_USER: mockserver
-      POSTGRES_PASSWORD: mockserver123
+      POSTGRES_DB: mithya
+      POSTGRES_USER: mithya
+      POSTGRES_PASSWORD: mithya123
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mockserver"]
+      test: ["CMD-SHELL", "pg_isready -U mithya"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - mockserver-network
+      - mithya-network
 
   backend:
     build:
       context: ./backend
-      dockerfile: src/MockServer.Api/Dockerfile
-    container_name: mockserver-backend
+      dockerfile: src/Mithya.Api/Dockerfile
+    container_name: mithya-backend
     ports:
       - "5050:8080"    # Admin API
-      - "5001:5001"    # Mock API (WireMock)
+      - "5001:5001"    # Mock API
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__Default=Host=postgres;Database=mockserver;Username=mockserver;Password=mockserver123
-      - WireMock__Port=5001
+      - ConnectionStrings__Default=Host=postgres;Database=mithya;Username=mithya;Password=mithya123
+      - Mithya__BaseUrl=http://localhost:5050
     depends_on:
       postgres:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - mockserver-network
+      - mithya-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: mockserver-frontend
+    container_name: mithya-frontend
     ports:
       - "3000:80"
     depends_on:
       - backend
     restart: unless-stopped
     networks:
-      - mockserver-network
+      - mithya-network
 
 volumes:
   postgres-data:
 
 networks:
-  mockserver-network:
+  mithya-network:
     driver: bridge

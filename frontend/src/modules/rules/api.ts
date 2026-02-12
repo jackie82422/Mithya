@@ -1,5 +1,10 @@
 import apiClient from '@/shared/api/client';
-import type { MockRule, CreateRuleRequest } from '@/shared/types';
+import type { MockRule, CreateRuleRequest, TemplatePreviewRequest, TemplatePreviewResponse } from '@/shared/types';
+
+export const templateApi = {
+  preview: (data: TemplatePreviewRequest) =>
+    apiClient.post<TemplatePreviewResponse>('/templates/preview', data).then((r) => r.data),
+};
 
 export const rulesApi = {
   getByEndpoint: (endpointId: string) =>

@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
+import { xml } from '@codemirror/lang-xml';
 import { useTheme } from '@/shared/contexts/ThemeContext';
 
 interface CodeEditorProps {
   value: string;
   onChange?: (value: string) => void;
-  language?: string;
+  language?: 'json' | 'handlebars' | 'xml';
   height?: string | number;
   readOnly?: boolean;
 }
@@ -14,11 +15,16 @@ interface CodeEditorProps {
 export default function CodeEditor({
   value,
   onChange,
+  language = 'json',
   height = 300,
   readOnly = false,
 }: CodeEditorProps) {
   const { mode } = useTheme();
-  const extensions = useMemo(() => [json()], []);
+  const extensions = useMemo(() => {
+    if (language === 'xml') return [xml()];
+    if (language === 'handlebars') return [];
+    return [json()];
+  }, [language]);
   const h = typeof height === 'number' ? `${height}px` : height;
 
   return (
@@ -30,7 +36,7 @@ export default function CodeEditor({
       readOnly={readOnly}
       editable={!readOnly}
       height={h}
-      style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--color-border)' }}
+      style={{ borderRadius: 12, overflow: 'clip', border: '1px solid var(--color-border)' }}
       basicSetup={{
         lineNumbers: true,
         foldGutter: true,

@@ -1,13 +1,20 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Typography, Button, Spin, Empty, Input, Flex, Space, Popconfirm, message } from 'antd';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Typography, Button, Spin, Empty, Input, Flex, Space, Popconfirm, message, Segmented, Card } from 'antd';
 import type { InputRef } from 'antd';
-import { PlusOutlined, SearchOutlined, CheckSquareOutlined, CloseOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, CheckSquareOutlined, CloseOutlined, GroupOutlined, UnorderedListOutlined, AppstoreOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoints, useCreateEndpoint, useUpdateEndpoint, useDeleteEndpoint, useSetDefaultResponse, useToggleEndpoint } from '../hooks';
+import { useGroupsWithEndpoints, useDeleteGroup } from '../groupHooks';
 import EndpointCard from '../components/EndpointCard';
 import EndpointForm from '../components/EndpointForm';
 import DefaultResponseForm from '../components/DefaultResponseForm';
-import type { MockEndpoint, CreateEndpointRequest, UpdateEndpointRequest, SetDefaultResponseRequest } from '@/shared/types';
+import GroupCard from '../components/GroupCard';
+import GroupDetailView from '../components/GroupDetailView';
+import GroupManageModal from '../components/GroupManageModal';
+import GroupAssignModal from '../components/GroupAssignModal';
+import type { MockEndpoint, EndpointGroup, CreateEndpointRequest, UpdateEndpointRequest, SetDefaultResponseRequest } from '@/shared/types';
+
+type ViewMode = 'list' | 'groups';
 
 export default function EndpointListPage() {
   const { t } = useTranslation();
@@ -17,6 +24,7 @@ export default function EndpointListPage() {
   const deleteEndpoint = useDeleteEndpoint();
   const setDefault = useSetDefaultResponse();
   const toggleEndpoint = useToggleEndpoint();
+  const deleteGroup = useDeleteGroup();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingEndpoint, setEditingEndpoint] = useState<MockEndpoint | null>(null);
@@ -29,6 +37,14 @@ export default function EndpointListPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchLoading, setBatchLoading] = useState(false);
 
+  const { groups: allGroups, endpointGroupMap, groupedEndpointIds } = useGroupsWithEndpoints();
+
+  const [viewMode, setViewMode] = useState<ViewMode>('groups');
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [groupManageOpen, setGroupManageOpen] = useState(false);
+  const [groupAssignOpen, setGroupAssignOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<EndpointGroup | null>(null);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -40,12 +56,26 @@ export default function EndpointListPage() {
     return () => document.removeEventListener('keydown', handler);
   }, []);
 
-  const filtered = endpoints?.filter(
-    (ep) =>
-      ep.name.toLowerCase().includes(search.toLowerCase()) ||
-      ep.path.toLowerCase().includes(search.toLowerCase()) ||
-      ep.serviceName.toLowerCase().includes(search.toLowerCase()) ||
-      ep.httpMethod.toLowerCase().includes(search.toLowerCase()),
+  // List mode: text search filtered
+  const filtered = useMemo(() => {
+    let list = endpoints ?? [];
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (ep) =>
+          ep.name.toLowerCase().includes(q) ||
+          ep.path.toLowerCase().includes(q) ||
+          ep.serviceName.toLowerCase().includes(q) ||
+          ep.httpMethod.toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [endpoints, search]);
+
+  // Ungrouped endpoints for group mode
+  const ungroupedEndpoints = useMemo(
+    () => (endpoints ?? []).filter((ep) => !groupedEndpointIds.has(ep.id)),
+    [endpoints, groupedEndpointIds],
   );
 
   const handleCreate = (values: CreateEndpointRequest) => {
@@ -135,6 +165,18 @@ export default function EndpointListPage() {
 
   const selectedCount = selectedIds.size;
 
+  // If a group is active in group mode, show GroupDetailView
+  if (viewMode === 'groups' && activeGroupId) {
+    return (
+      <GroupDetailView
+        groupId={activeGroupId}
+        isUngrouped={activeGroupId === 'ungrouped'}
+        ungroupedEndpoints={activeGroupId === 'ungrouped' ? ungroupedEndpoints : undefined}
+        onBack={() => setActiveGroupId(null)}
+      />
+    );
+  }
+
   return (
     <div>
       <Flex justify="space-between" align="center" style={{ marginBottom: 24 }}>
@@ -147,7 +189,15 @@ export default function EndpointListPage() {
           </Typography.Text>
         </div>
         <Space>
-          {!batchMode && filtered && filtered.length > 0 && (
+          <Segmented
+            value={viewMode}
+            onChange={(v) => { setViewMode(v as ViewMode); exitBatchMode(); }}
+            options={[
+              { value: 'list', icon: <UnorderedListOutlined /> },
+              { value: 'groups', icon: <AppstoreOutlined /> },
+            ]}
+          />
+          {viewMode === 'list' && !batchMode && filtered && filtered.length > 0 && (
             <Button
               icon={<CheckSquareOutlined />}
               onClick={() => setBatchMode(true)}
@@ -166,51 +216,124 @@ export default function EndpointListPage() {
         </Space>
       </Flex>
 
-      <Input
-        ref={searchRef}
-        prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
-        placeholder={`${t('common.search')}  ⌘K`}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ marginBottom: 20, height: 42, borderRadius: 12 }}
-        allowClear
-      />
-
-      {isLoading ? (
-        <Flex justify="center" style={{ padding: 80 }}>
-          <Spin size="large" />
-        </Flex>
-      ) : !filtered?.length ? (
-        <Empty description={search ? t('common.noData') : t('endpoints.noEndpoints')}>
-          {!search && (
-            <Button type="primary" onClick={() => setFormOpen(true)}>
-              {t('endpoints.create')}
-            </Button>
-          )}
-        </Empty>
-      ) : (
-        filtered.map((ep) => (
-          <EndpointCard
-            key={ep.id}
-            endpoint={ep}
-            onDelete={(id) => deleteEndpoint.mutate(id)}
-            onSetDefault={(ep) => {
-              setSelectedEndpoint(ep);
-              setDefaultFormOpen(true);
-            }}
-            onToggle={(id) => toggleEndpoint.mutate(id)}
-            onEdit={(ep) => {
-              setEditingEndpoint(ep);
-              setFormOpen(true);
-            }}
-            toggleLoading={toggleEndpoint.isPending}
-            selectable={batchMode}
-            selected={selectedIds.has(ep.id)}
-            onSelect={handleSelectToggle}
+      {/* ── List Mode ── */}
+      {viewMode === 'list' && (
+        <>
+          <Input
+            ref={searchRef}
+            prefix={<SearchOutlined style={{ color: 'var(--color-text-secondary)' }} />}
+            placeholder={`${t('common.search')}  ⌘K`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ marginBottom: 20, height: 42, borderRadius: 12 }}
+            allowClear
           />
-        ))
+
+          {isLoading ? (
+            <Flex justify="center" style={{ padding: 80 }}>
+              <Spin size="large" />
+            </Flex>
+          ) : !filtered?.length ? (
+            <Empty description={search ? t('common.noData') : t('endpoints.noEndpoints')}>
+              {!search && (
+                <Button type="primary" onClick={() => setFormOpen(true)}>
+                  {t('endpoints.create')}
+                </Button>
+              )}
+            </Empty>
+          ) : (
+            filtered.map((ep) => (
+              <EndpointCard
+                key={ep.id}
+                endpoint={ep}
+                onDelete={(id) => deleteEndpoint.mutate(id)}
+                onSetDefault={(ep) => {
+                  setSelectedEndpoint(ep);
+                  setDefaultFormOpen(true);
+                }}
+                onToggle={(id) => toggleEndpoint.mutate(id)}
+                onEdit={(ep) => {
+                  setEditingEndpoint(ep);
+                  setFormOpen(true);
+                }}
+                toggleLoading={toggleEndpoint.isPending}
+                selectable={batchMode}
+                selected={selectedIds.has(ep.id)}
+                onSelect={handleSelectToggle}
+                groups={endpointGroupMap[ep.id]}
+                onGroupClick={(groupId) => {
+                  setViewMode('groups');
+                  setActiveGroupId(groupId);
+                }}
+              />
+            ))
+          )}
+        </>
       )}
 
+      {/* ── Group Mode ── */}
+      {viewMode === 'groups' && (
+        <>
+          {isLoading ? (
+            <Flex justify="center" style={{ padding: 80 }}>
+              <Spin size="large" />
+            </Flex>
+          ) : (
+            <>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                  gap: 16,
+                  marginBottom: 16,
+                }}
+              >
+                {allGroups.map((g) => (
+                  <GroupCard
+                    key={g.id}
+                    group={g}
+                    onOpen={() => setActiveGroupId(g.id)}
+                    onEdit={(group) => { setEditingGroup(group); setGroupManageOpen(true); }}
+                    onDelete={(id) => deleteGroup.mutate(id)}
+                  />
+                ))}
+
+                {/* Ungrouped card */}
+                <Card
+                  hoverable
+                  style={{
+                    borderRadius: 16,
+                    cursor: 'pointer',
+                    border: '1px dashed var(--color-border)',
+                    height: '100%',
+                  }}
+                  styles={{ body: { padding: '16px 20px' } }}
+                  onClick={() => setActiveGroupId('ungrouped')}
+                >
+                  <Typography.Text strong style={{ fontSize: 15, display: 'block', marginBottom: 4 }}>
+                    {t('groups.ungrouped')}
+                  </Typography.Text>
+                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                    {t('groups.endpointCount', { count: ungroupedEndpoints.length })}
+                  </Typography.Text>
+                </Card>
+              </div>
+
+              <Button
+                type="dashed"
+                icon={<PlusOutlined />}
+                onClick={() => { setEditingGroup(null); setGroupManageOpen(true); }}
+                block
+                style={{ borderRadius: 12, height: 44 }}
+              >
+                {t('groups.create')}
+              </Button>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ── Batch Action Bar ── */}
       {batchMode && selectedCount > 0 && (
         <div
           style={{
@@ -231,6 +354,9 @@ export default function EndpointListPage() {
             <Typography.Text strong>
               {t('endpoints.batch.selected', { count: selectedCount })}
             </Typography.Text>
+            <Button size="small" icon={<GroupOutlined />} onClick={() => setGroupAssignOpen(true)}>
+              {t('groups.addToGroup')}
+            </Button>
             <Button size="small" onClick={handleBatchEnable} loading={batchLoading}>
               {t('endpoints.batch.enable')}
             </Button>
@@ -265,6 +391,20 @@ export default function EndpointListPage() {
         onCancel={() => setDefaultFormOpen(false)}
         onSubmit={handleSetDefault}
         loading={setDefault.isPending}
+      />
+
+      <GroupManageModal
+        open={groupManageOpen}
+        onClose={() => { setGroupManageOpen(false); setEditingGroup(null); }}
+        groups={allGroups}
+        editingGroup={editingGroup}
+      />
+
+      <GroupAssignModal
+        open={groupAssignOpen}
+        onClose={() => { setGroupAssignOpen(false); exitBatchMode(); }}
+        groups={allGroups}
+        endpointIds={Array.from(selectedIds)}
       />
     </div>
   );
