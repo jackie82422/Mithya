@@ -14,7 +14,7 @@ import ImportExportPage from './modules/import-export/pages/ImportExportPage';
 import ProxyConfigPage from './modules/proxy/pages/ProxyConfigPage';
 import ScenarioListPage from './modules/scenarios/pages/ScenarioListPage';
 import ScenarioDetailPage from './modules/scenarios/pages/ScenarioDetailPage';
-import NotFoundPage from './shared/pages/NotFoundPage';
+import NotFoundPage from './shared/components/NotFoundPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {

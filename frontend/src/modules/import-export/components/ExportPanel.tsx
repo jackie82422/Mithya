@@ -7,6 +7,7 @@ import {
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useEndpoints } from '@/modules/endpoints/hooks';
+import { useExportAll } from '../hooks';
 
 function SummaryItem({
   icon,
@@ -47,26 +48,32 @@ function SummaryItem({
 export default function ExportPanel() {
   const { t } = useTranslation();
   const { data: endpoints } = useEndpoints();
+  const exportMutation = useExportAll();
 
   const totalEndpoints = endpoints?.length ?? 0;
   const totalRules = endpoints?.reduce((sum, e) => sum + (e.rules?.length ?? 0), 0) ?? 0;
   const fileName = `mithya-export-${new Date().toISOString().slice(0, 10)}.json`;
 
-  const handleExport = () => {
-    if (!endpoints?.length) {
+  const handleExport = async () => {
+    if (!totalEndpoints) {
       message.warning(t('importExport.noDataToExport'));
       return;
     }
-    const blob = new Blob([JSON.stringify(endpoints, null, 2)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(url);
-    message.success(t('importExport.exportSuccess'));
+    try {
+      const data = await exportMutation.mutateAsync();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+      message.success(t('importExport.exportSuccess'));
+    } catch {
+      message.error(t('importExport.exportError'));
+    }
   };
 
   return (
@@ -93,7 +100,12 @@ export default function ExportPanel() {
       </Row>
 
       <Flex align="center" gap={12}>
-        <Button type="primary" icon={<DownloadOutlined />} onClick={handleExport}>
+        <Button
+          type="primary"
+          icon={<DownloadOutlined />}
+          onClick={handleExport}
+          loading={exportMutation.isPending}
+        >
           {t('importExport.exportButton')}
         </Button>
         <Typography.Text type="secondary" style={{ fontSize: 13 }}>

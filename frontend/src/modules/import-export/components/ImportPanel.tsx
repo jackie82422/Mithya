@@ -1,21 +1,16 @@
 import { useState } from 'react';
-import { Card, Upload, Button, Typography, message, Space, Modal } from 'antd';
+import { Card, Upload, Button, Typography, message, Space } from 'antd';
 import { UploadOutlined, ImportOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { endpointsApi } from '@/modules/endpoints/api';
-import { rulesApi } from '@/modules/rules/api';
-import type { MockEndpoint } from '@/shared/types';
+import { useImportJson } from '../hooks';
 import CodeEditor from '@/shared/components/CodeEditor';
 
 export default function ImportPanel() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const qc = useQueryClient();
   const [preview, setPreview] = useState('');
-  const [importing, setImporting] = useState(false);
-  const [importedCount, setImportedCount] = useState<number | null>(null);
+  const importMutation = useImportJson();
 
   const handleFileRead = (file: File) => {
     const reader = new FileReader();
@@ -27,102 +22,25 @@ export default function ImportPanel() {
     return false;
   };
 
-  const doImport = async (data: MockEndpoint[]) => {
-    setImporting(true);
-    try {
-      let count = 0;
-      for (const ep of data) {
-        const created = await endpointsApi.create({
-          name: ep.name,
-          serviceName: ep.serviceName,
-          protocol: ep.protocol,
-          path: ep.path,
-          httpMethod: ep.httpMethod,
-          protocolSettings: ep.protocolSettings,
-        });
-
-        if (ep.defaultResponse) {
-          await endpointsApi.setDefaultResponse(created.id, {
-            statusCode: ep.defaultStatusCode ?? 200,
-            responseBody: ep.defaultResponse,
-          });
-        }
-
-        if (ep.rules?.length) {
-          for (const rule of ep.rules) {
-            let conditions;
-            try {
-              conditions = JSON.parse(rule.matchConditions);
-            } catch {
-              conditions = [];
-            }
-            let responseHeaders;
-            try {
-              responseHeaders = rule.responseHeaders
-                ? JSON.parse(rule.responseHeaders)
-                : undefined;
-            } catch {
-              responseHeaders = undefined;
-            }
-            await rulesApi.create(created.id, {
-              ruleName: rule.ruleName,
-              priority: rule.priority,
-              conditions,
-              statusCode: rule.responseStatusCode,
-              responseBody: rule.responseBody,
-              responseHeaders,
-              delayMs: rule.delayMs,
-            });
-          }
-        }
-        count++;
-      }
-      qc.invalidateQueries({ queryKey: ['endpoints'] });
-      message.success(t('importExport.importSuccess', { count }));
-      setImportedCount(count);
-      setPreview('');
-    } catch {
-      message.error(t('importExport.importError'));
-    } finally {
-      setImporting(false);
-    }
-  };
-
   const handleImport = async () => {
     if (!preview) return;
     try {
-      const data: MockEndpoint[] = JSON.parse(preview);
-      const existing = await endpointsApi.getAll();
+      const data = JSON.parse(preview);
+      const endpoints = Array.isArray(data) ? data : data.endpoints ?? [];
+      const serviceProxies = Array.isArray(data) ? undefined : data.serviceProxies;
+      const result = await importMutation.mutateAsync({ endpoints, serviceProxies });
 
-      const existingSet = new Set(
-        existing.map((ep) => `${ep.httpMethod.toUpperCase()}:${ep.path}`),
-      );
-      const duplicates = data.filter((ep) =>
-        existingSet.has(`${ep.httpMethod.toUpperCase()}:${ep.path}`),
-      );
-
-      if (duplicates.length > 0) {
-        Modal.confirm({
-          title: t('importExport.duplicateConfirm'),
-          content: (
-            <div>
-              <p>{t('importExport.duplicateWarning', { count: duplicates.length })}</p>
-              <ul style={{ maxHeight: 200, overflow: 'auto', paddingLeft: 20 }}>
-                {duplicates.map((ep, i) => (
-                  <li key={i}>
-                    <code>{ep.httpMethod.toUpperCase()} {ep.path}</code> — {ep.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ),
-          okText: t('common.confirm'),
-          cancelText: t('common.cancel'),
-          onOk: () => doImport(data),
-        });
+      if (result.skipped > 0) {
+        message.warning(
+          t('importExport.importPartial', {
+            imported: result.imported,
+            skipped: result.skipped,
+          }),
+        );
       } else {
-        await doImport(data);
+        message.success(t('importExport.importSuccess', { count: result.imported }));
       }
+      setPreview('');
     } catch {
       message.error(t('importExport.importError'));
     }
@@ -149,14 +67,16 @@ export default function ImportPanel() {
               type="primary"
               icon={<ImportOutlined />}
               onClick={handleImport}
-              loading={importing}
+              loading={importMutation.isPending}
             >
-              {importing ? t('importExport.importing') : t('importExport.importButton')}
+              {importMutation.isPending
+                ? t('importExport.importing')
+                : t('importExport.importButton')}
             </Button>
           </>
         )}
 
-        {importedCount !== null && !preview && (
+        {importMutation.isSuccess && !preview && (
           <Button
             type="link"
             icon={<ArrowRightOutlined />}

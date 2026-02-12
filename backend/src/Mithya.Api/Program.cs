@@ -28,7 +28,6 @@ builder.Services.AddDbContext<MithyaDbContext>(options =>
 builder.Services.AddScoped<IEndpointRepository, EndpointRepository>();
 builder.Services.AddScoped<IRuleRepository, RuleRepository>();
 builder.Services.AddScoped<IRequestLogRepository, RequestLogRepository>();
-builder.Services.AddScoped<IProxyConfigRepository, ProxyConfigRepository>();
 builder.Services.AddScoped<IServiceProxyRepository, ServiceProxyRepository>();
 builder.Services.AddScoped<IScenarioRepository, ScenarioRepository>();
 builder.Services.AddScoped<IScenarioStepRepository, ScenarioStepRepository>();
@@ -61,7 +60,6 @@ builder.Services.AddHttpClient("TryRequest", client =>
 });
 builder.Services.AddSingleton<IProxyEngine, ProxyEngine>();
 builder.Services.AddSingleton<IRecordingService, RecordingService>();
-builder.Services.AddSingleton<IProxyConfigCache, ProxyConfigCache>();
 builder.Services.AddSingleton<IServiceProxyCache, ServiceProxyCache>();
 
 // Scenario Engine
@@ -115,7 +113,6 @@ app.MapEndpointManagementApis();
 app.MapRuleManagementApis();
 app.MapLogApis();
 app.MapTemplateApis();
-app.MapProxyConfigApis();
 app.MapServiceProxyApis();
 app.MapScenarioApis();
 app.MapEndpointGroupApis();
@@ -133,18 +130,6 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"Error loading mock rule cache: {ex.Message}");
-}
-
-// Load proxy config cache on startup
-var proxyCache = app.Services.GetRequiredService<IProxyConfigCache>();
-try
-{
-    await proxyCache.LoadAllAsync();
-    Console.WriteLine("Proxy config cache loaded successfully");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Error loading proxy config cache: {ex.Message}");
 }
 
 // Load service proxy cache on startup
